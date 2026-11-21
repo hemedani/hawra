@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">حوراء</string>
+
+    <!-- Navigation / screens -->
+    <string name="home_title">حوراء</string>
+    <string name="home_subtitle">قرآن کریم</string>
+    <string name="reader_title">خواندن</string>
+    <string name="history_title">تاریخچه</string>
+    <string name="settings_title">تنظیمات</string>
+
+    <!-- Home -->
+    <string name="home_continue_reading">ادامه خواندن</string>
+    <string name="home_start_reading">شروع خواندن</string>
+    <string name="home_phase_note">نسخهٔ اولیه — پنج صفحهٔ نخست قرآن کریم</string>
+
+    <!-- Reader -->
+    <string name="reader_loading">در حال آماده‌سازی صفحه…</string>
+    <string name="reader_error">متن قرآن بارگذاری نشد.</string>
+    <string name="reader_settings">تنظیمات خواندن</string>
+
+    <!-- Mushaf furniture -->
+    <string name="banner_surah">سورۀ %1$s</string>
+    <string name="banner_juz">جزء %1$s</string>
+
+    <!-- Selection action box -->
+    <string name="selection_play_ayah">پخش آیه %1$s</string>
+    <string name="selection_play_selection">پخش انتخاب‌شده‌ها</string>
+
+    <!-- Dock -->
+    <string name="dock_now_playing">آیۀ %1$s · %2$s</string>
+    <string name="dock_juz_title">جزء %1$s</string>
+    <string name="dock_juz_subtitle">جزء‌به‌جزء · %1$s</string>
+
+    <!-- Settings -->
+    <string name="settings_theme">پوسته</string>
+    <string name="settings_theme_light">روشن</string>
+    <string name="settings_theme_dark">تیره</string>
+    <string name="settings_theme_system">هماهنگ با دستگاه</string>
+    <string name="settings_language">زبان</string>
+
+    <string name="settings_reading">خواندن</string>
+    <string name="settings_font_size">اندازهٔ متن</string>
+    <string name="settings_show_translation">نمایش ترجمه</string>
+    <string name="settings_letter_color">رنگ حروف</string>
+    <string name="settings_diacritic_color">رنگ اعراب</string>
+    <string name="settings_recitation">تلاوت</string>
+
+    <string name="ink_ink">مشکی</string>
+    <string name="ink_green">سبز</string>
+    <string name="ink_navy">سرمه‌ای</string>
+
+    <string name="mark_gold">طلایی</string>
+    <string name="mark_green">سبز</string>
+    <string name="mark_grey">خاکستری</string>
+    <string name="mark_burgundy">زرشکی</string>
+
+    <!-- General -->
+    <string name="back">بازگشت</string>
+    <string name="loading">در حال بارگذاری…</string>
+    <string name="history_empty">هنوز تاریخچه‌ای ثبت نشده است</string>
+
+    <!-- History -->
+    <string name="history_total_time">زمان خواندن</string>
+    <string name="history_pages">صفحه‌ها</string>
+    <string name="history_streak">روز پیاپی</string>
+    <string name="history_today">امروز</string>
+    <string name="history_yesterday">دیروز</string>
+    <string name="history_completed">کامل</string>
+    <string name="history_interrupted">نیمه‌کاره</string>
+    <string name="history_ayah_span">آیه %1$s</string>
+    <string name="history_duration_seconds">%1$s ثانیه</string>
+    <string name="history_duration_minutes">%1$s دقیقه</string>
+    <string name="history_duration_hours">%1$s ساعت و %2$s دقیقه</string>
+
+    <string name="language_system">همان دستگاه</string>
+    <string name="language_persian">فارسی</string>
+    <string name="language_english">انگلیسی</string>
+
+    <string name="home_continue">ادامه خواندن</string>
+    <string name="home_page">صفحه %1$s</string>
+    <string name="home_today">امروز</string>
+    <string name="home_nothing_yet">هنوز چیزی نخوانده‌اید</string>
+    <string name="home_resume_hint">از جایی که رها کردید</string>
+
+    <!-- Landing -->
+    <string name="home_goal">%1$s از %2$s دقیقه</string>
+    <string name="home_streak_days">%1$s روز پیاپی</string>
+    <string name="home_open">باز کردن</string>
+    <string name="home_minutes">%1$s دقیقه</string>
+    <string name="home_goal_met">هدف امروز کامل شد</string>
+    <string name="settings_credits">نشانگر آیه: «Rub el Hizb» از Delapouite، game-icons.net، CC BY 3.0</string>
+
+    <!-- Recitation -->
+    <string name="recitation_play">پخش تلاوت</string>
+    <string name="recitation_pause">توقف تلاوت</string>
+    <string name="recitation_previous_ayah">آیۀ پیشین</string>
+    <string name="recitation_next_ayah">آیۀ بعد</string>
+    <string name="recitation_speed">سرعت پخش</string>
+    <string name="recitation_repeat">تکرار آیه</string>
+    <string name="recitation_failed">پخش نشد — دوباره بزنید</string>
+    <string name="recitation_reciter">قاری</string>
+    <string name="recitation_credit">تلاوت‌ها از CDN آیه‌به‌آیۀ AlQuran Cloud پخش می‌شوند</string>
+    <!-- Full-screen player -->
+    <string name="player_close">بستن پخش‌کننده</string>
+    <string name="player_now_playing">در حال پخش</string>
+    <string name="player_download_page">دانلود این صفحه</string>
+    <string name="player_downloading">در حال دانلود…</string>
+    <string name="player_reciters">تغییر قاری</string>
+    <!-- Presets -->
+    <string name="preset_section">الگوی تلاوت</string>
+    <string name="preset_plain">تلاوت ساده</string>
+    <string name="preset_empty">هنوز الگویی ساخته نشده است</string>
+    <string name="preset_step_ayah">آیه</string>
+    <string name="preset_step_translation">ترجمه</string>
+    <string name="preset_step_tafsir">تفسیر</string>
+    <string name="preset_step_silence">سکوت</string>
+    <string name="preset_missing_text">این الگو به متنی نیاز دارد که همراه برنامه نیست: %1$s</string>
+
+    <!-- Downloads -->
+    <string name="settings_downloads">دانلود تلاوت‌ها</string>
+    <string name="settings_downloads_hint">ذخیرهٔ آفلاین، آیه‌به‌آیه یا جزء‌به‌جزء</string>
+    <string name="downloads_title">دانلود تلاوت‌ها</string>
+    <string name="downloads_storage">فضای استفاده‌شده</string>
+    <string name="downloads_pending">%1$s فایل در صف</string>
+    <string name="downloads_reciter">قاری</string>
+    <string name="downloads_edition">نسخه</string>
+    <string name="downloads_scope">محدوده</string>
+    <string name="downloads_scope_page">صفحه</string>
+    <string name="downloads_scope_surah">سوره</string>
+    <string name="downloads_scope_juz">جزء</string>
+    <string name="downloads_scope_ayah">آیه</string>
+    <string name="downloads_page_from">از صفحهٔ %1$s</string>
+    <string name="downloads_page_to">تا صفحهٔ %1$s</string>
+    <string name="downloads_page_label">صفحهٔ %1$s تا %2$s</string>
+    <string name="downloads_first_five">پنج صفحهٔ اول</string>
+    <string name="downloads_pages_unavailable">متن قرآن بارگذاری نشد؛ محدوده را با سوره یا جزء انتخاب کنید.</string>
+    <string name="downloads_range_label">%1$s:%2$s تا %3$s:%4$s</string>
+    <string name="downloads_granularity_ayah">این نسخه آیه‌به‌آیه است؛ هر آیه یک فایل.</string>
+    <string name="downloads_granularity_surah">این نسخه سوره‌به‌سوره است؛ هر سوره یک فایل.</string>
+    <string name="downloads_granularity_juz">این نسخه جزء‌به‌جزء است؛ هر جزء یک فایل، پس دانلود هم فقط جزء‌به‌جزء ممکن است.</string>
+    <string name="downloads_surah_label">سورهٔ %1$s</string>
+    <string name="downloads_juz_label">جزء %1$s</string>
+    <string name="downloads_ayah_label">آیهٔ %1$s:%2$s</string>
+    <string name="downloads_ayah_count">%1$s آیه</string>
+    <string name="downloads_action">دانلود (حدود %1$s)</string>
+    <string name="downloads_saved">روی این دستگاه</string>
+    <string name="downloads_empty">هنوز چیزی دانلود نشده است.</string>
+    <string name="downloads_empty_hint">برای گوش دادن بدون اینترنت، از بالا محدوده را انتخاب و دانلود کنید.</string>
+    <string name="downloads_complete">کامل</string>
+    <string name="downloads_delete_all">حذف همه</string>
+    <string name="downloads_progress">%1$s از %2$s</string>
+    <string name="downloads_failed_count">%1$s ناموفق</string>
+    <string name="downloads_retry">تلاش دوباره</string>
+    <string name="downloads_delete">حذف</string>
+    <string name="downloads_catalogue_unavailable">فهرست قاریان در دسترس نیست. اتصال را بررسی کنید.</string>
+    <string name="downloads_notice_queued">%1$s فایل در صف دانلود · %2$s از قبل ذخیره شده بود</string>
+    <string name="downloads_notice_failed">شروع دانلود ناموفق: %1$s</string>
+    <string name="size_kb">کیلوبایت</string>
+    <string name="size_mb">مگابایت</string>
+    <string name="size_gb">گیگابایت</string>
+
+    <!-- Preset list & editor -->
+    <string name="settings_presets">الگوهای تلاوت</string>
+    <string name="settings_presets_hint">ترتیب دلخواه: آیه، ترجمه، تکرار</string>
+    <string name="presets_title">الگوهای تلاوت</string>
+    <string name="presets_new">الگوی تازه</string>
+    <string name="presets_empty">هنوز الگویی نساخته‌اید. با «الگوی تازه» اولین الگو را بسازید.</string>
+    <string name="presets_default_badge">پیش‌فرض</string>
+    <string name="presets_make_default">پیش‌فرض کن</string>
+    <string name="presets_edit">ویرایش</string>
+    <string name="presets_delete">حذف</string>
+    <string name="presets_no_coverage">هنوز با این الگو چیزی خوانده نشده است.</string>
+    <string name="presets_coverage_line">٪%1$s از قرآن · %2$s آیه</string>
+    <string name="presets_parts">بخش‌ها: %1$s</string>
+    <string name="presets_repeat">×%1$s</string>
+    <string name="editor_title_new">الگوی تازه</string>
+    <string name="editor_title_edit">ویرایش الگو</string>
+    <string name="editor_name">نام الگو</string>
+    <string name="editor_hint">این ترتیب روی هر آیه‌ای که بخوانید اجرا می‌شود.</string>
+    <string name="editor_no_steps">هنوز گامی اضافه نشده است.</string>
+    <string name="editor_add_ayah">افزودن آیه</string>
+    <string name="editor_add_translation">افزودن ترجمه</string>
+    <string name="editor_add_silence">افزودن سکوت</string>
+    <string name="editor_step_repeat">تعداد تکرار</string>
+    <string name="editor_remove">برداشتن</string>
+    <string name="editor_save">ذخیره</string>
+
+    <!-- Sign-in gate -->
+    <string name="auth_title_signin">خوش آمدید</string>
+    <string name="auth_title_register">ساخت حساب تازه</string>
+    <string name="auth_subtitle_signin">برای دیدن تاریخچهٔ مطالعهٔ خود وارد شوید.</string>
+    <string name="auth_subtitle_register">با یک حساب، تاریخچهٔ مطالعهٔ شما روی سرور می‌ماند و روی هر دستگاهی در دسترس است.</string>
+    <string name="auth_mode_signin">ورود</string>
+    <string name="auth_mode_register">ثبت‌نام</string>
+    <string name="auth_email">ایمیل</string>
+    <string name="auth_email_placeholder">you@example.com</string>
+    <string name="auth_password">گذرواژه</string>
+    <string name="auth_password_confirm">تکرار گذرواژه</string>
+    <string name="auth_show_password">نمایش گذرواژه</string>
+    <string name="auth_hide_password">پنهان کردن گذرواژه</string>
+    <string name="auth_display_name">نام (اختیاری)</string>
+    <string name="auth_name_placeholder">نام شما</string>
+    <string name="auth_submit_signin">ورود</string>
+    <string name="auth_submit_register">ساخت حساب</string>
+    <string name="auth_error_email_invalid">ایمیل درست به نظر نمی‌رسد.</string>
+    <string name="auth_error_password_short">گذرواژه باید دست‌کم %1$s نویسه باشد.</string>
+    <string name="auth_error_password_mismatch">دو گذرواژه یکسان نیستند.</string>
+    <string name="auth_error_credentials">ایمیل یا گذرواژه نادرست است.</string>
+    <string name="auth_error_duplicate">با این ایمیل حساب دیگری وجود دارد.</string>
+    <string name="auth_error_network">سرور در دسترس نیست. اتصال را بررسی کنید.</string>
+    <string name="auth_error_generic">انجام نشد. دوباره تلاش کنید.</string>
+    <string name="auth_offline_note">پس از ورود، برنامه بدون اینترنت هم کار می‌کند.</string>
+</resources>

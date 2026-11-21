@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only network policy.
+
+  The backend runs over plain HTTP on a LAN address during development, and since Android 9
+  (API 28) cleartext is refused by default — every request fails with a
+  `CleartextNotPermitted` exception that looks, from the app's side, exactly like the server
+  being down. That failure is worth naming because it has already cost one debugging session.
+
+  This lives in `src/debug/` rather than in the main manifest on purpose: `usesCleartextTraffic`
+  in `main` would ship to the Play Store and quietly allow unencrypted traffic in the release
+  build. Debug builds talk to a laptop over Wi-Fi; release builds must talk HTTPS.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>

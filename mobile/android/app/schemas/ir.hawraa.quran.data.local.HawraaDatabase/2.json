@@ -1,0 +1,619 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "6bec9afbd5e1546f017f2101e947294a",
+    "entities": [
+      {
+        "tableName": "reading_sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` TEXT, `startedAt` INTEGER NOT NULL, `endedAt` INTEGER, `surah` INTEGER NOT NULL, `fromAyah` INTEGER NOT NULL, `toAyah` INTEGER NOT NULL, `fromPage` INTEGER, `toPage` INTEGER, `durationReadSec` INTEGER NOT NULL, `completed` INTEGER NOT NULL, `interrupted` INTEGER NOT NULL, `mode` TEXT NOT NULL, `deviceInfo` TEXT, `settingsJson` TEXT, `syncStatus` TEXT NOT NULL DEFAULT 'pending', `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`clientId`))",
+        "fields": [
+          {
+            "fieldPath": "clientId",
+            "columnName": "clientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverId",
+            "columnName": "serverId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "endedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "surah",
+            "columnName": "surah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromAyah",
+            "columnName": "fromAyah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toAyah",
+            "columnName": "toAyah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromPage",
+            "columnName": "fromPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "toPage",
+            "columnName": "toPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "durationReadSec",
+            "columnName": "durationReadSec",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completed",
+            "columnName": "completed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "interrupted",
+            "columnName": "interrupted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mode",
+            "columnName": "mode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceInfo",
+            "columnName": "deviceInfo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "settingsJson",
+            "columnName": "settingsJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "syncStatus",
+            "columnName": "syncStatus",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'pending'"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "clientId"
+          ]
+        }
+      },
+      {
+        "tableName": "presets",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` TEXT, `name` TEXT NOT NULL, `description` TEXT, `stepsJson` TEXT NOT NULL, `reciterKey` TEXT, `autoAdvance` INTEGER NOT NULL, `ayahGapMs` INTEGER NOT NULL, `isDefault` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `revision` INTEGER NOT NULL, `updatedAtMs` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL DEFAULT 'pending', `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`clientId`))",
+        "fields": [
+          {
+            "fieldPath": "clientId",
+            "columnName": "clientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverId",
+            "columnName": "serverId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "stepsJson",
+            "columnName": "stepsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reciterKey",
+            "columnName": "reciterKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "autoAdvance",
+            "columnName": "autoAdvance",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayahGapMs",
+            "columnName": "ayahGapMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isDefault",
+            "columnName": "isDefault",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isArchived",
+            "columnName": "isArchived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtMs",
+            "columnName": "updatedAtMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "syncStatus",
+            "columnName": "syncStatus",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'pending'"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "clientId"
+          ]
+        }
+      },
+      {
+        "tableName": "preset_sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`clientId` TEXT NOT NULL, `serverId` TEXT, `presetClientId` TEXT, `presetName` TEXT NOT NULL, `startedAt` INTEGER NOT NULL, `endedAt` INTEGER, `activeSec` INTEGER NOT NULL, `fromSurah` INTEGER NOT NULL, `fromAyah` INTEGER NOT NULL, `toSurah` INTEGER NOT NULL, `toAyah` INTEGER NOT NULL, `fromPage` INTEGER, `toPage` INTEGER, `ayahsCompleted` INTEGER NOT NULL, `stepsCompleted` INTEGER NOT NULL, `playCount` INTEGER NOT NULL, `pauseCount` INTEGER NOT NULL, `seekCount` INTEGER NOT NULL, `lastEventAt` INTEGER NOT NULL, `status` TEXT NOT NULL, `reciterKey` TEXT, `speed` REAL NOT NULL, `eventsJson` TEXT, `syncStatus` TEXT NOT NULL DEFAULT 'pending', `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`clientId`))",
+        "fields": [
+          {
+            "fieldPath": "clientId",
+            "columnName": "clientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "serverId",
+            "columnName": "serverId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "presetClientId",
+            "columnName": "presetClientId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "presetName",
+            "columnName": "presetName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "endedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "activeSec",
+            "columnName": "activeSec",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromSurah",
+            "columnName": "fromSurah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromAyah",
+            "columnName": "fromAyah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toSurah",
+            "columnName": "toSurah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toAyah",
+            "columnName": "toAyah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromPage",
+            "columnName": "fromPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "toPage",
+            "columnName": "toPage",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "ayahsCompleted",
+            "columnName": "ayahsCompleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stepsCompleted",
+            "columnName": "stepsCompleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playCount",
+            "columnName": "playCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pauseCount",
+            "columnName": "pauseCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seekCount",
+            "columnName": "seekCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastEventAt",
+            "columnName": "lastEventAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reciterKey",
+            "columnName": "reciterKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "speed",
+            "columnName": "speed",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventsJson",
+            "columnName": "eventsJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "syncStatus",
+            "columnName": "syncStatus",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'pending'"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "clientId"
+          ]
+        }
+      },
+      {
+        "tableName": "preset_ayah_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`presetClientId` TEXT NOT NULL, `globalAyah` INTEGER NOT NULL, `surah` INTEGER NOT NULL, `ayah` INTEGER NOT NULL, `page` INTEGER, `plays` INTEGER NOT NULL, `listenedSec` INTEGER NOT NULL, `firstAt` INTEGER NOT NULL, `lastAt` INTEGER NOT NULL, `lastKind` TEXT, `syncStatus` TEXT NOT NULL DEFAULT 'pending', `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`presetClientId`, `globalAyah`))",
+        "fields": [
+          {
+            "fieldPath": "presetClientId",
+            "columnName": "presetClientId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "globalAyah",
+            "columnName": "globalAyah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "surah",
+            "columnName": "surah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ayah",
+            "columnName": "ayah",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "page",
+            "columnName": "page",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "plays",
+            "columnName": "plays",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "listenedSec",
+            "columnName": "listenedSec",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstAt",
+            "columnName": "firstAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastAt",
+            "columnName": "lastAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastKind",
+            "columnName": "lastKind",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "syncStatus",
+            "columnName": "syncStatus",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'pending'"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "presetClientId",
+            "globalAyah"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_preset_ayah_progress_presetClientId",
+            "unique": false,
+            "columnNames": [
+              "presetClientId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_preset_ayah_progress_presetClientId` ON `${TABLE_NAME}` (`presetClientId`)"
+          },
+          {
+            "name": "index_preset_ayah_progress_syncStatus",
+            "unique": false,
+            "columnNames": [
+              "syncStatus"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_preset_ayah_progress_syncStatus` ON `${TABLE_NAME}` (`syncStatus`)"
+          }
+        ]
+      },
+      {
+        "tableName": "downloads",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`editionKey` TEXT NOT NULL, `reciterKey` TEXT NOT NULL, `fileKey` TEXT NOT NULL, `scope` TEXT NOT NULL, `scopeKey` TEXT NOT NULL, `surah` INTEGER, `ayah` INTEGER, `juz` INTEGER, `url` TEXT NOT NULL, `relativePath` TEXT NOT NULL, `bytes` INTEGER NOT NULL, `state` TEXT NOT NULL DEFAULT 'queued', `error` TEXT, `requestedAt` INTEGER NOT NULL, `completedAt` INTEGER, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`editionKey`, `fileKey`))",
+        "fields": [
+          {
+            "fieldPath": "editionKey",
+            "columnName": "editionKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reciterKey",
+            "columnName": "reciterKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileKey",
+            "columnName": "fileKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scope",
+            "columnName": "scope",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scopeKey",
+            "columnName": "scopeKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "surah",
+            "columnName": "surah",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "ayah",
+            "columnName": "ayah",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "juz",
+            "columnName": "juz",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relativePath",
+            "columnName": "relativePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bytes",
+            "columnName": "bytes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'queued'"
+          },
+          {
+            "fieldPath": "error",
+            "columnName": "error",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "requestedAt",
+            "columnName": "requestedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "editionKey",
+            "fileKey"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_downloads_state",
+            "unique": false,
+            "columnNames": [
+              "state"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_downloads_state` ON `${TABLE_NAME}` (`state`)"
+          },
+          {
+            "name": "index_downloads_scopeKey",
+            "unique": false,
+            "columnNames": [
+              "scopeKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_downloads_scopeKey` ON `${TABLE_NAME}` (`scopeKey`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6bec9afbd5e1546f017f2101e947294a')"
+    ]
+  }
+}

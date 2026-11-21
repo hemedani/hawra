@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base theme: no action bar; Compose draws the entire UI and owns theming.
+         The window background is only visible for the first frame. -->
+    <style name="Theme.Hawraa" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

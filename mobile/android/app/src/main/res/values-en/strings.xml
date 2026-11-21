@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hawraa</string>
+
+    <string name="home_title">Hawraa</string>
+    <string name="home_subtitle">The Holy Quran</string>
+    <string name="reader_title">Read</string>
+    <string name="history_title">History</string>
+    <string name="settings_title">Settings</string>
+
+    <string name="home_continue_reading">Continue reading</string>
+    <string name="home_start_reading">Start reading</string>
+    <string name="home_phase_note">Early build — the first five pages of the Holy Quran</string>
+
+    <string name="reader_loading">Preparing the page…</string>
+    <string name="reader_error">The Quran text could not be loaded.</string>
+    <string name="reader_settings">Reading settings</string>
+
+    <string name="banner_surah">Surah %1$s</string>
+    <string name="banner_juz">Juz %1$s</string>
+
+    <!-- Selection action box -->
+    <string name="selection_play_ayah">Play ayah %1$s</string>
+    <string name="selection_play_selection">Play selection</string>
+
+    <!-- Dock -->
+    <string name="dock_now_playing">Ayah %1$s · %2$s</string>
+    <string name="dock_juz_title">Juz %1$s</string>
+    <string name="dock_juz_subtitle">Juz by juz · %1$s</string>
+
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_language">Language</string>
+
+    <string name="settings_reading">Reading</string>
+    <string name="settings_font_size">Text size</string>
+    <string name="settings_show_translation">Show translation</string>
+    <string name="settings_letter_color">Letter color</string>
+    <string name="settings_diacritic_color">Diacritic color</string>
+    <string name="settings_recitation">Recitation</string>
+
+    <string name="ink_ink">Ink</string>
+    <string name="ink_green">Green</string>
+    <string name="ink_navy">Navy</string>
+
+    <string name="mark_gold">Gold</string>
+    <string name="mark_green">Green</string>
+    <string name="mark_grey">Grey</string>
+    <string name="mark_burgundy">Burgundy</string>
+
+    <string name="back">Back</string>
+    <string name="loading">Loading…</string>
+    <string name="history_empty">No reading history yet</string>
+
+    <!-- History -->
+    <string name="history_total_time">Reading time</string>
+    <string name="history_pages">Pages</string>
+    <string name="history_streak">Day streak</string>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="history_completed">Complete</string>
+    <string name="history_interrupted">Interrupted</string>
+    <string name="history_ayah_span">Ayah %1$s</string>
+    <string name="history_duration_seconds">%1$s s</string>
+    <string name="history_duration_minutes">%1$s min</string>
+    <string name="history_duration_hours">%1$s h %2$s min</string>
+
+    <string name="language_system">System</string>
+    <string name="language_persian">Persian</string>
+    <string name="language_english">English</string>
+
+    <string name="home_continue">Continue reading</string>
+    <string name="home_page">Page %1$s</string>
+    <string name="home_today">Today</string>
+    <string name="home_nothing_yet">Nothing read yet</string>
+    <string name="home_resume_hint">Pick up where you left off</string>
+
+    <!-- Landing -->
+    <string name="home_goal">%1$s of %2$s min</string>
+    <string name="home_streak_days">%1$s-day streak</string>
+    <string name="home_open">Open</string>
+    <string name="home_minutes">%1$s min</string>
+    <string name="home_goal_met">Daily goal met</string>
+    <string name="settings_credits">Ayah marker: “Rub el Hizb” by Delapouite, game-icons.net, CC BY 3.0</string>
+
+    <!-- Recitation -->
+    <string name="recitation_play">Play recitation</string>
+    <string name="recitation_pause">Pause recitation</string>
+    <string name="recitation_previous_ayah">Previous ayah</string>
+    <string name="recitation_next_ayah">Next ayah</string>
+    <string name="recitation_speed">Playback speed</string>
+    <string name="recitation_repeat">Repeat ayah</string>
+    <string name="recitation_failed">Couldn\'t play — tap play to retry</string>
+    <string name="recitation_reciter">Reciter</string>
+    <string name="recitation_credit">Recitations stream from the AlQuran Cloud verse-by-verse CDN</string>
+    <!-- Full-screen player -->
+    <string name="player_close">Close player</string>
+    <string name="player_now_playing">Now playing</string>
+    <string name="player_download_page">Download this page</string>
+    <string name="player_downloading">Downloading…</string>
+    <string name="player_reciters">Change reciter</string>
+    <!-- Presets -->
+    <string name="preset_section">Recitation preset</string>
+    <string name="preset_plain">Plain recitation</string>
+    <string name="preset_empty">No presets yet</string>
+    <string name="preset_step_ayah">Verse</string>
+    <string name="preset_step_translation">Translation</string>
+    <string name="preset_step_tafsir">Tafsir</string>
+    <string name="preset_step_silence">Silence</string>
+    <string name="preset_missing_text">This preset needs text that is not bundled: %1$s</string>
+
+    <!-- Downloads -->
+    <string name="settings_downloads">Recitation downloads</string>
+    <string name="settings_downloads_hint">Keep audio offline, verse by verse or juz by juz</string>
+    <string name="downloads_title">Downloads</string>
+    <string name="downloads_storage">Storage used</string>
+    <string name="downloads_pending">%1$s files queued</string>
+    <string name="downloads_reciter">Reciter</string>
+    <string name="downloads_edition">Edition</string>
+    <string name="downloads_scope">Scope</string>
+    <string name="downloads_scope_page">Page</string>
+    <string name="downloads_scope_surah">Surah</string>
+    <string name="downloads_scope_juz">Juz</string>
+    <string name="downloads_scope_ayah">Ayah</string>
+    <string name="downloads_page_from">From page %1$s</string>
+    <string name="downloads_page_to">To page %1$s</string>
+    <string name="downloads_page_label">Pages %1$s–%2$s</string>
+    <string name="downloads_first_five">First five pages</string>
+    <string name="downloads_pages_unavailable">The mushaf text did not load; pick a surah or a juz instead.</string>
+    <string name="downloads_range_label">%1$s:%2$s – %3$s:%4$s</string>
+    <string name="downloads_granularity_ayah">Verse by verse — one file per ayah.</string>
+    <string name="downloads_granularity_surah">Surah by surah — one file per surah.</string>
+    <string name="downloads_granularity_juz">Juz by juz — one file per juz, so downloads can only be whole juzes.</string>
+    <string name="downloads_surah_label">Surah %1$s</string>
+    <string name="downloads_juz_label">Juz %1$s</string>
+    <string name="downloads_ayah_label">Ayah %1$s:%2$s</string>
+    <string name="downloads_ayah_count">%1$s ayahs</string>
+    <string name="downloads_action">Download (about %1$s)</string>
+    <string name="downloads_saved">On this device</string>
+    <string name="downloads_empty">Nothing downloaded yet.</string>
+    <string name="downloads_empty_hint">Pick a scope above to listen without a connection.</string>
+    <string name="downloads_complete">Complete</string>
+    <string name="downloads_delete_all">Delete all</string>
+    <string name="downloads_progress">%1$s of %2$s</string>
+    <string name="downloads_failed_count">%1$s failed</string>
+    <string name="downloads_retry">Retry</string>
+    <string name="downloads_delete">Delete</string>
+    <string name="downloads_catalogue_unavailable">The reciter catalogue is unavailable. Check your connection.</string>
+    <string name="downloads_notice_queued">%1$s files queued · %2$s were already saved</string>
+    <string name="downloads_notice_failed">Could not start the download: %1$s</string>
+    <string name="size_kb">KB</string>
+    <string name="size_mb">MB</string>
+    <string name="size_gb">GB</string>
+
+    <!-- Preset list & editor -->
+    <string name="settings_presets">Recitation presets</string>
+    <string name="settings_presets_hint">Your own order: verse, translation, repeats</string>
+    <string name="presets_title">Recitation presets</string>
+    <string name="presets_new">New preset</string>
+    <string name="presets_empty">No presets yet. Start with “New preset”.</string>
+    <string name="presets_default_badge">Default</string>
+    <string name="presets_make_default">Make default</string>
+    <string name="presets_edit">Edit</string>
+    <string name="presets_delete">Delete</string>
+    <string name="presets_no_coverage">Nothing read with this preset yet.</string>
+    <string name="presets_coverage_line">%1$s%% of the Quran · %2$s ayahs</string>
+    <string name="presets_parts">Parts: %1$s</string>
+    <string name="presets_repeat">×%1$s</string>
+    <string name="editor_title_new">New preset</string>
+    <string name="editor_title_edit">Edit preset</string>
+    <string name="editor_name">Preset name</string>
+    <string name="editor_hint">This recipe applies to whatever you read.</string>
+    <string name="editor_no_steps">No steps yet.</string>
+    <string name="editor_add_ayah">Add verse</string>
+    <string name="editor_add_translation">Add translation</string>
+    <string name="editor_add_silence">Add silence</string>
+    <string name="editor_step_repeat">Repeat count</string>
+    <string name="editor_remove">Remove</string>
+    <string name="editor_save">Save</string>
+
+    <!-- Sign-in gate -->
+    <string name="auth_title_signin">Welcome back</string>
+    <string name="auth_title_register">Create an account</string>
+    <string name="auth_subtitle_signin">Sign in to see your reading history.</string>
+    <string name="auth_subtitle_register">An account keeps your reading history on the server, available on every device.</string>
+    <string name="auth_mode_signin">Sign in</string>
+    <string name="auth_mode_register">Register</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_email_placeholder">you@example.com</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_password_confirm">Confirm password</string>
+    <string name="auth_show_password">Show password</string>
+    <string name="auth_hide_password">Hide password</string>
+    <string name="auth_display_name">Name (optional)</string>
+    <string name="auth_name_placeholder">Your name</string>
+    <string name="auth_submit_signin">Sign in</string>
+    <string name="auth_submit_register">Create account</string>
+    <string name="auth_error_email_invalid">That email address does not look valid.</string>
+    <string name="auth_error_password_short">The password must be at least %1$s characters.</string>
+    <string name="auth_error_password_mismatch">The two passwords do not match.</string>
+    <string name="auth_error_credentials">Email or password is incorrect.</string>
+    <string name="auth_error_duplicate">An account with this email already exists.</string>
+    <string name="auth_error_network">Cannot reach the server. Check your connection.</string>
+    <string name="auth_error_generic">Something went wrong. Try again.</string>
+    <string name="auth_offline_note">Once you are signed in, the app works offline.</string>
+</resources>
