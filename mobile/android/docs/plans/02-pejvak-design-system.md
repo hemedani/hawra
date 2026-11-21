@@ -134,7 +134,7 @@ These bind every task; a reviewer must treat them as the rubric.
 
 ---
 
-### Task 3 — ScreenFrame and the floating GlassHeader
+### Task 3 — ScreenFrame and the floating GlassHeader ✅
 
 **Goal:** every screen shares Pejvak's header anatomy and measured top inset.
 
@@ -400,3 +400,15 @@ without opening Pejvak.
   `WaveHelperTest` (9), `IconCatalogTest` (2), `GlassPrimitivesScreenshotTest` (light + dark).
   `assembleDebug` green; `./gradlew test` 337/337; captures at
   `app/build/screenshots/glass-primitives-{light,dark}.png` inspected.
+- 2026-11-21 — **Task 3 complete.** Ported `ScreenFrame` (verbatim API, body is
+  `backdropSource(zIndex = 1f)`, measured header/sub-header top inset, safe with a null
+  `LocalBackdrop`) and `ScreenHeader` (`HeaderSearch`, `GlassHeader`: floating `FrostedSurface`
+  capsule at `header.margin` / `header.minHeight` / `header.contentPadding`, `radius.xl`, leading
+  slot, overline/title/subtitle, trailing `RowScope` actions, and a search bubble that morphs into
+  an inline field via `Crossfade` + `animateContentSize` gated by `useMotionEnabled`, with
+  `HapticIntent.Select`/`Tap` and `BackHandler`). `userTitle` swaps the title to Vazirmatn; search
+  input/placeholder and all padding use `start`/`end` so RTL flips correctly. Added
+  `search_close` (fa/en) and reused the existing `search_action`/`search_clear`/`search_placeholder`.
+  New `HeaderScreenshotTest` (8 captures: gallery + expanded search × light/dark × fa/en) at
+  `app/build/screenshots/header-{gallery,search}-{light,dark}-{fa,en}.png`, all inspected.
+  `assembleDebug` green; `./gradlew test` 345/345. No screen wired yet (Tasks 7–8).
