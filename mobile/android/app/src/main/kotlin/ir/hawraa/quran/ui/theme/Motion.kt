@@ -67,6 +67,12 @@ object HawraaDuration {
     const val TOGGLE = 120
     const val CROSSFADE = 400
     const val SCREEN = 420
+
+    /** The scrubber's wave amplitude settles after a play/pause change. */
+    const val SCRUBBER = 380
+
+    /** One player tick: the playhead glides between second ticks instead of stepping. */
+    const val PLAYBACK_TICK = 1_000
 }
 
 /** Entrance stagger: index-derived, arithmetic — never hand-numbered (cap 320 ms). */

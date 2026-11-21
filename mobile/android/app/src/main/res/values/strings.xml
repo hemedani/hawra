@@ -110,6 +110,13 @@
     <string name="player_download_page">دانلود این صفحه</string>
     <string name="player_downloading">در حال دانلود…</string>
     <string name="player_reciters">تغییر قاری</string>
+    <string name="player_back_30">۳۰ ثانیه عقب</string>
+    <string name="player_forward_30">۳۰ ثانیه جلو</string>
+    <string name="player_connecting">در حال اتصال…</string>
+    <string name="player_connecting_long">هنوز در حال اتصال…</string>
+    <string name="player_failed">پخش ناموفق بود</string>
+    <string name="player_stop_waiting">توقف انتظار</string>
+    <string name="player_scrubber">نوار پیشرفت پخش</string>
     <!-- Presets -->
     <string name="preset_section">الگوی تلاوت</string>
     <string name="preset_plain">تلاوت ساده</string>

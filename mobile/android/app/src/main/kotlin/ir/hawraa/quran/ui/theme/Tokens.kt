@@ -150,6 +150,62 @@ data class WaveGeometry(
     val wakePhaseSpan: Float = 7f,
 )
 
+/** The player identity tile (DESIGN.md §10.5): hero tile shadow and inner inset. */
+@Immutable
+data class PlayerGeometry(
+    val heroShadow: Dp = 24.dp,
+    val heroPadding: Dp = 5.dp,
+)
+
+/**
+ * The wave scrubber (DESIGN.md §10.6). Every number is Pejvak's: the same track is
+ * drawn at `scale = 1f` in the player and [miniScale] in the dock, so the two can
+ * never drift apart.
+ */
+@Immutable
+data class ScrubberGeometry(
+    val waveWavelength: Dp = 64.dp,
+    val waveAmplitude: Dp = 3.dp,
+    val waveStroke: Dp = 3.dp,
+    val headDot: Dp = 5.5.dp,
+    val headHalo: Dp = 9.dp,
+    val headHaloAlpha: Float = 0.14f,
+    val miniScale: Float = 0.55f,
+    val miniHeight: Dp = 14.dp,
+    val barWidth: Dp = 1.8.dp,
+    val barPitch: Dp = 4.4.dp,
+    val barHeight: Dp = 9.dp,
+    val playedAlpha: Float = 0.92f,
+    val restingAlpha: Float = 0.17f,
+    val waitingAlpha: Float = 0.55f,
+    val waitingTaper: Dp = 24.dp,
+    val waitingVariation: Float = 0.25f,
+    val activeTaper: Dp = 12.dp,
+    val playedVariation: Float = 0.2f,
+    val wakeLength: Dp = 190.dp,
+    val wakeSpread: Dp = 10.5.dp,
+    val wakePhase: Float = 1.5f,
+    val wakeAlpha: Float = 0.62f,
+    val wakeAmplitudeScale: Float = 0.35f,
+    val wakeSecondScale: Float = 0.8f,
+    val wakeSecondPhaseScale: Float = 1.45f,
+    val markerDot: Dp = 3.dp,
+    val markerHitSlop: Dp = 14.dp,
+)
+
+/** The transport bubbles and status line (DESIGN.md §10.6). */
+@Immutable
+data class TransportGeometry(
+    val secondarySize: Dp = 48.dp,
+    val playSize: Dp = 64.dp,
+    val spinnerStroke: Dp = 2.dp,
+    val spinnerScale: Float = 0.34f,
+    val statusSpinnerSize: Dp = 14.dp,
+    val statusSpinnerStroke: Dp = 1.5.dp,
+    val statusSpacing: Dp = 8.dp,
+    val statusLongWaitMs: Long = 8_000L,
+)
+
 /** The glass sheet's entry/exit motion and drag handle. */
 @Immutable
 data class SheetGeometry(
@@ -183,6 +239,9 @@ data class HawraaGeometry(
     val header: HeaderGeometry = HeaderGeometry(),
     val glass: GlassGeometry = GlassGeometry(),
     val wave: WaveGeometry = WaveGeometry(),
+    val player: PlayerGeometry = PlayerGeometry(),
+    val scrubber: ScrubberGeometry = ScrubberGeometry(),
+    val transport: TransportGeometry = TransportGeometry(),
     val sheet: SheetGeometry = SheetGeometry(),
     val skeleton: SkeletonGeometry = SkeletonGeometry(),
     val maxContentWidth: Dp = 760.dp,

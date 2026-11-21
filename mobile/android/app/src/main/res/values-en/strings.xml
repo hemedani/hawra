@@ -106,6 +106,13 @@
     <string name="player_download_page">Download this page</string>
     <string name="player_downloading">Downloading…</string>
     <string name="player_reciters">Change reciter</string>
+    <string name="player_back_30">Back 30 seconds</string>
+    <string name="player_forward_30">Forward 30 seconds</string>
+    <string name="player_connecting">Connecting…</string>
+    <string name="player_connecting_long">Still connecting…</string>
+    <string name="player_failed">Playback failed</string>
+    <string name="player_stop_waiting">Stop waiting</string>
+    <string name="player_scrubber">Playback progress</string>
     <!-- Presets -->
     <string name="preset_section">Recitation preset</string>
     <string name="preset_plain">Plain recitation</string>
