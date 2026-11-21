@@ -7,8 +7,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Type scale from Pejvak DESING.md §4. Latin UI uses SansSerif; Persian UI uses
- * bundled Vazirmatn via `UserText`. The Quran mushaf face lives separately in `QuranFont.kt`.
+ * Type scale from Pejvak DESING.md §4. Latin UI uses SansSerif; Persian titles opt
+ * into the bundled Vazirmatn UI face. The Quran mushaf face lives separately in `QuranFont.kt`.
  */
 val HawraaTypography = Typography(
     displayLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 40.sp),

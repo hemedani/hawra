@@ -235,6 +235,7 @@
     <string name="search_placeholder">جست‌وجو…</string>
     <string name="search_clear">پاک کردن جست‌وجو</string>
     <string name="search_action">جست‌وجو</string>
+    <string name="search_close">بستن جست‌وجو</string>
     <string name="home_history_hint">نشست‌های مطالعه و روند پیاپی</string>
     <string name="home_settings_hint">پوسته، قلم، زبان و تلاوت</string>
     <string name="player_minimize">کوچک کردن پخش‌کننده</string>
