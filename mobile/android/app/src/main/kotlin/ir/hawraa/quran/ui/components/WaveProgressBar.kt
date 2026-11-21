@@ -14,7 +14,7 @@ import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalHawraaTokens
 
 /**
- * The read-only sibling of [WaveSlider]: the same track, no handle.
+ * The read-only sibling of the wave scrubber: the same track, no handle.
  *
  * Used wherever a value has to be *shown* rather than changed — how far into a track a
  * partial listen got, where a session's span sat inside its file. Same curve, same

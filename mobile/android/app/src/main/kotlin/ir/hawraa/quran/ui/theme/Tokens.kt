@@ -94,6 +94,8 @@ data class FrostGeometry(
      * player). Chrome panes — header, dock, mini-player — use [blur] instead.
      */
     val backdrop: Dp = 18.dp,
+    /** Maximum height of the frosted pane's inner top catchlight. */
+    val sheenCap: Dp = 28.dp,
     val noise: Float = 0.12f,
 )
 

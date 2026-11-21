@@ -52,8 +52,7 @@ fun AmbientCanvas(
     }
     // Dark has the contrast headroom for a rich, colourful field: white text on the
     // deep base still clears 4.5:1 behind the frost even at 0.38 (and where two cool
-    // blooms overlap). Light stays deeper so white text on the brighter field clears —
-    // both pinned by ContrastContractTest at these alphas.
+    // blooms overlap). Light stays deeper so white text on the brighter field clears.
     val baseBloomAlpha = if (tokens.isDark) 0.38f else 0.20f
     Canvas(modifier = modifier.fillMaxSize()) {
         drawRect(color = tokens.canvasBase)

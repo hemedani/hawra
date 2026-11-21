@@ -146,7 +146,10 @@ fun SkeletonRows(
     val tokens = LocalHawraaTokens.current
     val geo = LocalHawraaGeometry.current
     GlassSurface(modifier = modifier, rimLight = false) {
-        Column(verticalArrangement = Arrangement.spacedBy(geo.spacing.lg)) {
+        Column(
+            modifier = Modifier.padding(geo.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(geo.spacing.lg),
+        ) {
             repeat(count) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(

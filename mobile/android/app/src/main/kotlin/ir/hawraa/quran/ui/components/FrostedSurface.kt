@@ -61,8 +61,8 @@ fun FrostedSurface(
             elevation = softElevation,
             shape = shape,
             clip = false,
-            ambientColor = shadow.copy(alpha = shadow.alpha * 0.22f),
-            spotColor = shadow.copy(alpha = shadow.alpha * 0.28f),
+            ambientColor = shadow.copy(alpha = 0.22f),
+            spotColor = shadow.copy(alpha = 0.28f),
         )
     } else {
         Modifier
@@ -90,7 +90,7 @@ fun FrostedSurface(
                 .background(tokens.frostSheen)
                 .background(grainBrush)
                 .drawBehind {
-                    val sheenHeight = (size.height * 0.30f).coerceAtMost(geo.spacing.xxl.toPx())
+                    val sheenHeight = (size.height * 0.30f).coerceAtMost(geo.frost.sheenCap.toPx())
                     if (sheenHeight > 0f) {
                         drawRect(
                             brush = Brush.verticalGradient(
