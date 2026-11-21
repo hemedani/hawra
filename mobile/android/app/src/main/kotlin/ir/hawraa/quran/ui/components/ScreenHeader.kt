@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,13 +37,16 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import ir.hawraa.quran.R
 import ir.hawraa.quran.core.HapticIntent
+import ir.hawraa.quran.core.isRtlText
 import ir.hawraa.quran.core.rememberHaptics
 import ir.hawraa.quran.ui.theme.HawraaDuration
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
@@ -88,6 +92,10 @@ fun GlassHeader(
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val layoutDirection = LocalLayoutDirection.current
+    val rtl = userTitle && isRtlText(title)
+    val overlineRtl = userTitle && overline != null && isRtlText(overline)
+    val subtitleRtl = userTitle && subtitle != null && isRtlText(subtitle)
 
     fun openSearch() {
         haptics.trigger(HapticIntent.Select)
@@ -157,33 +165,48 @@ fun GlassHeader(
                         }
                         Column(Modifier.weight(1f)) {
                             if (overline != null) {
+                                CompositionLocalProvider(
+                                    LocalLayoutDirection provides
+                                        if (overlineRtl) LayoutDirection.Rtl else layoutDirection,
+                                ) {
+                                    Text(
+                                        text = overline.uppercase(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = tokens.textSecondary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                            CompositionLocalProvider(
+                                LocalLayoutDirection provides
+                                    if (rtl) LayoutDirection.Rtl else layoutDirection,
+                            ) {
                                 Text(
-                                    text = overline.uppercase(),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = tokens.textSecondary,
+                                    text = title,
+                                    style = if (rtl) {
+                                        MaterialTheme.typography.titleLarge.copy(fontFamily = Vazirmatn)
+                                    } else {
+                                        MaterialTheme.typography.titleLarge
+                                    },
+                                    color = tokens.text,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
-                            Text(
-                                text = title,
-                                style = if (userTitle) {
-                                    MaterialTheme.typography.titleLarge.copy(fontFamily = Vazirmatn)
-                                } else {
-                                    MaterialTheme.typography.titleLarge
-                                },
-                                color = tokens.text,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
                             if (subtitle != null) {
-                                Text(
-                                    text = subtitle,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = tokens.textSecondary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
+                                CompositionLocalProvider(
+                                    LocalLayoutDirection provides
+                                        if (subtitleRtl) LayoutDirection.Rtl else layoutDirection,
+                                ) {
+                                    Text(
+                                        text = subtitle,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = tokens.textSecondary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
                             }
                         }
                         if (actions != null || search != null) {
