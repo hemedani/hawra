@@ -1,0 +1,54 @@
+{
+  "name": "hawraa-backend",
+  "version": "0.1.0",
+  "exports": "./mod.ts",
+  "tasks": {
+    "start": "deno run --allow-all --watch --watch-exclude=declarations --watch-exclude=uploads --no-clear-screen mod.ts",
+    "dev": "deno run --allow-all --watch mod.ts",
+    "check": "deno check mod.ts",
+    "lint": "deno lint",
+    "fmt": "deno fmt",
+    "seed": "deno run --allow-all seed.ts",
+    "audio-mirror": "deno run --allow-all tools/mirrorAudio.ts",
+    "test": "deno test --allow-all content/ src/ utils/"
+  },
+  "fmt": {
+    "include": [
+      "src/",
+      "models/",
+      "utils/",
+      "content/",
+      "tools/",
+      "mod.ts",
+      "seed.ts"
+    ],
+    "semiColons": true,
+    "singleQuote": false,
+    "indentWidth": 2
+  },
+  "lint": {
+    "include": [
+      "src/",
+      "models/",
+      "utils/",
+      "content/",
+      "tools/",
+      "mod.ts",
+      "seed.ts"
+    ],
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  },
+  "imports": {
+    "lesan": "jsr:@hemedani/lesan@^0.2.3",
+    "djwt": "https://deno.land/x/djwt@v2.8/mod.ts",
+    "@lib": "./utils/mod.ts",
+    "@model": "./models/mod.ts"
+  },
+  "compilerOptions": {
+    "strict": true
+  }
+}
