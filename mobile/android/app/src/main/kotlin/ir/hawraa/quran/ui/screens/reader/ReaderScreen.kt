@@ -1,0 +1,743 @@
+package ir.hawraa.quran.ui.screens.reader
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.hawraa.quran.R
+import ir.hawraa.quran.domain.quran.BasmalaItem
+import ir.hawraa.quran.domain.quran.QuranVerse
+import ir.hawraa.quran.domain.quran.ReaderItem
+import ir.hawraa.quran.domain.quran.ReaderItems
+import ir.hawraa.quran.domain.quran.SelectionPlan
+import ir.hawraa.quran.domain.quran.SurahHeaderItem
+import ir.hawraa.quran.domain.quran.VerseElement
+import ir.hawraa.quran.domain.quran.VerseItem
+import ir.hawraa.quran.domain.quran.VerseLayer
+import ir.hawraa.quran.domain.quran.VerseSelection
+import ir.hawraa.quran.domain.quran.playbackPlan
+import ir.hawraa.quran.domain.quran.toPersianDigits
+import ir.hawraa.quran.domain.settings.ReadingSettings
+import ir.hawraa.quran.ui.appLocale
+import ir.hawraa.quran.ui.components.BubbleButton
+import ir.hawraa.quran.ui.components.DiamondBullet
+import ir.hawraa.quran.ui.components.GlassElevation
+import ir.hawraa.quran.ui.components.GlassSurface
+import ir.hawraa.quran.ui.components.SelectionAction
+import ir.hawraa.quran.ui.components.SelectionActionBox
+import ir.hawraa.quran.ui.components.TransportIcons
+import ir.hawraa.quran.ui.components.playAyahAction
+import ir.hawraa.quran.ui.components.playSelectionAction
+import ir.hawraa.quran.ui.quran.AyahOrnament
+import ir.hawraa.quran.ui.quran.MushafBanner
+import ir.hawraa.quran.ui.quran.QuranText
+import ir.hawraa.quran.ui.quran.displayName
+import ir.hawraa.quran.ui.quran.quranLineHeight
+import ir.hawraa.quran.ui.theme.LocalGlassColors
+import ir.hawraa.quran.ui.theme.LocalHawraaDarkTheme
+import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
+import ir.hawraa.quran.ui.theme.LocalQuranColors
+import ir.hawraa.quran.ui.theme.withReadingSettings
+import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.drop
+
+/**
+ * The reader: **one continuous scroll** through the mushaf, with the signature verse + translation
+ * layout, in both themes and both locales (`docs/DESIGN.md` §11.1).
+ *
+ * There is no pager and no page counter. Pages still exist underneath — sessions, recitation queues
+ * and the resume point are page-based — but the reader never shows a page number, and scrolling
+ * runs straight through page boundaries (see [ReaderItems]).
+ *
+ * There is also **no bottom bar**. Actions that belong to a selection appear in a floating box over
+ * that selection ([SelectionActionBox]); playback and navigation live in the dock, which the app
+ * shell draws (`HawraaShell`). This screen only owes the dock its `dockInset` of bottom padding.
+ *
+ * Typography goes through [QuranText] only, so letters and diacritics stay independently colorable.
+ * The verse and each of its translations are **separately selectable** ([VerseSelection]); session
+ * tracking hooks into real scroll events, never a timer.
+ */
+@Composable
+fun ReaderScreen(
+    onSettings: () -> Unit,
+    viewModel: ReaderViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // The full-screen player is opened from the dock's mini-player (which lives in the app shell),
+    // so the reader observes the request through the ViewModel rather than owning the trigger.
+    // Opening it also hides the dock (via the store), so the player covers the whole screen.
+    val playerOpen by viewModel.playerOpen.collectAsStateWithLifecycle()
+
+    // Leaving the app mid-read ends the session; coming back does not silently resume it
+    // (the first scroll after returning opens a fresh one).
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) viewModel.onReaderStopped()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Navigating away keeps the activity started, so ON_STOP never fires — but the mushaf is no
+    // longer on screen and must not keep accruing reading time.
+    DisposableEffect(Unit) {
+        onDispose { viewModel.onScreenLeft() }
+    }
+
+    ReaderContent(
+        state = state,
+        onSettings = onSettings,
+        onPageVisible = viewModel::onPageVisible,
+        onReadingActivity = viewModel::onReadingActivity,
+        onPlayPause = viewModel::onPlayPause,
+        onPreviousAyah = viewModel::onPreviousAyah,
+        onNextAyah = viewModel::onNextAyah,
+        onCycleSpeed = viewModel::onCycleSpeed,
+        onToggleRepeat = viewModel::onToggleRepeat,
+        onPlayPreset = viewModel::onPlayPreset,
+        onPlaySelection = viewModel::onPlaySelection,
+        onExitPreset = viewModel::onExitPreset,
+        playerOpen = playerOpen,
+        onClosePlayer = viewModel::closePlayer,
+        onSelectReciter = viewModel::selectReciter,
+        onDownloadPage = viewModel::downloadCurrentPage,
+        positionProvider = { viewModel.currentPositionMs() to viewModel.currentDurationMs() },
+    )
+}
+
+/**
+ * Stateless reader body: state in, events out. Kept separate from the ViewModel wiring so the
+ * mushaf can be rendered in tests (and previewed) directly.
+ */
+@Composable
+internal fun ReaderContent(
+    state: ReaderUiState,
+    onSettings: () -> Unit,
+    onPageVisible: (Int) -> Unit = {},
+    onReadingActivity: (Int) -> Unit = {},
+    onPlayPause: (Pair<Int, Int>?, Int) -> Unit = { _, _ -> },
+    onPreviousAyah: () -> Unit = {},
+    onNextAyah: () -> Unit = {},
+    onCycleSpeed: () -> Unit = {},
+    onToggleRepeat: () -> Unit = {},
+    onPlayPreset: (String, Pair<Int, Int>?) -> Unit = { _, _ -> },
+    onPlaySelection: (SelectionPlan) -> Unit = {},
+    onExitPreset: () -> Unit = {},
+    playerOpen: Boolean = false,
+    onClosePlayer: () -> Unit = {},
+    onSelectReciter: (String) -> Unit = {},
+    onDownloadPage: () -> Unit = {},
+    positionProvider: () -> Pair<Long, Long> = { 0L to 0L },
+) {
+    val themeQuran = LocalQuranColors.current
+    val dark = LocalHawraaDarkTheme.current
+    val geometry = LocalHawraaGeometry.current
+    val glass = LocalGlassColors.current
+    val quran = remember(themeQuran, state.settings, dark) {
+        themeQuran.withReadingSettings(state.settings, dark)
+    }
+
+    CompositionLocalProvider(LocalQuranColors provides quran) {
+        val items = remember(state.pages, state.surahs) {
+            ReaderItems.build(state.pages, state.surahs)
+        }
+        val listState = rememberLazyListState()
+
+        // What the reader has highlighted. One entry per tapped element, so the verse and each
+        // translation keep independent state — the foundation for showing three translations and a
+        // commentary at once, each highlighted on its own.
+        var selection by remember { mutableStateOf(VerseSelection()) }
+
+        // Where the focused verse sits on screen, so the action box can follow it. Null when
+        // nothing is selected or the verse has scrolled out of the viewport.
+        var focusBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+
+        val visiblePageNumber by remember(items) {
+            derivedStateOf {
+                items.getOrNull(listState.firstVisibleItemIndex)?.page ?: 0
+            }
+        }
+        val visiblePage = state.pages.firstOrNull { it.page == visiblePageNumber }
+            ?: state.pages.firstOrNull()
+        val currentSurah = state.surahOf(visiblePage)
+
+        // Restore "continue reading" once: scroll to the first item of the stored page.
+        var restored by remember(items) { mutableStateOf(false) }
+        LaunchedEffect(items, state.startPageIndex) {
+            if (restored || items.isEmpty()) return@LaunchedEffect
+            val page = state.pages.getOrNull(state.startPageIndex)?.page
+            val index = page?.let { ReaderItems.indexOfPage(items, it) } ?: -1
+            if (index > 0) listState.scrollToItem(index)
+            restored = true
+        }
+
+        // A new page at the top of the screen is the session's event source: it opens a session,
+        // and scrolling past closes the previous one as completed.
+        LaunchedEffect(items) {
+            if (items.isEmpty()) return@LaunchedEffect
+            snapshotFlow { items.getOrNull(listState.firstVisibleItemIndex)?.page }
+                .collect { page -> if (page != null) onPageVisible(page) }
+        }
+
+        // Any scroll is the reader's own activity signal — the only thing that advances the
+        // reading clock while the mushaf is on screen.
+        LaunchedEffect(items) {
+            if (items.isEmpty()) return@LaunchedEffect
+            snapshotFlow {
+                listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+            }
+                .drop(1)
+                .collect { (index, _) ->
+                    items.getOrNull(index)?.let { onReadingActivity(it.page) }
+                }
+        }
+
+        // Follow-along: bring the reciting ayah into view, but only when it is actually off screen,
+        // so a reader who is scrolling is not yanked back on every ayah.
+        LaunchedEffect(state.recitation.playingVerse) {
+            val playing = state.recitation.playingVerse ?: return@LaunchedEffect
+            val index = ReaderItems.indexOfVerse(items, playing.first, playing.second)
+            if (index < 0) return@LaunchedEffect
+            val visible = listState.layoutInfo.visibleItemsInfo.any { it.index == index }
+            if (!visible) listState.animateScrollToItem(index)
+        }
+
+        // A selection that scrolls out of view must take its action box with it — a floating box
+        // anchored to nothing is worse than no box.
+        LaunchedEffect(listState, selection) {
+            snapshotFlow { listState.firstVisibleItemIndex }
+                .collect {
+                    val active = selection.active ?: return@collect
+                    val index = ReaderItems.indexOfVerse(items, active.surah, active.ayah)
+                    if (index >= 0 && index !in visibleRange(listState)) focusBounds = null
+                }
+        }
+
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val density = LocalDensity.current
+            val containerHeightPx = constraints.maxHeight.toFloat()
+            val dockInsetPx = with(density) { geometry.dock.dockInset.toPx() }
+            val topSafePx = with(density) { 72.dp.toPx() }
+
+            // The reading pane floats: it keeps a margin from the screen edge so the ambient
+            // canvas is visible around it, which is what makes the pane read as glass.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = geometry.spacing.md,
+                        end = geometry.spacing.md,
+                        top = geometry.spacing.xs,
+                    ),
+            ) {
+                GlassSurface(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = RoundedCornerShape(geometry.radius.xl),
+                    strong = true,
+                    elevation = GlassElevation.Panel,
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        when {
+                            state.isLoading -> ReaderMessage(stringResource(R.string.reader_loading))
+                            state.failed || items.isEmpty() ->
+                                ReaderMessage(stringResource(R.string.reader_error))
+
+                            else -> LazyColumn(
+                                state = listState,
+                                modifier = Modifier.fillMaxSize().testTag("mushaf-scroll"),
+                                contentPadding = PaddingValues(
+                                    start = 14.dp,
+                                    end = 14.dp,
+                                    // The floating top bar is 44 dp plus its own padding; content
+                                    // starts below it so a surah plate never scrolls underneath.
+                                    top = 64.dp,
+                                    // Room for the dock at its tallest, so the last verse is
+                                    // never hidden behind it.
+                                    bottom = geometry.dock.dockInset,
+                                ),
+                            ) {
+                                items(items = items, key = { it.key }) { item ->
+                                    when (item) {
+                                        is SurahHeaderItem -> MushafBanner(
+                                            surahNumber = item.surah.number,
+                                            surahName = item.surah.displayName(),
+                                            juz = item.juz,
+                                            modifier = Modifier.padding(top = 8.dp),
+                                        )
+
+                                        is BasmalaItem -> QuranText(
+                                            text = state.basmalaUthmani,
+                                            letterColor = quran.letter,
+                                            diacriticColor = quran.diacritic,
+                                            fontSize = state.settings.fontSizeSp.sp,
+                                            lineHeight = quranLineHeight(state.settings.fontSizeSp),
+                                            modifier = Modifier.padding(top = 12.dp, bottom = 2.dp),
+                                        )
+
+                                        is VerseItem -> VerseBlock(
+                                            verse = item.verse,
+                                            settings = state.settings,
+                                            selection = selection,
+                                            playing = state.recitation.playingVerse ==
+                                                (item.verse.surah to item.verse.ayah),
+                                            onToggle = { element ->
+                                                selection = selection.toggle(element)
+                                            },
+                                            onFocusBounds = { rect -> focusBounds = rect },
+                                        )
+                                    }
+                                }
+                                item(key = "end") { Spacer(Modifier.height(8.dp)) }
+                            }
+                        }
+
+                        // The floating top bar, inside the pane so it scrolls over the text.
+                        ReaderTopBar(
+                            surahName = currentSurah?.displayName().orEmpty(),
+                            juz = visiblePage?.juz,
+                            onSettings = onSettings,
+                            onDownload = onDownloadPage,
+                            downloadVisible = state.recitation.available,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .statusBarsPadding()
+                                .padding(top = geometry.spacing.sm),
+                        )
+                    }
+                }
+            }
+
+            // ---- the floating action box, anchored to the selection ----
+            val active = selection.active
+            AnimatedVisibility(
+                visible = active != null,
+                enter = fadeIn() + scaleIn(initialScale = 0.94f),
+                exit = fadeOut() + scaleOut(targetScale = 0.94f),
+                modifier = Modifier.align(Alignment.TopCenter),
+            ) {
+                if (active != null) {
+                    var boxHeight by remember { mutableStateOf(0) }
+                    val gapPx = with(density) { geometry.spacing.sm.toPx() }
+                    val bounds = focusBounds
+                    val y = when {
+                        bounds == null ->
+                            containerHeightPx - dockInsetPx - boxHeight - gapPx
+
+                        // Above the verse when there is room, below it otherwise, and never
+                        // over the dock or under the top bar.
+                        bounds.top - boxHeight - gapPx >= topSafePx ->
+                            bounds.top - boxHeight - gapPx
+
+                        bounds.bottom + gapPx + boxHeight <= containerHeightPx - dockInsetPx ->
+                            bounds.bottom + gapPx
+
+                        else -> containerHeightPx - dockInsetPx - boxHeight - gapPx
+                    }
+
+                    // Only the actions that can actually do something. With no recitation
+                    // catalogue there is no play button, rather than a dead one. The play action
+                    // says what it will do: a plain single-verse pick plays from that ayah to the
+                    // end of the surah (D31) and is labelled "Play ayah N"; a selection that
+                    // narrows the scope — two or more verses, or any translation/tafsir — becomes
+                    // "Play selection" and plays only what was picked (D32). Download is the
+                    // explicit half of "keep this offline": the same page scope the player and the
+                    // silent auto-cache use, so the three can never disagree.
+                    val plan = selection.playbackPlan()
+                    val actions = buildList {
+                        if (state.recitation.available) {
+                            if (plan != null && plan.isSelectionRun) {
+                                add(playSelectionAction { onPlaySelection(plan) })
+                            } else {
+                                add(
+                                    playAyahAction(active.ayah) {
+                                        onPlayPause(
+                                            active.surah to active.ayah,
+                                            visiblePage?.page ?: visiblePageNumber,
+                                        )
+                                    },
+                                )
+                            }
+                            add(
+                                SelectionAction(
+                                    key = "download",
+                                    label = stringResource(R.string.player_download_page),
+                                    icon = TransportIcons.Download,
+                                    onClick = onDownloadPage,
+                                ),
+                            )
+                        }
+                    }
+
+                    SelectionActionBox(
+                        actions = actions,
+                        modifier = Modifier
+                            .offset { IntOffset(0, y.roundToInt().coerceAtLeast(0)) }
+                            .onGloballyPositioned { boxHeight = it.size.height },
+                    )
+                }
+            }
+        }
+
+        if (playerOpen) {
+            // Position is read on a while-visible ticker in this leaf, so the progress bar advances
+            // without pushing a per-second recomposition through the app-wide store (DESIGN §15).
+            var position by remember { mutableStateOf(positionProvider()) }
+            LaunchedEffect(Unit) {
+                while (true) {
+                    position = positionProvider()
+                    delay(500)
+                }
+            }
+
+            // The verse to feature: the one sounding, or — for a whole-juz track, which has no
+            // verse position — the first verse of the page on screen.
+            val featured = state.currentVerse()
+                ?: visiblePage?.let { page -> page.verses.firstOrNull()?.let { VerseItem(page.page, it) } }
+            val shownVerse = featured?.verse
+            val surah = shownVerse?.let { state.surahs[it.surah] }
+
+            NowPlayingScreen(
+                surahName = surah?.displayName().orEmpty(),
+                ayah = shownVerse?.ayah,
+                juz = state.recitation.playingJuz,
+                verseArabic = shownVerse?.textUthmani.orEmpty(),
+                translationText = shownVerse?.translations?.firstOrNull()?.text,
+                featuredStep = state.recitation.activeStep,
+                reciterName = state.recitation.reciterName(
+                    persian = LocalConfiguration.current.appLocale().language == "fa",
+                ),
+                presetName = state.recitation.activePresetName,
+                isPlaying = state.recitation.isPlaying,
+                buffering = state.recitation.buffering,
+                failed = state.recitation.failed,
+                speed = state.recitation.speed,
+                repeatAyah = state.recitation.repeatAyah,
+                reciters = state.reciters,
+                selectedReciterKey = state.selectedReciterKey,
+                fontSizeSp = state.settings.fontSizeSp,
+                persian = LocalConfiguration.current.appLocale().language == "fa",
+                positionMs = position.first,
+                durationMs = position.second,
+                downloading = false,
+                presets = state.recitation.presets,
+                activePresetName = state.recitation.activePresetName,
+                onClose = onClosePlayer,
+                onToggle = { onPlayPause(null, visiblePage?.page ?: visiblePageNumber) },
+                onPrevious = onPreviousAyah,
+                onNext = onNextAyah,
+                onCycleSpeed = onCycleSpeed,
+                onToggleRepeat = onToggleRepeat,
+                onSelectReciter = onSelectReciter,
+                onDownload = onDownloadPage,
+                onPlayPreset = { clientId -> onPlayPreset(clientId, null) },
+                onExitPreset = onExitPreset,
+            )
+        }
+    }
+}
+
+/** Indices currently laid out, so "is the selected verse still on screen" is a cheap lookup. */
+private fun visibleRange(state: androidx.compose.foundation.lazy.LazyListState): IntRange {
+    val info = state.layoutInfo.visibleItemsInfo
+    if (info.isEmpty()) return IntRange.EMPTY
+    return info.first().index..info.last().index
+}
+
+@Composable
+private fun ReaderTopBar(
+    surahName: String,
+    juz: Int?,
+    onSettings: () -> Unit,
+    onDownload: () -> Unit = {},
+    downloadVisible: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    val glass = LocalGlassColors.current
+    val geometry = LocalHawraaGeometry.current
+    val quran = LocalQuranColors.current
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = geometry.spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GlassSurface(
+            modifier = Modifier.weight(1f).height(44.dp),
+            shape = RoundedCornerShape(geometry.radius.pill),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = surahName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = glass.text,
+                )
+                if (juz != null) {
+                    Spacer(Modifier.width(10.dp))
+                    DiamondBullet(tint = quran.mark)
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = stringResource(R.string.banner_juz, juz.toPersianDigits()),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = glass.textSecondary,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.width(geometry.spacing.xs))
+        if (downloadVisible) {
+            BubbleButton(
+                icon = TransportIcons.Download,
+                contentDescription = stringResource(R.string.player_download_page),
+                onClick = onDownload,
+                size = geometry.controls.lg,
+                iconSize = 19.dp,
+                modifier = Modifier.testTag("topbar-download"),
+            )
+            Spacer(Modifier.width(geometry.spacing.xs))
+        }
+        BubbleButton(
+            icon = Icons.Filled.Settings,
+            contentDescription = stringResource(R.string.reader_settings),
+            onClick = onSettings,
+            size = geometry.controls.lg,
+            iconSize = 19.dp,
+        )
+    }
+}
+
+/**
+ * One verse: the Arabic pane and one pane per translation, each with its **own** tap state.
+ *
+ * Tapping the Arabic highlights only the Arabic; tapping a translation highlights only that
+ * translation. That is the whole point of the split: the block is a stack of independent panes,
+ * not one unit with one colour, so a future layout can show three translations and a commentary
+ * side by side and let the reader point at any one of them.
+ */
+@Composable
+private fun VerseBlock(
+    verse: QuranVerse,
+    settings: ReadingSettings,
+    selection: VerseSelection,
+    playing: Boolean,
+    onToggle: (VerseElement) -> Unit,
+    onFocusBounds: (androidx.compose.ui.geometry.Rect?) -> Unit,
+) {
+    val quran = LocalQuranColors.current
+    val verseSelected = selection.isSelected(verse.surah, verse.ayah, VerseLayer.VERSE)
+    val focused = selection.isFocused(verse.surah, verse.ayah)
+    // Tapping the Arabic peeks at its translations even with translations switched off — a
+    // lookup, not a mode change: nothing is selected and the setting is untouched.
+    val showTranslations = settings.showTranslation || focused
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            // Only the focused verse reports its bounds, so there is one callback per selection
+            // rather than one per pane.
+            .then(
+                if (focused) {
+                    Modifier.onGloballyPositioned { onFocusBounds(it.boundsInRoot()) }
+                } else {
+                    Modifier
+                },
+            ),
+    ) {
+        Pane(
+            selected = verseSelected,
+            playing = playing,
+            tag = "verse-${verse.key}",
+            onClick = { onToggle(VerseElement.verse(verse.surah, verse.ayah)) },
+        ) {
+            AyahOrnament(
+                number = verse.ayah,
+                highlight = when {
+                    verseSelected -> quran.mark
+                    playing -> quran.accent
+                    else -> null
+                },
+            )
+            Spacer(Modifier.width(6.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                QuranText(
+                    text = verse.textUthmani,
+                    letterColor = quran.letter,
+                    diacriticColor = quran.diacritic,
+                    fontSize = settings.fontSizeSp.sp,
+                    lineHeight = quranLineHeight(settings.fontSizeSp),
+                )
+            }
+        }
+
+        if (showTranslations) {
+            verse.translations.forEach { translation ->
+                Pane(
+                    selected = selection.isSelected(
+                        verse.surah,
+                        verse.ayah,
+                        VerseLayer.TRANSLATION,
+                        translation.key,
+                    ),
+                    playing = false,
+                    tag = "translation-${verse.key}-${translation.key}",
+                    // Indented past the rosette: the translation belongs to the verse, not to the
+                    // ornament beside it.
+                    modifier = Modifier.padding(start = 34.dp, end = 4.dp, top = 2.dp),
+                    onClick = {
+                        onToggle(
+                            VerseElement.translation(verse.surah, verse.ayah, translation.key),
+                        )
+                    },
+                ) {
+                    Text(
+                        text = translation.text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = quran.translation,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp,
+                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A tappable pane: a wash when selected, a bar on the leading edge, and an accent wash when it is
+ * the ayah being recited. Selection outranks playback, so a tapped verse keeps its mark while the
+ * recitation moves past it.
+ */
+@Composable
+private fun Pane(
+    selected: Boolean,
+    playing: Boolean,
+    tag: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val quran = LocalQuranColors.current
+    val geometry = LocalHawraaGeometry.current
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val wash = when {
+        selected -> quran.selection
+        playing -> quran.playing
+        else -> Color.Transparent
+    }
+    val edge = if (selected) quran.selectionEdge else quran.playingEdge
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(geometry.radius.lg))
+            .background(wash)
+            .clickable(onClick = onClick)
+            .testTag(tag)
+            .drawBehind {
+                if (!selected && !playing) return@drawBehind
+                val bar = 3.dp.toPx()
+                // Leading edge: right in RTL, left in LTR.
+                val x = if (rtl) size.width - bar else 0f
+                drawRoundRect(
+                    color = edge,
+                    topLeft = Offset(x, 0f),
+                    size = Size(bar, size.height),
+                    cornerRadius = CornerRadius(bar),
+                )
+            }
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.Top,
+        content = content,
+    )
+}
+
+@Composable
+private fun ReaderMessage(text: String) {
+    val glass = LocalGlassColors.current
+    Box(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = glass.textSecondary,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
