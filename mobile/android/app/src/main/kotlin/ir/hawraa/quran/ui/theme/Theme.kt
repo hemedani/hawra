@@ -35,6 +35,7 @@ data class HawraaTokens(
     val onAccent: Color,
     val accentTeal: Color,
     val danger: Color,
+    val scrim: Color,
     val isDark: Boolean,
 )
 
@@ -58,6 +59,7 @@ private fun lightTokens() = HawraaTokens(
     onAccent = OnAccent,
     accentTeal = AccentTealLight,
     danger = DangerLight,
+    scrim = Scrim,
     isDark = false,
 )
 
@@ -79,6 +81,7 @@ private fun darkTokens() = HawraaTokens(
     onAccent = OnAccent,
     accentTeal = AccentTealDark,
     danger = DangerDark,
+    scrim = Scrim,
     isDark = true,
 )
 

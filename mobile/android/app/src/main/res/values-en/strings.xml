@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <resources>
     <string name="app_name">Hawraa</string>
+    <string name="action_close">Close</string>
 
     <string name="home_title">Hawraa</string>
     <string name="home_subtitle">The Holy Quran</string>

@@ -46,7 +46,15 @@ data class Spacing(
 data class Tiles(val sm: Dp = 32.dp, val md: Dp = 40.dp, val lg: Dp = 48.dp, val xl: Dp = 56.dp, val hero: Dp = 76.dp)
 
 @Immutable
-data class Controls(val sm: Dp = 36.dp, val md: Dp = 40.dp, val lg: Dp = 44.dp, val xl: Dp = 52.dp, val play: Dp = 64.dp)
+data class Controls(
+    val sm: Dp = 36.dp,
+    val md: Dp = 40.dp,
+    val lg: Dp = 44.dp,
+    val xl: Dp = 52.dp,
+    val play: Dp = 64.dp,
+    val spinner: Dp = 20.dp,
+    val spinnerStroke: Dp = 2.dp,
+)
 
 @Immutable
 data class Bars(val thin: Dp = 4.dp, val thick: Dp = 6.dp, val seekerTrack: Dp = 2.dp, val seekerThumb: Dp = 12.dp)
@@ -97,6 +105,69 @@ data class HeaderGeometry(
     val contentPadding: Dp = 20.dp,
 )
 
+/** Glass pane anatomy (DESING.md §6): the top rim and contour hairline. */
+@Immutable
+data class GlassGeometry(
+    val rimHeight: Dp = 3.dp,
+    val borderWidth: Dp = 1.dp,
+    val hairline: Dp = 1.dp,
+)
+
+/** The wave language (DESING.md §8). Shared by the dock seam, sheets and progress. */
+@Immutable
+data class WaveGeometry(
+    val hairlineHeight: Dp = 6.dp,
+    val hairlineAmplitude: Dp = 1.2.dp,
+    val hairlineWavelength: Dp = 48.dp,
+    val hairlineTaper: Dp = 12.dp,
+    val hairlineStroke: Dp = 1.dp,
+    val progressHeight: Dp = 16.dp,
+    val progressWavelength: Dp = 40.dp,
+    val progressAmplitude: Dp = 1.9.dp,
+    val progressRestingAmplitudeScale: Float = 0.45f,
+    val progressRestingWavelengthScale: Float = 1.7f,
+    val progressRestingVariation: Float = 0.35f,
+    val progressRestingTaper: Dp = 8.dp,
+    val progressRestingStroke: Dp = 1.5.dp,
+    val progressActiveVariation: Float = 0.2f,
+    val progressActiveTaper: Dp = 5.dp,
+    val progressActiveStroke: Dp = 2.dp,
+    val progressHeadGlowRadius: Dp = 5.dp,
+    val progressHeadRadius: Dp = 2.6.dp,
+    val wakeLength: Dp = 54.dp,
+    val wakeHeight: Dp = 10.dp,
+    val wakeSpread: Dp = 2.2.dp,
+    val wakeAmplitude: Dp = 1.6.dp,
+    val wakeWavelength: Dp = 30.dp,
+    val wakeDashLong: Dp = 9.dp,
+    val wakeDashShort: Dp = 0.6.dp,
+    val wakeGapTight: Dp = 2.6.dp,
+    val wakeGapWide: Dp = 6.5.dp,
+    val wakeThin: Dp = 1.dp,
+    val wakeThick: Dp = 1.5.dp,
+    val wakePhaseSpan: Float = 7f,
+)
+
+/** The glass sheet's entry/exit motion and drag handle. */
+@Immutable
+data class SheetGeometry(
+    val enterRise: Dp = 12.dp,
+    val enterSway: Dp = 7.dp,
+    val enterScale: Float = 0.018f,
+    val handleWidth: Dp = 36.dp,
+    val handleHeight: Dp = 4.dp,
+    val crestTravel: Float = 5.2f,
+)
+
+/** Skeleton loading rows. */
+@Immutable
+data class SkeletonGeometry(
+    val lineHeight: Dp = 12.dp,
+    val lineHeightSmall: Dp = 10.dp,
+    val lineWidth: Float = 0.6f,
+    val lineWidthSmall: Float = 0.4f,
+)
+
 @Immutable
 data class HawraaGeometry(
     val radius: Radius = Radius(),
@@ -108,6 +179,10 @@ data class HawraaGeometry(
     val dock: DockGeometry = DockGeometry(),
     val frost: FrostGeometry = FrostGeometry(),
     val header: HeaderGeometry = HeaderGeometry(),
+    val glass: GlassGeometry = GlassGeometry(),
+    val wave: WaveGeometry = WaveGeometry(),
+    val sheet: SheetGeometry = SheetGeometry(),
+    val skeleton: SkeletonGeometry = SkeletonGeometry(),
     val maxContentWidth: Dp = 760.dp,
 ) {
     val touchTarget: Dp get() = dock.touch

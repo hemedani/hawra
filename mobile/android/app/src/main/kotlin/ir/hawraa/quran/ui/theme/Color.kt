@@ -66,6 +66,9 @@ val ShadowDark = Color(0x8C000000)
 val TrackGlassLight = Color(0x2EFFFFFF)
 val TrackGlassDark = Color(0x33F0F5F6)
 
+// --- Modal scrim behind a glass sheet (DESING.md §9.1) ---
+val Scrim = Color(0x59000000)                 // black 35%
+
 val MarkLight = Color(0xFFA98436)
 val MarkDark = Color(0xFFD9BB78)
 val MarkSoftLight = Color(0x24A98436)
