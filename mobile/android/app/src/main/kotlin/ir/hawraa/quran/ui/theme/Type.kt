@@ -22,3 +22,15 @@ val HawraaTypography = Typography(
     labelLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
     labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 15.sp, letterSpacing = 1.3.sp),
 )
+
+/**
+ * The design token `caption` (12 / 16, 400) from DESIGN.md §5.2 — metadata and the
+ * scrubber's clocks. Material has no caption slot, so it rides on [Typography.bodySmall].
+ */
+val Typography.caption: TextStyle
+    get() = bodySmall.copy(
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        fontWeight = FontWeight.Normal,
+        letterSpacing = 0.sp,
+    )

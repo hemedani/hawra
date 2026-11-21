@@ -14,12 +14,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.ui.components.AmbientCanvas
@@ -156,6 +159,21 @@ class PlayerPartsScreenshotTest {
         }
     }
 
+    private fun transportRtl(theme: ThemeMode) {
+        render(theme) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                SectionTitle("Transport · RTL (fa)")
+                TransportControls(
+                    isPlaying = true,
+                    waiting = false,
+                    onToggle = {},
+                    onNext = {},
+                    onPrevious = {},
+                )
+            }
+        }
+    }
+
     private fun identity(theme: ThemeMode) {
         render(theme) {
             SectionTitle("Identity tile")
@@ -163,9 +181,9 @@ class PlayerPartsScreenshotTest {
                 horizontalArrangement = Arrangement.spacedBy(20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                HeroArtwork(size = 112.dp, seedKey = "surah:2", label = "۲")
-                PaletteTile(seedKey = "surah:2", label = "۲", size = 48.dp)
-                PaletteTile(seedKey = "juz:30", label = "۳۰", size = 48.dp)
+                HeroArtwork(size = 112.dp, seedKey = "surah:2", number = "۲")
+                PaletteTile(seedKey = "surah:2", number = "۲", size = 48.dp)
+                PaletteTile(seedKey = "juz:30", number = "۳۰", size = 48.dp)
             }
         }
     }
@@ -240,6 +258,18 @@ class PlayerPartsScreenshotTest {
     fun transport_skip_dark() {
         transport(ThemeMode.DARK, isPlaying = true, waiting = false, skip = true)
         capture("player-parts-transport-skip-dark.png")
+    }
+
+    @Test
+    fun transport_rtl_light() {
+        transportRtl(ThemeMode.LIGHT)
+        capture("player-parts-transport-rtl-light.png")
+    }
+
+    @Test
+    fun transport_rtl_dark() {
+        transportRtl(ThemeMode.DARK)
+        capture("player-parts-transport-rtl-dark.png")
     }
 
     @Test

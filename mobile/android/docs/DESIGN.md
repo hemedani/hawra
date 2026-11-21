@@ -334,9 +334,8 @@ sheen. Legibility must never depend on blur.
 - **Directional glyphs are auto-mirrored** (`Icons.AutoMirrored`) so back/next stay correct in RTL.
 - A glyph whose meaning changes (play ↔ pause, playing ↔ paused) **cross-fades**; it never swaps
   instantly in place.
-- Transport glyphs come from `ui/components/TransportIcons.kt`, which draws them from Material's own
-  24 dp outlines — `material-icons-core` ships only `PlayArrow`, and `material-icons-extended` is a
-  10 MB dependency for four glyphs.
+- Transport glyphs come from the semantic `ICON_GLYPHS` catalog (`ui/components/Icon.kt`, D3), drawn
+  from Material Rounded in `material-icons-extended`.
 - The same rule covers the password eye (`ui/components/EyeGlyph.kt`, §10.11): `material-icons-core`
   has no `Visibility`/`VisibilityOff`, so the glyph is two quadratics and a disc. **Before adding an
   icon dependency, check whether the glyph is two shapes in a `Canvas`** — it usually is, and the

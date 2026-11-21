@@ -197,7 +197,7 @@ data class ScrubberGeometry(
 @Immutable
 data class TransportGeometry(
     val secondarySize: Dp = 48.dp,
-    val playSize: Dp = 64.dp,
+    val playSize: Dp = Controls().play,
     val spinnerStroke: Dp = 2.dp,
     val spinnerScale: Float = 0.34f,
     val statusSpinnerSize: Dp = 14.dp,

@@ -17,11 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import ir.hawraa.quran.core.HapticIntent
 import ir.hawraa.quran.core.rememberHaptics
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
@@ -55,9 +58,12 @@ fun BubbleButton(
     busy: Boolean = false,
     tint: Color? = null,
     content: @Composable (() -> Unit)? = null,
+    /** Mirrors the glyph in RTL for directional media icons (next/previous). */
+    mirrorInRtl: Boolean = false,
 ) {
     val tokens = LocalHawraaTokens.current
     val geometry = LocalHawraaGeometry.current
+    val layoutDirection = LocalLayoutDirection.current
     val glyphSize = if (iconSize != Dp.Unspecified) iconSize else size * 0.46f
     val glyph = when {
         filled -> tint ?: tokens.onAccent
@@ -116,7 +122,15 @@ fun BubbleButton(
                     imageVector = icon,
                     contentDescription = null,
                     tint = glyph,
-                    modifier = Modifier.size(glyphSize),
+                    modifier = Modifier
+                        .size(glyphSize)
+                        .then(
+                            if (mirrorInRtl && layoutDirection == LayoutDirection.Rtl) {
+                                Modifier.graphicsLayer { scaleX = -1f }
+                            } else {
+                                Modifier
+                            },
+                        ),
                 )
             }
         }

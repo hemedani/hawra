@@ -32,6 +32,7 @@ import ir.hawraa.quran.core.HapticIntent
 import ir.hawraa.quran.core.rememberHaptics
 import ir.hawraa.quran.ui.components.BubbleButton
 import ir.hawraa.quran.ui.components.ICON_GLYPHS
+import ir.hawraa.quran.ui.theme.HawraaDuration
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalHawraaTokens
 import kotlinx.coroutines.delay
@@ -67,6 +68,7 @@ fun TransportControls(
             contentDescription = stringResource(R.string.recitation_previous_ayah),
             onClick = onPrevious,
             size = transport.secondarySize,
+            mirrorInRtl = true,
         )
         if (onRewind != null) {
             BubbleButton(
@@ -102,6 +104,7 @@ fun TransportControls(
             contentDescription = stringResource(R.string.recitation_next_ayah),
             onClick = onNext,
             size = transport.secondarySize,
+            mirrorInRtl = true,
         )
     }
 }
@@ -166,7 +169,7 @@ fun PlaybackStatusLine(
     LaunchedEffect(waiting, start) {
         while (waiting) {
             now = System.currentTimeMillis()
-            delay(1_000)
+            delay(HawraaDuration.PLAYBACK_TICK.toLong())
         }
     }
     val waitedLong = waiting && start != null && now - start > transport.statusLongWaitMs

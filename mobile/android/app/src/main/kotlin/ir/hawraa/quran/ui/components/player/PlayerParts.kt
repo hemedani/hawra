@@ -33,7 +33,7 @@ import ir.hawraa.quran.ui.theme.LocalHawraaTokens
 fun HeroArtwork(
     size: Dp,
     seedKey: String,
-    label: String,
+    number: String,
     modifier: Modifier = Modifier,
     tileAlpha: Float = 1f,
     onTilePositioned: ((LayoutCoordinates) -> Unit)? = null,
@@ -58,7 +58,7 @@ fun HeroArtwork(
     ) {
         PaletteTile(
             seedKey = seedKey,
-            label = label,
+            number = number,
             size = size - player.heroPadding * 2,
             radius = geometry.radius.lg - geometry.spacing.xs,
             modifier = Modifier

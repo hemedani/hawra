@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -49,6 +50,7 @@ import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalHawraaTokens
 import ir.hawraa.quran.ui.theme.ScrubberGeometry
 import ir.hawraa.quran.ui.theme.WaveGeometry
+import ir.hawraa.quran.ui.theme.caption
 import ir.hawraa.quran.ui.theme.useMotionEnabled
 import kotlin.math.abs
 import kotlin.math.max
@@ -112,6 +114,8 @@ fun Scrubber(
     val haptics = rememberHaptics()
     val persian = LocalConfiguration.current.appLocale().language == "fa"
     val trackLabel = stringResource(R.string.player_scrubber)
+    val currentOnSeek by rememberUpdatedState(onSeek)
+    val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
     var preview by remember { mutableStateOf<Float?>(null) }
     val base = scrubberFraction(positionSec, durationSec)
     // The player ticks once a second; a linear tween carries the playhead between
@@ -134,8 +138,10 @@ fun Scrubber(
         animationSpec = if (motion) tween(HawraaDuration.SCRUBBER) else snap(),
         label = "waveAmplitude",
     )
-    val phase = if (waveActive) rememberWavePhase() else 0f
-    val values = remember(waveform, waveSeed) { waveform ?: decorativeWaveform(waveSeed) }
+    val phase = rememberWavePhase()
+    val values = remember(waveform, waveSeed) {
+        waveform?.takeIf { it.isNotEmpty() } ?: decorativeWaveform(waveSeed)
+    }
 
     Column(modifier.fillMaxWidth()) {
         Canvas(
@@ -172,7 +178,9 @@ fun Scrubber(
                         }
                         if (horizontal) {
                             haptics.trigger(HapticIntent.Scrub)
-                            onSeek(scrubberSeekMs(scrubberFractionAt(x, size.width.toFloat()), durationSec))
+                            if (durationSec > 0) {
+                                currentOnSeek(scrubberSeekMs(scrubberFractionAt(x, size.width.toFloat()), durationSec))
+                            }
                         } else if (preview != null) {
                             val f = scrubberFractionAt(x, size.width.toFloat())
                             val hit = nearestMarker(
@@ -184,10 +192,12 @@ fun Scrubber(
                             )
                             if (hit != null) {
                                 haptics.trigger(HapticIntent.Scrub)
-                                onMarkerClick(hit.id)
+                                currentOnMarkerClick(hit.id)
                             } else {
                                 haptics.trigger(HapticIntent.Scrub)
-                                onSeek(scrubberSeekMs(f, durationSec))
+                                if (durationSec > 0) {
+                                    currentOnSeek(scrubberSeekMs(f, durationSec))
+                                }
                             }
                         }
                         preview = null
@@ -203,7 +213,6 @@ fun Scrubber(
                 waveform = values,
                 waiting = waiting,
                 accent = tokens.accent,
-                border = tokens.glassBorder,
                 scale = 1f,
                 scrubber = scrubber,
                 waveGeometry = geometry.wave,
@@ -219,12 +228,12 @@ fun Scrubber(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
                 formatClock(positionSec, persian),
-                style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.caption.copy(fontFeatureSettings = "tnum"),
                 color = tokens.textSecondary,
             )
             Text(
                 formatRemaining(positionSec, durationSec, persian),
-                style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.caption.copy(fontFeatureSettings = "tnum"),
                 color = tokens.textSecondary,
             )
         }
@@ -259,8 +268,10 @@ fun WavyProgress(
         animationSpec = if (motion) tween(HawraaDuration.SCRUBBER) else snap(),
         label = "miniWaveAmplitude",
     )
-    val phase = if (waveActive) rememberWavePhase() else 0f
-    val values = remember(waveform, waveSeed) { waveform ?: decorativeWaveform(waveSeed) }
+    val phase = rememberWavePhase()
+    val values = remember(waveform, waveSeed) {
+        waveform?.takeIf { it.isNotEmpty() } ?: decorativeWaveform(waveSeed)
+    }
     // The dock carries the scrubber's whole design — loudness strip, wake and riding
     // playhead — at mini scale. It needs real headroom: the bars reach ±5 dp and the
     // halo ±7 dp, so a 9 dp canvas would clip the crests into a smear.
@@ -273,7 +284,6 @@ fun WavyProgress(
             waveform = values,
             waiting = waiting,
             accent = tokens.accent,
-            border = tokens.glassBorder,
             scale = scrubber.miniScale,
             scrubber = scrubber,
             waveGeometry = geometry.wave,
@@ -312,7 +322,6 @@ private fun DrawScope.drawTrack(
     waveform: FloatArray,
     waiting: Boolean,
     accent: Color,
-    border: Color,
     scale: Float,
     scrubber: ScrubberGeometry,
     waveGeometry: WaveGeometry,

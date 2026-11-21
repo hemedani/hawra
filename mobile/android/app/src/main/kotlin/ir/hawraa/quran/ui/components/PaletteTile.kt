@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import ir.hawraa.quran.domain.paletteIndexFor
 import ir.hawraa.quran.ui.theme.AuroraRamps
@@ -27,11 +28,15 @@ import ir.hawraa.quran.ui.theme.tileRadius
  * from the seed (surah, juz, or reciter) with the number set in the UI face. The same
  * seed paints the same gradient on every device, offline — a track's colour is a fact
  * about its name, not a network response.
+ *
+ * [number] is a single numeral token (`۲`, `۳۰`), never a title: Hawraa's tile carries
+ * the ayah/juz/surah number, so a long label is reduced to its first word and ellipsized
+ * rather than clipped.
  */
 @Composable
 fun PaletteTile(
     seedKey: String,
-    label: String,
+    number: String,
     modifier: Modifier = Modifier,
     size: Dp = LocalHawraaGeometry.current.tiles.md,
     radius: Dp = tileRadius(size),
@@ -40,6 +45,7 @@ fun PaletteTile(
     val geometry = LocalHawraaGeometry.current
     val ramp = AuroraRamps[paletteIndexFor(seedKey)]
     val shape = RoundedCornerShape(radius)
+    val numeral = number.trim().substringBefore(' ')
     // A hero tile needs a numeral that carries at hero scale; the dock's small tile
     // keeps the title size. Both stay on the UI face — the mushaf face is scripture.
     val style = if (size >= geometry.tiles.xl) {
@@ -59,11 +65,13 @@ fun PaletteTile(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = label,
+                text = numeral,
                 style = style,
                 color = tokens.text,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

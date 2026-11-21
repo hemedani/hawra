@@ -197,14 +197,16 @@ may extend it, not replace it).
   replacement: number on aurora wash), `PlayerChipRow`, `LevelSliderRow` only if a screen uses it.
 
 **Requirements**
-1. `Scrubber`: 2 dp track, white fill, 12 dp glowing thumb, remaining-time caption in `caption`
-   tabular figures; while waiting an indeterminate band; seek callback in ms.
+1. `Scrubber`: Pejvak's full-loudness strip (one bar per RMS window, played bars in `accent`),
+   the played wave with its wake, and the riding playhead dot (5.5 dp dot / 9 dp halo) over the
+   strip; remaining-time caption in `caption` tabular figures; while waiting a tapered travelling
+   band; seek callback in ms.
 2. `WavyProgress`: Pejvak's wave at `MINI_SCALE`; when `waveform == null`, render a deterministic
    decorative wave (never a flat line) so the dock and player still show the water language.
 3. `TransportControls`: prev / play-pause / next. Play is the 64 dp filled bubble; prev/next are
    48 dp outlined bubbles; waiting = `SpinnerRing`. No ±30 (D9).
 4. All sizes from `HawraaGeometry`; motion gated; haptics on press.
-5. Unit tests for the waveform/position mapping pure functions; `NowPlayingScreenshotTest` capture of
+5. Unit tests for the waveform/position mapping pure functions; `PlayerPartsScreenshotTest` capture of
    the transport + scrubber in both themes.
 
 **Done when:** build green; tests green; capture inspected.
@@ -426,3 +428,13 @@ without opening Pejvak.
   scrubber playing/waiting, transport playing/paused/waiting/skip, identity × light/dark) at
   `app/build/screenshots/player-parts-*.png`, all inspected. `assembleDebug` green;
   `./gradlew test` 372/372.
+- 2026-11-21 — **Task 5 review fixes**. Media skip glyphs now mirror with layout direction
+  (`BubbleButton(mirrorInRtl)`; `AutoMirrored.Rounded.SkipNext/SkipPrevious` are absent from this
+  Material version) with an explicit fa-RTL transport capture; scrubber callbacks use
+  `rememberUpdatedState`, an empty waveform falls back to the decorative strip, unknown durations no
+  longer emit `onSeek(0)`, clocks use the `caption` token, and the unused `border` was removed;
+  transport status ticks use `HawraaDuration.PLAYBACK_TICK`; `TransportGeometry.playSize` reuses
+  `Controls.play`; `PaletteTile` takes an explicit numeral token and ellipsizes. Plan requirement 1
+  and the Task 5 test line now match the shipped Pejvak scrubber/`PlayerPartsScreenshotTest`;
+  DESIGN.md's transport-glyph sentence points at `ICON_GLYPHS`. `./gradlew test` 374/374,
+  `assembleDebug` green.
