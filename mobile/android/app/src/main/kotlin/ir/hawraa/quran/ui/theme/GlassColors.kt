@@ -5,94 +5,99 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Chrome tokens for the glass language (`docs/DESIGN.md` §4).
+ * Chrome tokens for the Pejvak glass language (`DESING.md` §3).
  *
- * Everything that is *not* the mushaf reads these: the dock, the selection action box, cards,
- * sheets, chips, the top bar. The reading surface has its own set ([QuranColors]) and the two are
- * never mixed — see the note on [QuranColors.page].
+ * Everything that is *not* the opaque mushaf paper reads these (or [LocalHawraaTokens]):
+ * the header, dock, mini-player, cards, sheets, chips.
+ * The reading surface keeps [QuranColors] (`LocalQuranColors`) with its opaque page.
  */
 @Immutable
 data class GlassColors(
-    /** The field everything floats on. */
     val canvas: Color,
-    /** One step up from the canvas, for the layer behind a floating pane. */
     val canvasElevated: Color,
-    /** The soft blooms drawn on the canvas. Low frequency, low contrast. */
     val blooms: List<Color>,
-    /** A normal floating pane. */
     val glassFill: Color,
-    /** Dock, sheets, action box — anything that must read over busy content. */
     val glassFillStrong: Color,
-    /** API 29–30 has no blur, so the fill has to carry the pane on its own. */
     val glassFillFallback: Color,
-    /** The hairline edge. Dark in light mode, light in dark mode — see [GlassBorderLight]. */
     val glassBorder: Color,
-    /** The specular top edge that sells the material. */
     val glassHighlight: Color,
+    val frostBase: Color,
+    val frostScrim: Color,
+    val frostSheen: Color,
+    val frostFallback: Color,
     val shadow: Color,
     val text: Color,
     val textSecondary: Color,
     val textTertiary: Color,
     val icon: Color,
-    /** "This is the current thing" — current destination, playing ayah, primary action. */
+    /** Pure white active highlight on dark-teal glass chrome (Pejvak §3). */
     val accent: Color,
     val accentSoft: Color,
     val onAccent: Color,
-    /** "The reader put this here" — selection, ornament. Never interactive. */
+    /** Chromatic teal accent for tonal highlights & contrast badges on dark-teal glass. */
+    val accentTeal: Color,
     val mark: Color,
     val markSoft: Color,
     val danger: Color,
-    /** Progress tracks and in-pane dividers. */
     val track: Color,
-    /** True when this set is the dark one — used to gate blur and elevation choices. */
     val dark: Boolean,
 )
 
 private val LightGlassColors = GlassColors(
-    canvas = CanvasLight,
-    canvasElevated = CanvasElevatedLight,
-    blooms = listOf(CanvasBloomALight, CanvasBloomBLight, CanvasBloomCLight),
+    canvas = CanvasBaseLight,
+    canvasElevated = CanvasBaseLight,
+    blooms = listOf(RampTeal.third, RampBlue.third, RampPurple.third),
     glassFill = GlassFillLight,
     glassFillStrong = GlassFillStrongLight,
     glassFillFallback = GlassFillFallbackLight,
     glassBorder = GlassBorderLight,
     glassHighlight = GlassHighlightLight,
+    frostBase = FrostBaseLight,
+    frostScrim = FrostScrimLight,
+    frostSheen = FrostSheenLight,
+    frostFallback = FrostFallbackLight,
     shadow = ShadowLight,
     text = TextLight,
     textSecondary = TextSecondaryLight,
     textTertiary = TextTertiaryLight,
-    icon = IconLight,
-    accent = AccentLight,
-    accentSoft = AccentSoftLight,
-    onAccent = OnAccentLight,
-    mark = MarkLight,
-    markSoft = MarkSoftLight,
+    icon = TextLight,
+    accent = Accent,
+    accentSoft = GlassFillStrongLight,
+    onAccent = OnAccent,
+    accentTeal = AccentTealLight,
+    mark = MarkDark,
+    markSoft = MarkSoftDark,
     danger = DangerLight,
-    track = TrackLight,
+    track = TrackGlassLight,
     dark = false,
 )
 
 private val DarkGlassColors = GlassColors(
-    canvas = CanvasDark,
-    canvasElevated = CanvasElevatedDark,
-    blooms = listOf(CanvasBloomADark, CanvasBloomBDark, CanvasBloomCDark),
+    canvas = CanvasBaseDark,
+    canvasElevated = CanvasBaseDark,
+    blooms = listOf(RampTeal.first, RampBlue.first, RampPurple.first),
     glassFill = GlassFillDark,
     glassFillStrong = GlassFillStrongDark,
     glassFillFallback = GlassFillFallbackDark,
     glassBorder = GlassBorderDark,
     glassHighlight = GlassHighlightDark,
+    frostBase = FrostBaseDark,
+    frostScrim = FrostScrimDark,
+    frostSheen = FrostSheenDark,
+    frostFallback = FrostFallbackDark,
     shadow = ShadowDark,
     text = TextDark,
     textSecondary = TextSecondaryDark,
     textTertiary = TextTertiaryDark,
-    icon = IconDark,
-    accent = AccentDark,
-    accentSoft = AccentSoftDark,
-    onAccent = OnAccentDark,
+    icon = TextDark,
+    accent = Accent,
+    accentSoft = GlassFillStrongDark,
+    onAccent = OnAccent,
+    accentTeal = AccentTealDark,
     mark = MarkDark,
     markSoft = MarkSoftDark,
     danger = DangerDark,
-    track = TrackDark,
+    track = TrackGlassDark,
     dark = true,
 )
 

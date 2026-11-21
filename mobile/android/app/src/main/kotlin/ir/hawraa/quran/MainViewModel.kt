@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.hawraa.quran.data.repository.SettingsRepository
 import ir.hawraa.quran.domain.AppLanguage
+import ir.hawraa.quran.domain.MotionSetting
 import ir.hawraa.quran.domain.ThemeMode
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,5 +26,17 @@ class MainViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = AppLanguage.DEFAULT,
+    )
+
+    val motionSetting: StateFlow<MotionSetting> = settingsRepository.motionSetting.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = MotionSetting.DEFAULT,
+    )
+
+    val hapticsEnabled: StateFlow<Boolean> = settingsRepository.hapticsEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = true,
     )
 }

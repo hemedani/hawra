@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <resources>
     <string name="app_name">حوراء</string>
 
@@ -89,7 +89,9 @@
     <string name="home_open">باز کردن</string>
     <string name="home_minutes">%1$s دقیقه</string>
     <string name="home_goal_met">هدف امروز کامل شد</string>
-    <string name="settings_credits">نشانگر آیه: «Rub el Hizb» از Delapouite، game-icons.net، CC BY 3.0</string>
+    <string
+        name="settings_credits"
+    >نشانگر آیه: «Rub el Hizb» از Delapouite، game-icons.net، CC BY 3.0</string>
 
     <!-- Recitation -->
     <string name="recitation_play">پخش تلاوت</string>
@@ -134,11 +136,15 @@
     <string name="downloads_page_to">تا صفحهٔ %1$s</string>
     <string name="downloads_page_label">صفحهٔ %1$s تا %2$s</string>
     <string name="downloads_first_five">پنج صفحهٔ اول</string>
-    <string name="downloads_pages_unavailable">متن قرآن بارگذاری نشد؛ محدوده را با سوره یا جزء انتخاب کنید.</string>
+    <string
+        name="downloads_pages_unavailable"
+    >متن قرآن بارگذاری نشد؛ محدوده را با سوره یا جزء انتخاب کنید.</string>
     <string name="downloads_range_label">%1$s:%2$s تا %3$s:%4$s</string>
     <string name="downloads_granularity_ayah">این نسخه آیه‌به‌آیه است؛ هر آیه یک فایل.</string>
     <string name="downloads_granularity_surah">این نسخه سوره‌به‌سوره است؛ هر سوره یک فایل.</string>
-    <string name="downloads_granularity_juz">این نسخه جزء‌به‌جزء است؛ هر جزء یک فایل، پس دانلود هم فقط جزء‌به‌جزء ممکن است.</string>
+    <string
+        name="downloads_granularity_juz"
+    >این نسخه جزء‌به‌جزء است؛ هر جزء یک فایل، پس دانلود هم فقط جزء‌به‌جزء ممکن است.</string>
     <string name="downloads_surah_label">سورهٔ %1$s</string>
     <string name="downloads_juz_label">جزء %1$s</string>
     <string name="downloads_ayah_label">آیهٔ %1$s:%2$s</string>
@@ -146,14 +152,18 @@
     <string name="downloads_action">دانلود (حدود %1$s)</string>
     <string name="downloads_saved">روی این دستگاه</string>
     <string name="downloads_empty">هنوز چیزی دانلود نشده است.</string>
-    <string name="downloads_empty_hint">برای گوش دادن بدون اینترنت، از بالا محدوده را انتخاب و دانلود کنید.</string>
+    <string
+        name="downloads_empty_hint"
+    >برای گوش دادن بدون اینترنت، از بالا محدوده را انتخاب و دانلود کنید.</string>
     <string name="downloads_complete">کامل</string>
     <string name="downloads_delete_all">حذف همه</string>
     <string name="downloads_progress">%1$s از %2$s</string>
     <string name="downloads_failed_count">%1$s ناموفق</string>
     <string name="downloads_retry">تلاش دوباره</string>
     <string name="downloads_delete">حذف</string>
-    <string name="downloads_catalogue_unavailable">فهرست قاریان در دسترس نیست. اتصال را بررسی کنید.</string>
+    <string
+        name="downloads_catalogue_unavailable"
+    >فهرست قاریان در دسترس نیست. اتصال را بررسی کنید.</string>
     <string name="downloads_notice_queued">%1$s فایل در صف دانلود · %2$s از قبل ذخیره شده بود</string>
     <string name="downloads_notice_failed">شروع دانلود ناموفق: %1$s</string>
     <string name="size_kb">کیلوبایت</string>
@@ -190,7 +200,9 @@
     <string name="auth_title_signin">خوش آمدید</string>
     <string name="auth_title_register">ساخت حساب تازه</string>
     <string name="auth_subtitle_signin">برای دیدن تاریخچهٔ مطالعهٔ خود وارد شوید.</string>
-    <string name="auth_subtitle_register">با یک حساب، تاریخچهٔ مطالعهٔ شما روی سرور می‌ماند و روی هر دستگاهی در دسترس است.</string>
+    <string
+        name="auth_subtitle_register"
+    >با یک حساب، تاریخچهٔ مطالعهٔ شما روی سرور می‌ماند و روی هر دستگاهی در دسترس است.</string>
     <string name="auth_mode_signin">ورود</string>
     <string name="auth_mode_register">ثبت‌نام</string>
     <string name="auth_email">ایمیل</string>
@@ -211,4 +223,20 @@
     <string name="auth_error_network">سرور در دسترس نیست. اتصال را بررسی کنید.</string>
     <string name="auth_error_generic">انجام نشد. دوباره تلاش کنید.</string>
     <string name="auth_offline_note">پس از ورود، برنامه بدون اینترنت هم کار می‌کند.</string>
+
+    <!-- Pejvak glass shell, motion, haptics, search & player additions -->
+    <string name="settings_appearance">ظاهر و حس</string>
+    <string name="settings_motion">پویایی و انیمیشن</string>
+    <string name="motion_system">دستگاه</string>
+    <string name="motion_full">کامل</string>
+    <string name="motion_reduced">کاهش‌یافته</string>
+    <string name="settings_haptics">بازخورد لمسی</string>
+    <string name="search_placeholder">جست‌وجو…</string>
+    <string name="search_clear">پاک کردن جست‌وجو</string>
+    <string name="search_action">جست‌وجو</string>
+    <string name="home_history_hint">نشست‌های مطالعه و روند پیاپی</string>
+    <string name="home_settings_hint">پوسته، قلم، زبان و تلاوت</string>
+    <string name="player_minimize">کوچک کردن پخش‌کننده</string>
+    <string name="player_expand">باز کردن پخش‌کننده</string>
+    <string name="player_preset_label">الگو</string>
 </resources>

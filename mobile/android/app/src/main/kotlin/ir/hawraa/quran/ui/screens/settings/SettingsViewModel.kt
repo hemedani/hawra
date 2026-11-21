@@ -7,6 +7,7 @@ import ir.hawraa.quran.data.quran.QuranContentRepository
 import ir.hawraa.quran.data.quran.RecitationRepository
 import ir.hawraa.quran.data.repository.SettingsRepository
 import ir.hawraa.quran.domain.AppLanguage
+import ir.hawraa.quran.domain.MotionSetting
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.domain.settings.DiacriticInk
 import ir.hawraa.quran.domain.settings.LetterInk
@@ -37,6 +38,18 @@ class SettingsViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         initialValue = AppLanguage.DEFAULT,
+    )
+
+    val motionSetting: StateFlow<MotionSetting> = settingsRepository.motionSetting.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = MotionSetting.DEFAULT,
+    )
+
+    val hapticsEnabled: StateFlow<Boolean> = settingsRepository.hapticsEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = true,
     )
 
     val readingSettings: StateFlow<ReadingSettings> = settingsRepository.readingSettings.stateIn(
@@ -81,6 +94,14 @@ class SettingsViewModel @Inject constructor(
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+    }
+
+    fun setMotionSetting(setting: MotionSetting) {
+        viewModelScope.launch { settingsRepository.setMotionSetting(setting) }
+    }
+
+    fun setHapticsEnabled(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setHapticsEnabled(enabled) }
     }
 
     fun setFontSize(sp: Int) {

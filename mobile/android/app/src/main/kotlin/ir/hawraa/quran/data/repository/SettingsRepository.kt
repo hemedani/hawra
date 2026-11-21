@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import ir.hawraa.quran.domain.AppLanguage
+import ir.hawraa.quran.domain.MotionSetting
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.domain.recitation.PlaybackSpeed
 import ir.hawraa.quran.domain.settings.DiacriticInk
@@ -39,6 +40,8 @@ class SettingsRepository @Inject constructor(
     private val reciterKey = stringPreferencesKey("reciter_key")
     private val playbackSpeedKey = floatPreferencesKey("playback_speed")
     private val repeatAyahKey = booleanPreferencesKey("repeat_ayah")
+    private val motionKey = stringPreferencesKey("motion_preference")
+    private val hapticsKey = booleanPreferencesKey("haptics_enabled")
 
     val themeMode: Flow<ThemeMode> = dataStore.data.map { prefs ->
         ThemeMode.fromKey(prefs[themeKey])
@@ -48,12 +51,28 @@ class SettingsRepository @Inject constructor(
         AppLanguage.fromKey(prefs[appLanguageKey])
     }
 
+    val motionSetting: Flow<MotionSetting> = dataStore.data.map { prefs ->
+        MotionSetting.fromKey(prefs[motionKey])
+    }
+
+    val hapticsEnabled: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[hapticsKey] ?: true
+    }
+
     suspend fun setAppLanguage(language: AppLanguage) {
         dataStore.edit { prefs -> prefs[appLanguageKey] = language.key }
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {
         dataStore.edit { prefs -> prefs[themeKey] = mode.key }
+    }
+
+    suspend fun setMotionSetting(setting: MotionSetting) {
+        dataStore.edit { prefs -> prefs[motionKey] = setting.key }
+    }
+
+    suspend fun setHapticsEnabled(enabled: Boolean) {
+        dataStore.edit { prefs -> prefs[hapticsKey] = enabled }
     }
 
     val readingSettings: Flow<ReadingSettings> = dataStore.data.map { prefs ->

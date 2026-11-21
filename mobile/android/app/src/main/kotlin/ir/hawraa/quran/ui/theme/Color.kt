@@ -3,99 +3,97 @@ package ir.hawraa.quran.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Raw palette values — the contract from `docs/DESIGN.md` §4.
- *
- * Two families live here and they are **not interchangeable**:
- *
- *  - the **glass chrome** family (canvas, glass, text, accent) for everything that is not the
- *    mushaf — the dock, the action box, cards, sheets, chips;
- *  - the **mushaf** family (page, ink, mark, accent, banner) for the reading surface only.
- *
- * Chrome is translucent because it floats; the reading surface is opaque because scripture is
- * read, not decorated. Never paint Quran text on a glass token.
- *
- * No colour literal may appear outside `ui/theme/`.
+ * Pejvak glass palette — the contract from DESING.md §3, extended with Hawraa's
+ * opaque mushaf tokens (`Page*`, `LetterInk*`, `MarkInk*`) which are never mixed
+ * with translucent chrome. All colors live in `ui/theme/`.
  */
 
-// ---- Canvas -------------------------------------------------------------------------------
-// The field everything floats on. Light is a cool pale grey-blue — deliberately NOT cream (that
-// would drag the app back to the mushaf look it is leaving) and not white (glass over white is
-// invisible). Dark is near-black with a blue cast, so panes read as glass over deep water.
-val CanvasLight = Color(0xFFE4E9EF)
-val CanvasElevatedLight = Color(0xFFEDF1F6)
-val CanvasBloomALight = Color(0xFFC9DCE6)
-val CanvasBloomBLight = Color(0xFFD3DAEC)
-val CanvasBloomCLight = Color(0xFFE4DCEC)
+// --- Canvas (the field behind the glass; never near-white in light) ---
+// Deep mid-tone so white-on-glass clears 4.5:1 against the worst-case bloom
+// (pinned by ContrastContractTest). Light is a brighter field than dark, not white.
+val CanvasBaseLight = Color(0xFF33505F)
+val CanvasBaseDark = Color(0xFF0A0F16)
 
-val CanvasDark = Color(0xFF060910)
-val CanvasElevatedDark = Color(0xFF0E1520)
-val CanvasBloomADark = Color(0xFF0D2C33)
-val CanvasBloomBDark = Color(0xFF12203A)
-val CanvasBloomCDark = Color(0xFF241C33)
+// --- Glass fills ---
+val GlassFillLight = Color(0x29FFFFFF)        // white 16%
+val GlassFillDark = Color(0x14FFFFFF)         // white 8%
+val GlassFillStrongLight = Color(0x42FFFFFF)  // white 26%
+val GlassFillStrongDark = Color(0x24FFFFFF)   // white 14%
+val GlassFillFallbackLight = Color(0x4DFFFFFF)// white 30% (API 29-30)
+val GlassFillFallbackDark = Color(0xB8141C26) // dark 72% (API 29-30)
 
-// ---- Glass --------------------------------------------------------------------------------
-// Note the border direction: in light mode the hairline is DARK (13 %), because a white border on
-// a pale canvas disappears; in dark mode it is LIGHT (22 %). That asymmetry is what makes the
-// panes read as glass in both themes.
-val GlassFillLight = Color(0xC7FFFFFF) // white 78 %
-// 98 %, not 92 %: the dock and sheets sit over text that scrolls behind them, and a measured
-// screenshot showed the page still 4 % legible through the panel at 96 % — enough to read whole
-// Persian words under the dock's icons, which looks like a rendering fault rather than like glass.
-// The border, the sheen and the shadow carry the material; the fill only has to occlude.
-val GlassFillStrongLight = Color(0xFAFFFFFF)
-val GlassFillFallbackLight = Color(0xE0FFFFFF) // white 88 % — API 29–30, no blur
-val GlassBorderLight = Color(0x21142027) // #142027 at 13 %
-val GlassHighlightLight = Color(0xF2FFFFFF) // white 95 % — the specular top edge
-val ShadowLight = Color(0x29142027) // #142027 at 16 %
+// --- Frost material (shell chrome only: header, dock, mini-player) ---
+// The pane must REVEAL the blurred backdrop as a luminous crystalline wash, not an
+// opaque grey/teal slab. Keeping base + scrim + sheen around ~48-49% combined opacity
+// leaves ~51-52% of the blurred canvas and scrolling artwork glowing through, while
+// still passing ContrastContractTest against the brightest aurora bloom.
+val FrostBaseLight = Color(0x38284452)        // deep teal-slate 22%
+val FrostBaseDark = Color(0x3D08121A)         // deep slate 24%
+val FrostScrimLight = Color(0x381E4752)       // cool teal 22%
+val FrostScrimDark = Color(0x3D0B2830)        // crystalline teal 24%
+val FrostSheenLight = Color(0x24E6F9FF)       // ice highlight 14%
+val FrostSheenDark = Color(0x1FDFF6FF)        // pale cyan ice 12%
+val FrostFallbackLight = Color(0xD133505F)    // canvasBase 82% (API 29-30)
+val FrostFallbackDark = Color(0xDB06090F)     // #06090F 86% (API 29-30)
 
-val GlassFillDark = Color(0xB81C2532) // #1C2532 at 72 %
-// Same 98 % as light, and for the same reason: at 94 % the page's translation text measured an
-// 8-lum lift behind the dock, which is more visible on a flat dark panel than 4 % is on white.
-val GlassFillStrongDark = Color(0xFA1E2836) // #1E2836 at 98 %
-val GlassFillFallbackDark = Color(0xCC141D28) // #141D28 at 80 %
-val GlassBorderDark = Color(0x38E2EEFF) // #E2EEFF at 22 %
-val GlassHighlightDark = Color(0x3DFFFFFF) // white 24 %
-val ShadowDark = Color(0x8C000000) // black 55 %
+// --- Glass edges ---
+// A crisp, bright hairline is what sells "cut glass": light catches the top edge and
+// separates the pane from the field.
+val GlassBorderLight = Color(0x99FFFFFF)      // white 60%
+val GlassBorderDark = Color(0x66FFFFFF)       // white 40%
+val GlassHighlightLight = Color(0xBFFFFFFF)   // white 75%
+val GlassHighlightDark = Color(0x8CFFFFFF)    // white 55%
 
-// ---- Text on glass ------------------------------------------------------------------------
-val TextLight = Color(0xFF0E1720)
-val TextSecondaryLight = Color(0xFF41505A)
-val TextTertiaryLight = Color(0xFF5B6A75)
-val IconLight = Color(0xFF2C3A43)
+// --- Text on glass ---
+val TextLight = Color(0xFFFFFFFF)
+val TextDark = Color(0xFFF2F6F7)
+val TextSecondaryLight = Color(0xBDFFFFFF)    // white 74%
+val TextSecondaryDark = Color(0xB8F0F5F6)     // 72%
+val TextTertiaryLight = Color(0x85FFFFFF)     // white 52%
+val TextTertiaryDark = Color(0x80F0F5F6)      // 50%
 
-val TextDark = Color(0xFFF0F5F4)
-val TextSecondaryDark = Color(0xFFB4C4CB)
-val TextTertiaryDark = Color(0xFF8B9EA8)
-val IconDark = Color(0xFFD6E2E6)
+// --- Accent & semantic ---
+val Accent = Color(0xFFFFFFFF)
+val OnAccent = Color(0xFF0E1720)
+val AccentTealLight = Color(0xFF0A635C)
+val AccentTealDark = Color(0xFF5FD9C6)
+val DangerLight = Color(0xFFFFD7DD)
+val DangerDark = Color(0xFFFF8296)
 
-// ---- Accent & semantic --------------------------------------------------------------------
-// One accent, one meaning: "this is the current thing". Turquoise (فیروزه) is also the hook the
-// future Iranian design layer will hang on.
-val AccentLight = Color(0xFF0A635C)
-val AccentDark = Color(0xFF5FD9C6)
-val OnAccentLight = Color(0xFFFFFFFF)
-val OnAccentDark = Color(0xFF04231F)
-val AccentSoftLight = Color(0x1F0A635C) // 12 %
-val AccentSoftDark = Color(0x295FD9C6) // 16 %
+// --- Semantic glass helpers (tracks, shadows, mushaf markers) ---
+val ShadowLight = Color(0x29000000)
+val ShadowDark = Color(0x8C000000)
+val TrackGlassLight = Color(0x2EFFFFFF)
+val TrackGlassDark = Color(0x33F0F5F6)
 
-/**
- * The warm marker. Means *the reader put this here* — a selected verse, an ornament rule.
- * It is **never** an interactive colour: if gold starts looking tappable, the accent has lost its
- * monopoly on "current".
- */
 val MarkLight = Color(0xFFA98436)
 val MarkDark = Color(0xFFD9BB78)
-val MarkSoftLight = Color(0x24A98436) // 14 %
-val MarkSoftDark = Color(0x2ED9BB78) // 18 %
+val MarkSoftLight = Color(0x24A98436)
+val MarkSoftDark = Color(0x2ED9BB78)
 
-val DangerLight = Color(0xFFB02F45)
-val DangerDark = Color(0xFFFF8296)
-val TrackLight = Color(0x2E41505A) // 18 %
-val TrackDark = Color(0x33B4C4CB) // 20 %
+val OnAccentMushafLight = Color(0xFFFFFFFF)
+val OnAccentMushafDark = Color(0xFF04231F)
+val AccentSoftMushafLight = Color(0x1F0A635C)
+val AccentSoftMushafDark = Color(0x295FD9C6)
+val TrackMushafLight = Color(0x2E41505A)
+val TrackMushafDark = Color(0x33B4C4CB)
 
-// ---- The mushaf surface --------------------------------------------------------------------
-// The most opaque surface in the app. A reading pane that let the canvas through would put blooms
-// behind diacritics, and diacritics are the smallest strokes on the screen.
+// --- Aurora ramps (content identity) [deep, mid, light] ---
+val RampTeal = Triple(Color(0xFF0A635C), Color(0xFF159A8C), Color(0xFF5FD9C6))
+val RampBlue = Triple(Color(0xFF123A6B), Color(0xFF2D6CB5), Color(0xFF7FB6F0))
+val RampPurple = Triple(Color(0xFF3A2A6B), Color(0xFF6C4FC1), Color(0xFFB79CF0))
+val RampCoral = Triple(Color(0xFF7A2E3A), Color(0xFFC75B6B), Color(0xFFFF9FAE))
+val RampAmber = Triple(Color(0xFF7A4A12), Color(0xFFC78A2D), Color(0xFFFFD08A))
+val RampGreen = Triple(Color(0xFF1E5A34), Color(0xFF3E9A5F), Color(0xFF8FD9A8))
+val RampPink = Triple(Color(0xFF6B2A5A), Color(0xFFB54F9A), Color(0xFFF09FD9))
+val RampCyan = Triple(Color(0xFF0E4A5A), Color(0xFF2D8FA8), Color(0xFF7FD9E8))
+
+val AuroraRamps = listOf(
+    RampTeal, RampBlue, RampPurple, RampCoral,
+    RampAmber, RampGreen, RampPink, RampCyan,
+)
+
+// --- The mushaf surface (opaque by design — never mixed with translucent chrome) ---
 val PageLight = Color(0xFFFDFDFE)
 val PageVariantLight = Color(0xFFF4F7F9)
 val LetterInkLight = Color(0xFF16202A)
@@ -108,8 +106,7 @@ val LetterInkDark = Color(0xFFEDE9E0)
 val MarkInkDark = Color(0xFFD9BB78)
 val TranslationDark = Color(0xFFA8B4BE)
 
-// ---- Quran ink presets (reader choice, not theme) -------------------------------------------
-// Letters
+// --- Quran ink presets (reader choice, not theme) ---
 val QuranLetterInkLight = LetterInkLight
 val QuranLetterGreenLight = Color(0xFF0E5C4E)
 val QuranLetterNavyLight = Color(0xFF1B2A4A)
@@ -117,7 +114,6 @@ val QuranLetterInkDark = LetterInkDark
 val QuranLetterGreenDark = Color(0xFFA9DCC0)
 val QuranLetterNavyDark = Color(0xFFB7C8EC)
 
-// Diacritics
 val QuranMarkGoldLight = MarkInkLight
 val QuranMarkGreenLight = Color(0xFF2C7A57)
 val QuranMarkGreyLight = Color(0xFF8A8577)
