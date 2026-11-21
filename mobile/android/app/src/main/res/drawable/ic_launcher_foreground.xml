@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rub el Hizb (۞): two overlapping squares, the traditional Quran section mark. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M32,32 L76,32 L76,76 L32,76 Z"
+        android:strokeColor="#E8C87A"
+        android:strokeWidth="4.5"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M54,23 L85,54 L54,85 L23,54 Z"
+        android:strokeColor="#E8C87A"
+        android:strokeWidth="4.5"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M54,47 a7,7 0 1,0 0.001,0 Z"
+        android:fillColor="#E8C87A" />
+</vector>

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 2,
+  "defaultReciter": "shakernejad",
+  "ayahNumbering": "global-hafs",
+  "sources": {
+    "audio": {
+      "name": "AlQuran Cloud verse-by-verse audio CDN",
+      "url": "https://cdn.islamic.network/quran/audio/{bitrate}/{edition}/{ayah}.mp3",
+      "license": "Audio served by the AlQuran Cloud CDN (islamic.network). Recitations are streamed for listening and study; attribution is shown in Settings.",
+      "verifiedAt": "2026-11-15"
+    },
+    "mirror": {
+      "name": "This project's own audio mirror",
+      "url": "/uploads/recitation/{editionKey}/{kind}/{file}.mp3",
+      "license": "Files mirrored from the upstream source by `deno task audio-mirror`. Only editions the server actually holds are served here. A template beginning with `/` is server-relative and is resolved against the app's configured base URL when the catalogue loads.",
+      "verifiedAt": "2026-11-15"
+    }
+  },
+  "reciters": [
+    {
+      "key": "parhizgar",
+      "nameFa": "شهریار پرهیزگار",
+      "nameEn": "Shahriar Parhizgar",
+      "style": "murattal",
+      "bitrate": 48,
+      "granularity": "ayah",
+      "urlTemplate": "https://cdn.islamic.network/quran/audio/48/ar.parhizgar/{ayah}.mp3"
+    },
+    {
+      "key": "shakernejad",
+      "nameFa": "حامد شاکرنژاد",
+      "nameEn": "Hamed Shakernejad",
+      "style": "murattal",
+      "bitrate": 64,
+      "granularity": "ayah",
+      "urlTemplate": "https://apiquran.inoor.ir/File/Sound/Recitation/1014/{surah3}{ayah3}.mp3"
+    },
+    {
+      "key": "shakernejad-juz",
+      "nameFa": "حامد شاکرنژاد (جزء‌به‌جزء)",
+      "nameEn": "Hamed Shakernejad (juz)",
+      "style": "tartil",
+      "bitrate": 24,
+      "granularity": "juz",
+      "urlTemplate": "/uploads/recitation/shakernejad-tartil-juz-24/juz/{juz2}.mp3"
+    },
+    {
+      "key": "alafasy",
+      "nameFa": "مشاری راشد العفاسی",
+      "nameEn": "Mishary Rashid al-Afasy",
+      "style": "murattal",
+      "bitrate": 128,
+      "urlTemplate": "https://cdn.islamic.network/quran/audio/128/ar.alafasy/{ayah}.mp3"
+    },
+    {
+      "key": "husary",
+      "nameFa": "محمود خلیل الحصری",
+      "nameEn": "Mahmoud Khalil al-Husary",
+      "style": "murattal",
+      "bitrate": 128,
+      "urlTemplate": "https://cdn.islamic.network/quran/audio/128/ar.husary/{ayah}.mp3"
+    },
+    {
+      "key": "minshawi",
+      "nameFa": "محمد صدیق منشاوی",
+      "nameEn": "Mohamed Siddiq al-Minshawi",
+      "style": "murattal",
+      "bitrate": 128,
+      "urlTemplate": "https://cdn.islamic.network/quran/audio/128/ar.minshawi/{ayah}.mp3"
+    }
+  ],
+  "unavailable": []
+}

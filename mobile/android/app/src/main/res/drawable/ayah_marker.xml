@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ayah marker: "Rub el Hizb" by Delapouite, from game-icons.net (CC BY 3.0).
+  https://commons.wikimedia.org/wiki/File:Rub-el-hizb_-_Delapouite_-_game-icons.svg
+  See app/src/main/assets/licenses/ayah-marker-game-icons.txt for the full attribution.
+
+  Changes from the original: the path was normalised to absolute coordinates, and the
+  two circles forming the central ring were removed so the verse number can occupy that
+  space. The octagram, its corner ticks and its edge notches are unchanged.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M 256 16.97 L 249.6 23.34 L 185.9 87 L 87 87 L 87 186 L 16.97 256 L 87 326 L 87 425 L 186 425 L 256 495 L 326 425 L 425 425 L 425 326 L 495 256 L 425 186 L 425 87 L 326 87 L 256 16.97 Z M 256 42.43 L 300.6 87 L 211.4 87 L 256 42.43 Z M 105 105 L 168 105 L 105 168 L 105 105 Z M 193.4 105 L 318.6 105 L 407 193.4 L 407 318.6 L 318.6 407 L 193.4 407 L 105 318.6 L 105 193.4 L 193.4 105 Z M 344 105 L 407 105 L 407 168 L 344 105 Z M 425 211.4 L 469.6 256 L 425 300.6 L 425 211.4 Z M 87 211.4 L 87 300.6 L 42.43 256 L 87 211.4 Z M 407 344 L 407 407 L 344 407 L 407 344 Z M 105 344 L 168 407 L 105 407 L 105 344 Z M 211.4 425 L 300.6 425 L 256 469.6 L 211.4 425 Z" />
+</vector>

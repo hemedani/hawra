@@ -1,0 +1,18 @@
+Ayah marker icon
+================
+
+Title:  Rub el Hizb
+Author: Delapouite
+Source: https://game-icons.net/1x1/delapouite/rub-el-hizb.html
+File:   https://commons.wikimedia.org/wiki/File:Rub-el-hizb_-_Delapouite_-_game-icons.svg
+Licence: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+         https://creativecommons.org/licenses/by/3.0/
+
+The icon is used as the verse-number marker on the mushaf pages. The vector drawable
+res/drawable/ayah_marker.xml was produced from the original SVG by normalising the path
+to absolute coordinates and removing the two circles that form the central ring, so the
+ayah number can sit in that space. The octagram, its corner ticks and its edge notches
+are used unchanged.
+
+game-icons.net asks that the attribution be visible in the product; it appears in the
+Settings screen under "Credits" and in this file.
