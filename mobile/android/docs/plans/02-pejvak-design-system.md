@@ -102,7 +102,7 @@ These bind every task; a reviewer must treat them as the rubric.
 
 ---
 
-### Task 2 — Glass, frost, backdrop, wave and icon primitives
+### Task 2 — Glass, frost, backdrop, wave and icon primitives ✅
 
 **Goal:** port the material and motion substrate the rest of the port stands on.
 
@@ -388,3 +388,15 @@ without opening Pejvak.
   weights, every `R.font` resource resolves through the loader); updated the `AGENTS.md` icon rule to
   the `ICON_GLYPHS` / Material Rounded policy (D3); noted the UI face in `docs/summary.md`.
   `assembleDebug` green; `./gradlew test` 324/324.
+- 2026-11-21 — **Task 2 complete.** Ported the Pejvak material/motion substrate with the package map:
+  `Backdrop` (draw-node blur coordinator, API 31+ gate and 29–30 fallback verbatim),
+  `FrostedSurface` (`ShellInsets`/`LocalShellInsets`/`dockElevation`), `GlassSurface` (Pejvak recipe
+  plus Hawraa's `GlassElevation`/soft-shadow compatibility), `Wave`/`HairlineWave`/`WaveProgressBar`,
+  `AmbientCanvas` (nav surge, four cool blooms, 760 ms), `GlassSheet`
+  (`SheetPresence`/`LocalSheetPresence`/`SheetWake`, Vazirmatn `Text`), the semantic `ICON_GLYPHS`
+  catalog + `Icon`, `PrimaryButton`, and `EmptyState`/`InlineNotice`/`SkeletonRows`. Added the
+  geometry/token groups they need (`GlassGeometry`, `WaveGeometry`, `SheetGeometry`,
+  `SkeletonGeometry`, `Controls.spinner*`, `scrim`) and `action_close` in fa/en. New tests:
+  `WaveHelperTest` (9), `IconCatalogTest` (2), `GlassPrimitivesScreenshotTest` (light + dark).
+  `assembleDebug` green; `./gradlew test` 337/337; captures at
+  `app/build/screenshots/glass-primitives-{light,dark}.png` inspected.
