@@ -186,7 +186,7 @@ may extend it, not replace it).
 
 ---
 
-### Task 5 — Player parts: scrubber, wave, transport
+### Task 5 — Player parts: scrubber, wave, transport ✅
 
 **Goal:** Pejvak's player controls, reduced to Hawraa's feature set (D9).
 
@@ -412,3 +412,17 @@ without opening Pejvak.
   New `HeaderScreenshotTest` (8 captures: gallery + expanded search × light/dark × fa/en) at
   `app/build/screenshots/header-{gallery,search}-{light,dark}-{fa,en}.png`, all inspected.
   `assembleDebug` green; `./gradlew test` 345/345. No screen wired yet (Tasks 7–8).
+- 2026-11-21 — **Task 5 complete** (executed before Task 4; the dock consumes these parts).
+  Ported `PaletteTile` (aurora wash from `paletteIndexFor`, Vazirmatn label, no Coil artwork),
+  `Scrubber`/`WavyProgress` (full-loudness bar strip, played wave, riding playhead + halo, wake
+  trail, waiting band, ms seek callback, deterministic `sampleWaveformFor` decorative wave when
+  `waveform == null`), `TransportControls` (nullable ±30 so the player passes null; 64 dp filled
+  play, 48 dp outlined prev/next, `SpinnerRing` while waiting), `PlaybackStatusLine(waiting,
+  error)`, and `HeroArtwork`/`PlayerChipRow`. Added `PlayerGeometry`/`ScrubberGeometry`/
+  `TransportGeometry`, `HawraaDuration.SCRUBBER`/`PLAYBACK_TICK`, and the fa/en player strings.
+  Kept Pejvak's strip + riding dot per the dispatch ruling rather than the older 2 dp/12 dp thumb
+  sketch in requirement 1. New `PlayerPartsTest` (fraction/seek mapping, decorative wave
+  deterministic/bounded/never-flat/seed-varying) and `PlayerPartsScreenshotTest` (14 captures:
+  scrubber playing/waiting, transport playing/paused/waiting/skip, identity × light/dark) at
+  `app/build/screenshots/player-parts-*.png`, all inspected. `assembleDebug` green;
+  `./gradlew test` 372/372.
