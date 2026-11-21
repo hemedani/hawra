@@ -76,7 +76,7 @@ These bind every task; a reviewer must treat them as the rubric.
 
 ## 4. Tasks
 
-### Task 1 — Foundation: fonts, icons policy, build gate
+### Task 1 — Foundation: fonts, icons policy, build gate ✅
 
 **Goal:** the project compiles again and the design dependencies match Pejvak.
 
@@ -383,3 +383,8 @@ without opening Pejvak.
 
 - 2026-11-21 — Plan authored after auditing both apps. Baseline checkpoint commit preserves the
   previous agent's theme-token port. Build is blocked only on missing Vazirmatn fonts.
+- 2026-11-21 — **Task 1 complete.** Bundled the four Vazirmatn TTFs (copied byte-for-byte from Pejvak)
+  and `Vazirmatn-OFL.txt` under `assets/licenses/`; added `VazirmatnFontTest` (family declares four
+  weights, every `R.font` resource resolves through the loader); updated the `AGENTS.md` icon rule to
+  the `ICON_GLYPHS` / Material Rounded policy (D3); noted the UI face in `docs/summary.md`.
+  `assembleDebug` green; `./gradlew test` 324/324.

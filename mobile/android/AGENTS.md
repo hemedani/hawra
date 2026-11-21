@@ -63,10 +63,11 @@ Non-negotiables it encodes:
   `List<SelectionAction>` — never a permanent bottom bar. Playback + navigation live in the dock.
 - **The dock is one panel with two halves** (mini-player + nav), owned by the app shell. A screen
   owes it `geometry.dock.dockInset` of bottom padding and nothing else.
-- **Icons**: `material-icons-core` only (~40 glyphs). A missing glyph is drawn in
-  `ui/components/*Icons.kt` (`TransportIcons`, `DockIcons`, `EyeGlyph`), not pulled in as
-  `material-icons-extended` — that is a 10 MB dependency for a handful of shapes, and most of them
-  are two paths in a `Canvas`.
+- **Icons**: use the semantic `ICON_GLYPHS` catalog (`ui/components/Icon.kt`), drawn from Material
+  **Rounded** in `material-icons-extended`. This is the accepted exception to the old "core only"
+  rule (D3): Pejvak's catalog needs exact Rounded glyphs, and the ~10 MB APK cost is a stated,
+  deliberate trade for visual fidelity. Only `Icon.kt` imports an icon set; screens name a semantic
+  glyph, and a missing glyph is added to the catalog — never hand-drawn per screen.
 - **A chip is a filter, `GlassSegments` is a choice.** Anything selecting one-of-N uses
   `GlassSegments` (glass palette, filled `accent` selection); chips toggle. Mixing them makes the app
   feel imprecise, and `SegmentedPill`'s Material palette is one shade off every glass pane around it.

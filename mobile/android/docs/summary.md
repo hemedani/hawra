@@ -514,6 +514,8 @@ the letter layer (letter colour). Registration is exact — confirmed on Android
 from a combining-mark codepoint, plus an explicit table for marks baked into a letters glyph (the
 shadda of the `uni0647.fina.allah` ligature).
 
+- **UI face: Vazirmatn** (SIL, OFL — licence in `assets/licenses/Vazirmatn-OFL.txt`), bundled from
+  Pejvak's Android sector; chrome and Persian UI/content use it, scripture never does.
 - **Face: Scheherazade New 4.500** (SIL, OFL — licence in `assets/licenses/`). Chosen because it is a
   normal OpenType Naskh (one glyph per letter, marks placed by GPOS), covers the full Uthmani
   repertoire, and is the closest visual match to the owner's Ketab Mobien reference among the faces
