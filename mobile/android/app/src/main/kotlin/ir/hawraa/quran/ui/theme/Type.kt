@@ -34,3 +34,13 @@ val Typography.caption: TextStyle
         fontWeight = FontWeight.Normal,
         letterSpacing = 0.sp,
     )
+
+/**
+ * The player's hero identity numeral. The tile is artwork-sized but carries a number, so it needs
+ * a step above [titleLarge] to read as the identity rather than a badge.
+ */
+val Typography.heroNumeral: TextStyle
+    get() = displayLarge.copy(
+        fontSize = 56.sp,
+        lineHeight = 64.sp,
+    )

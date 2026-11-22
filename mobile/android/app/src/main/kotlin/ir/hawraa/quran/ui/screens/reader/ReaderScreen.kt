@@ -52,7 +52,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -81,7 +80,6 @@ import ir.hawraa.quran.domain.quran.VerseSelection
 import ir.hawraa.quran.domain.quran.playbackPlan
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.domain.settings.ReadingSettings
-import ir.hawraa.quran.ui.appLocale
 import ir.hawraa.quran.ui.components.BubbleButton
 import ir.hawraa.quran.ui.components.DiamondBullet
 import ir.hawraa.quran.ui.components.GlassElevation
@@ -96,13 +94,13 @@ import ir.hawraa.quran.ui.quran.MushafBanner
 import ir.hawraa.quran.ui.quran.QuranText
 import ir.hawraa.quran.ui.quran.displayName
 import ir.hawraa.quran.ui.quran.quranLineHeight
+import ir.hawraa.quran.ui.recitation.NowPlayingStore
 import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaDarkTheme
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalQuranColors
 import ir.hawraa.quran.ui.theme.withReadingSettings
 import kotlin.math.roundToInt
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 
 /**
@@ -156,18 +154,11 @@ fun ReaderScreen(
         onPageVisible = viewModel::onPageVisible,
         onReadingActivity = viewModel::onReadingActivity,
         onPlayPause = viewModel::onPlayPause,
-        onPreviousAyah = viewModel::onPreviousAyah,
-        onNextAyah = viewModel::onNextAyah,
-        onCycleSpeed = viewModel::onCycleSpeed,
-        onToggleRepeat = viewModel::onToggleRepeat,
-        onPlayPreset = viewModel::onPlayPreset,
         onPlaySelection = viewModel::onPlaySelection,
-        onExitPreset = viewModel::onExitPreset,
         playerOpen = playerOpen,
         onClosePlayer = viewModel::closePlayer,
-        onSelectReciter = viewModel::selectReciter,
         onDownloadPage = viewModel::downloadCurrentPage,
-        positionProvider = { viewModel.currentPositionMs() to viewModel.currentDurationMs() },
+        playerStore = viewModel.playerStore,
     )
 }
 
@@ -182,18 +173,11 @@ internal fun ReaderContent(
     onPageVisible: (Int) -> Unit = {},
     onReadingActivity: (Int) -> Unit = {},
     onPlayPause: (Pair<Int, Int>?, Int) -> Unit = { _, _ -> },
-    onPreviousAyah: () -> Unit = {},
-    onNextAyah: () -> Unit = {},
-    onCycleSpeed: () -> Unit = {},
-    onToggleRepeat: () -> Unit = {},
-    onPlayPreset: (String, Pair<Int, Int>?) -> Unit = { _, _ -> },
     onPlaySelection: (SelectionPlan) -> Unit = {},
-    onExitPreset: () -> Unit = {},
     playerOpen: Boolean = false,
     onClosePlayer: () -> Unit = {},
-    onSelectReciter: (String) -> Unit = {},
     onDownloadPage: () -> Unit = {},
-    positionProvider: () -> Pair<Long, Long> = { 0L to 0L },
+    playerStore: NowPlayingStore? = null,
 ) {
     val themeQuran = LocalQuranColors.current
     val dark = LocalHawraaDarkTheme.current
@@ -444,60 +428,11 @@ internal fun ReaderContent(
             }
         }
 
-        if (playerOpen) {
-            // Position is read on a while-visible ticker in this leaf, so the progress bar advances
-            // without pushing a per-second recomposition through the app-wide store (DESIGN §15).
-            var position by remember { mutableStateOf(positionProvider()) }
-            LaunchedEffect(Unit) {
-                while (true) {
-                    position = positionProvider()
-                    delay(500)
-                }
-            }
-
-            // The verse to feature: the one sounding, or — for a whole-juz track, which has no
-            // verse position — the first verse of the page on screen.
-            val featured = state.currentVerse()
-                ?: visiblePage?.let { page -> page.verses.firstOrNull()?.let { VerseItem(page.page, it) } }
-            val shownVerse = featured?.verse
-            val surah = shownVerse?.let { state.surahs[it.surah] }
-
-            NowPlayingScreen(
-                surahName = surah?.displayName().orEmpty(),
-                ayah = shownVerse?.ayah,
-                juz = state.recitation.playingJuz,
-                verseArabic = shownVerse?.textUthmani.orEmpty(),
-                translationText = shownVerse?.translations?.firstOrNull()?.text,
-                featuredStep = state.recitation.activeStep,
-                reciterName = state.recitation.reciterName(
-                    persian = LocalConfiguration.current.appLocale().language == "fa",
-                ),
-                presetName = state.recitation.activePresetName,
-                isPlaying = state.recitation.isPlaying,
-                buffering = state.recitation.buffering,
-                failed = state.recitation.failed,
-                speed = state.recitation.speed,
-                repeatAyah = state.recitation.repeatAyah,
-                reciters = state.reciters,
-                selectedReciterKey = state.selectedReciterKey,
-                fontSizeSp = state.settings.fontSizeSp,
-                persian = LocalConfiguration.current.appLocale().language == "fa",
-                positionMs = position.first,
-                durationMs = position.second,
-                downloading = false,
-                presets = state.recitation.presets,
-                activePresetName = state.recitation.activePresetName,
-                onClose = onClosePlayer,
-                onToggle = { onPlayPause(null, visiblePage?.page ?: visiblePageNumber) },
-                onPrevious = onPreviousAyah,
-                onNext = onNextAyah,
-                onCycleSpeed = onCycleSpeed,
-                onToggleRepeat = onToggleRepeat,
-                onSelectReciter = onSelectReciter,
-                onDownload = onDownloadPage,
-                onPlayPreset = { clientId -> onPlayPreset(clientId, null) },
-                onExitPreset = onExitPreset,
-            )
+        // The player is still a reader overlay on this route; the shell-owned sheet that morphs
+        // out of the dock arrives in the next task. The store supplies the snapshot and the
+        // commands the reader has already bound.
+        if (playerOpen && playerStore != null) {
+            NowPlayingScreen(store = playerStore, onClose = onClosePlayer)
         }
     }
 }

@@ -5,7 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
@@ -14,12 +14,18 @@ import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
 import ir.hawraa.quran.data.quran.QuranContentRepository
 import ir.hawraa.quran.domain.ThemeMode
+import ir.hawraa.quran.domain.preset.PresetStepKind
 import ir.hawraa.quran.domain.recitation.PlaybackSpeed
 import ir.hawraa.quran.ui.components.AmbientCanvas
-import ir.hawraa.quran.ui.screens.reader.NowPlayingScreen
-import ir.hawraa.quran.ui.screens.reader.PresetOption
-import ir.hawraa.quran.ui.screens.reader.ReciterChoice
+import ir.hawraa.quran.ui.recitation.NowPlayingStore
+import ir.hawraa.quran.ui.recitation.PlayerPreset
+import ir.hawraa.quran.ui.recitation.PlayerReciter
+import ir.hawraa.quran.ui.recitation.PlayerUi
+import ir.hawraa.quran.ui.recitation.PlayerVerse
+import ir.hawraa.quran.ui.screens.player.PlayerContent
 import ir.hawraa.quran.ui.theme.HawraaTheme
+import ir.hawraa.quran.ui.theme.LocalMotionPreference
+import ir.hawraa.quran.ui.theme.MotionPreference
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
@@ -30,13 +36,13 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * The full-screen player, rendered on the JVM (real Skia + HarfBuzz + the bundled mushaf face) into
- * `app/build/screenshots/`. This is the visual gate for D30: the verse must register on the opaque
- * reading surface in both themes, and the chrome must survive both locales.
+ * The full-screen player content, rendered on the JVM (real Skia + HarfBuzz + the bundled mushaf
+ * face) into `app/build/screenshots/`. This is the visual gate for the ported Pejvak layout: the
+ * verse must register on the opaque reading surface in both themes, the chrome must survive both
+ * locales, and a juz track must show «جزء N» with no verse card.
  *
- * The player is drawn **without the dock** — the shell hides it while the player is open — so a bare
- * canvas behind the player is exactly what the app composes here, unlike the reader captures that
- * need [TestShell].
+ * Motion is pinned to reduced so the hero entrance and the playing pulse are static; the capture
+ * is the resting layout, not a frame from an animation.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -56,56 +62,84 @@ class NowPlayingScreenshotTest {
             .first { it.second.surah == 1 && it.second.ayah == 3 }
     }
 
-    @Composable
-    private fun player(persian: Boolean, isPlaying: Boolean) = NowPlayingScreen(
-        surahName = if (persian) "الفاتحة" else "Al-Fatiha",
-        ayah = 3,
-        juz = null,
-        verseArabic = verse.second.textUthmani,
-        translationText = verse.second.translations.firstOrNull()?.text
-            ?: if (persian) "ستایش خداوندی را که پروردگار جهانیان است." else "Praise belongs to the Lord of all the worlds.",
-        featuredStep = null,
-        reciterName = if (persian) "شهریار پرهیزگار" else "Shahriar Parhizgar",
-        presetName = null,
-        isPlaying = isPlaying,
-        buffering = false,
-        failed = false,
-        speed = PlaybackSpeed.ONE_AND_QUARTER,
-        repeatAyah = true,
-        reciters = listOf(
-            ReciterChoice("shakernejad", "حامد شاکرنژاد", "Hamed Shakernejad", perAyah = false),
-            ReciterChoice("parhizgar", "شهریار پرهیزگار", "Shahriar Parhizgar", perAyah = true),
-            ReciterChoice("alafasy", "مشاری العفاسی", "al-Afasy", perAyah = true),
-        ),
-        selectedReciterKey = "parhizgar",
-        fontSizeSp = 30,
-        persian = persian,
-        positionMs = 7_400,
-        durationMs = 21_000,
-        downloading = false,
-        presets = listOf(
-            PresetOption("p1", if (persian) "آیه، ترجمه، آیه" else "Verse, translation, verse", true, 3),
-            PresetOption("p2", if (persian) "حفظ" else "Memorising", false, 4),
-        ),
-        activePresetName = null,
-        onClose = {},
-        onToggle = {},
-        onPrevious = {},
-        onNext = {},
-        onCycleSpeed = {},
-        onToggleRepeat = {},
-        onSelectReciter = {},
-        onDownload = {},
-        onPlayPreset = {},
-        onExitPreset = {},
-    )
+    private val store = NowPlayingStore().apply {
+        bindPositionProvider { 7_400 to 21_000 }
+    }
 
-    private fun render(mode: ThemeMode, persian: Boolean, isPlaying: Boolean) {
+    private fun player(
+        persian: Boolean,
+        isPlaying: Boolean,
+        juz: Int? = null,
+        activePreset: Boolean = false,
+    ): PlayerUi {
+        val v = verse.second
+        val presetName = if (persian) "آیه، ترجمه، آیه" else "Verse, translation, verse"
+        return PlayerUi(
+            surahNumber = 1,
+            surahNameFa = "الفاتحة",
+            surahNameEn = "Al-Fatiha",
+            ayah = if (juz != null) 1 else v.ayah,
+            juzNumber = juz,
+            reciterNameFa = "شهریار پرهیزگار",
+            reciterNameEn = "Shahriar Parhizgar",
+            presetNameFa = if (activePreset) presetName else null,
+            stepKind = if (activePreset) PresetStepKind.TRANSLATION else null,
+            isPlaying = isPlaying,
+            busy = false,
+            failed = false,
+            speed = PlaybackSpeed.ONE_AND_QUARTER,
+            repeatAyah = true,
+            reciters = listOf(
+                PlayerReciter("shakernejad", "حامد شاکرنژاد", "Hamed Shakernejad", perAyah = false),
+                PlayerReciter("parhizgar", "شهریار پرهیزگار", "Shahriar Parhizgar", perAyah = true),
+                PlayerReciter("alafasy", "مشاری العفاسی", "al-Afasy", perAyah = true),
+            ),
+            selectedReciterKey = "parhizgar",
+            presets = listOf(
+                PlayerPreset("p1", presetName, true, 3),
+                PlayerPreset("p2", if (persian) "حفظ" else "Memorising", false, 4),
+            ),
+            featuredVerse = if (juz != null) {
+                null
+            } else {
+                PlayerVerse(
+                    surah = v.surah,
+                    ayah = v.ayah,
+                    page = verse.first,
+                    arabic = v.textUthmani,
+                    translation = v.translations.firstOrNull()?.text
+                        ?: if (persian) {
+                            "ستایش خداوندی را که پروردگار جهانیان است."
+                        } else {
+                            "Praise belongs to the Lord of all the worlds."
+                        },
+                )
+            },
+            downloadablePage = verse.first,
+            fontSizeSp = 30,
+        )
+    }
+
+    private fun render(
+        mode: ThemeMode,
+        persian: Boolean,
+        isPlaying: Boolean,
+        juz: Int? = null,
+        activePreset: Boolean = false,
+    ) {
         composeRule.setContent {
             HawraaTheme(themeMode = mode) {
                 Box(Modifier.fillMaxSize()) {
                     AmbientCanvas()
-                    player(persian, isPlaying)
+                    CompositionLocalProvider(
+                        LocalMotionPreference provides MotionPreference.Reduced,
+                    ) {
+                        PlayerContent(
+                            ui = player(persian, isPlaying, juz, activePreset),
+                            store = store,
+                            onClose = {},
+                        )
+                    }
                 }
             }
         }
@@ -120,7 +154,7 @@ class NowPlayingScreenshotTest {
 
     @Test
     fun player_light_persian_playing() {
-        render(ThemeMode.LIGHT, persian = true, isPlaying = true)
+        render(ThemeMode.LIGHT, persian = true, isPlaying = true, activePreset = true)
         capture("player-light-fa.png")
     }
 
@@ -132,8 +166,21 @@ class NowPlayingScreenshotTest {
 
     @Test
     @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
+    fun player_light_english() {
+        render(ThemeMode.LIGHT, persian = false, isPlaying = true)
+        capture("player-light-en.png")
+    }
+
+    @Test
+    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
     fun player_dark_english() {
         render(ThemeMode.DARK, persian = false, isPlaying = true)
         capture("player-dark-en.png")
+    }
+
+    @Test
+    fun player_dark_persian_juz() {
+        render(ThemeMode.DARK, persian = true, isPlaying = true, juz = 1)
+        capture("player-dark-fa-juz.png")
     }
 }

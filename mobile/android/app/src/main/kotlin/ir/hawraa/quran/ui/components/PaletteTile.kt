@@ -19,6 +19,7 @@ import ir.hawraa.quran.ui.theme.AuroraRamps
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalHawraaTokens
 import ir.hawraa.quran.ui.theme.Vazirmatn
+import ir.hawraa.quran.ui.theme.heroNumeral
 import ir.hawraa.quran.ui.theme.tileRadius
 
 /**
@@ -48,10 +49,10 @@ fun PaletteTile(
     val numeral = number.trim().substringBefore(' ')
     // A hero tile needs a numeral that carries at hero scale; the dock's small tile
     // keeps the title size. Both stay on the UI face — the mushaf face is scripture.
-    val style = if (size >= geometry.tiles.xl) {
-        MaterialTheme.typography.titleLarge
-    } else {
-        MaterialTheme.typography.titleMedium
+    val style = when {
+        size >= geometry.tiles.hero * 2f -> MaterialTheme.typography.heroNumeral
+        size >= geometry.tiles.xl -> MaterialTheme.typography.titleLarge
+        else -> MaterialTheme.typography.titleMedium
     }.copy(fontFamily = Vazirmatn)
 
     Box(

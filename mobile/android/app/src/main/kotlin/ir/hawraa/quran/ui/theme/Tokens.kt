@@ -150,11 +150,13 @@ data class WaveGeometry(
     val wakePhaseSpan: Float = 7f,
 )
 
-/** The player identity tile (DESIGN.md §10.5): hero tile shadow and inner inset. */
+/** The player identity tile (DESIGN.md §10.5): hero tile shadow, inner inset and size. */
 @Immutable
 data class PlayerGeometry(
     val heroShadow: Dp = 24.dp,
     val heroPadding: Dp = 5.dp,
+    /** The full-screen player's identity tile: artwork scale, but a numeral instead of artwork. */
+    val heroSize: Dp = 180.dp,
 )
 
 /**

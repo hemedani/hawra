@@ -180,6 +180,12 @@ class ReaderViewModel @Inject constructor(
     private val _playerOpen = MutableStateFlow(false)
     val playerOpen: StateFlow<Boolean> = _playerOpen.asStateFlow()
 
+    /**
+     * The app-wide player store, exposed so the reader can draw the full-screen player with the
+     * commands it has already bound. The store still owns no playback: the reader does.
+     */
+    val playerStore: NowPlayingStore get() = nowPlaying
+
     private var themeMode = ThemeMode.SYSTEM
     private var recitationSettings = RecitationSettings()
 
