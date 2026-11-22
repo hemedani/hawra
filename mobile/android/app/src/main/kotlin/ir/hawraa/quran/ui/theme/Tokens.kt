@@ -242,6 +242,9 @@ data class SheetGeometry(
     val canvasFade: Float = 0.68f,
     /** Collapsed card shadow scale, relative to `spacing.sm`. */
     val shadowScale: Float = 1.15f,
+    /** Ambient/spot shadow opacity while the card floats. */
+    val shadowAmbient: Float = 0.22f,
+    val shadowSpot: Float = 0.28f,
     /** The content's transform origin (fraction of the viewport) while it scales in. */
     val contentOriginX: Float = 0.5f,
     val contentOriginY: Float = 0.14f,

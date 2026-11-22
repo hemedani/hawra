@@ -373,8 +373,8 @@ fun NowPlayingSheet(
                 elevation = cardShadowDp,
                 shape = cardShape,
                 clip = false,
-                ambientColor = glass.shadow.copy(alpha = 0.22f),
-                spotColor = glass.shadow.copy(alpha = 0.28f),
+                ambientColor = glass.shadow.copy(alpha = geometry.sheet.shadowAmbient),
+                spotColor = glass.shadow.copy(alpha = geometry.sheet.shadowSpot),
             )
         } else {
             Modifier
