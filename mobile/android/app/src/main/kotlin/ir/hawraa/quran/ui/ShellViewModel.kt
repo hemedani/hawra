@@ -32,6 +32,9 @@ class ShellViewModel @Inject constructor(
 
     val player: StateFlow<PlayerUi?> = store.state
 
+    /** The app-wide player store, so the shell can mount the morphing sheet over its chrome. */
+    val playerStore: NowPlayingStore get() = store
+
     /** Whether the full-screen player is open; the shell hides the dock while it is true. */
     val playerExpanded: StateFlow<Boolean> = store.expanded
 

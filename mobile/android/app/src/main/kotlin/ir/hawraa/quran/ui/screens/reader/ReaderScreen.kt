@@ -94,7 +94,6 @@ import ir.hawraa.quran.ui.quran.MushafBanner
 import ir.hawraa.quran.ui.quran.QuranText
 import ir.hawraa.quran.ui.quran.displayName
 import ir.hawraa.quran.ui.quran.quranLineHeight
-import ir.hawraa.quran.ui.recitation.NowPlayingStore
 import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaDarkTheme
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
@@ -126,11 +125,6 @@ fun ReaderScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // The full-screen player is opened from the dock's mini-player (which lives in the app shell),
-    // so the reader observes the request through the ViewModel rather than owning the trigger.
-    // Opening it also hides the dock (via the store), so the player covers the whole screen.
-    val playerOpen by viewModel.playerOpen.collectAsStateWithLifecycle()
-
     // Leaving the app mid-read ends the session; coming back does not silently resume it
     // (the first scroll after returning opens a fresh one).
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -155,10 +149,7 @@ fun ReaderScreen(
         onReadingActivity = viewModel::onReadingActivity,
         onPlayPause = viewModel::onPlayPause,
         onPlaySelection = viewModel::onPlaySelection,
-        playerOpen = playerOpen,
-        onClosePlayer = viewModel::closePlayer,
         onDownloadPage = viewModel::downloadCurrentPage,
-        playerStore = viewModel.playerStore,
     )
 }
 
@@ -174,10 +165,7 @@ internal fun ReaderContent(
     onReadingActivity: (Int) -> Unit = {},
     onPlayPause: (Pair<Int, Int>?, Int) -> Unit = { _, _ -> },
     onPlaySelection: (SelectionPlan) -> Unit = {},
-    playerOpen: Boolean = false,
-    onClosePlayer: () -> Unit = {},
     onDownloadPage: () -> Unit = {},
-    playerStore: NowPlayingStore? = null,
 ) {
     val themeQuran = LocalQuranColors.current
     val dark = LocalHawraaDarkTheme.current
@@ -426,13 +414,6 @@ internal fun ReaderContent(
                     )
                 }
             }
-        }
-
-        // The player is still a reader overlay on this route; the shell-owned sheet that morphs
-        // out of the dock arrives in the next task. The store supplies the snapshot and the
-        // commands the reader has already bound.
-        if (playerOpen && playerStore != null) {
-            NowPlayingScreen(store = playerStore, onClose = onClosePlayer)
         }
     }
 }

@@ -7,6 +7,10 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.DraggableState
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,16 +36,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.sp
 import ir.hawraa.quran.R
 import ir.hawraa.quran.domain.preset.PresetStepKind
@@ -68,6 +81,7 @@ import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalQuranColors
 import ir.hawraa.quran.ui.theme.useMotionEnabled
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 
 /**
@@ -91,6 +105,16 @@ fun PlayerContent(
     store: NowPlayingStore,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Hides the hero tile while the sheet flies its own copy between the dock and the hero. */
+    heroTileAlpha: Float = 1f,
+    /** Publishes the hero tile's coordinates so the sheet can land the flight exactly on it. */
+    onHeroTilePositioned: ((LayoutCoordinates) -> Unit)? = null,
+    /** Downward delta the body could not scroll, in px. */
+    onPullDown: (Float) -> Unit = {},
+    /** The pull gesture ended with release velocity in px/s (`0f` on a slow lift). */
+    onPullEnd: (Float) -> Unit = {},
+    /** True while the sheet has been pulled partway down from its resting height. */
+    isPulled: () -> Boolean = { false },
 ) {
     val glass = LocalGlassColors.current
     val geometry = LocalHawraaGeometry.current
@@ -128,12 +152,70 @@ fun PlayerContent(
         ) { value, _ -> heroScale = value }
     }
 
+    // The pull has to end even when the finger leaves without a fling. Watching the pointer
+    // stream in the initial pass — before any child can consume it — gives a slow lift a home
+    // without stealing the scroll, the scrubber or a button press.
+    val pullDown by rememberUpdatedState(onPullDown)
+    val pullEnd by rememberUpdatedState(onPullEnd)
+    val pulled by rememberUpdatedState(isPulled)
+    val headerDragState = rememberDraggableState { dy ->
+        if (dy > 0f || pulled()) pullDown(dy)
+    }
+    val bodyScroll = rememberScrollState()
+    val pullConnection = remember(bodyScroll) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput && available.y < 0f && pulled()) {
+                    pullDown(available.y)
+                    return Offset(0f, available.y)
+                }
+                return Offset.Zero
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                if (source != NestedScrollSource.UserInput) return Offset.Zero
+                if (available.y > 0f && bodyScroll.value <= 0) {
+                    pullDown(available.y)
+                    return Offset(0f, available.y)
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                if (pulled()) {
+                    pullEnd(available.y)
+                    return available
+                }
+                return Velocity.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                if (pulled()) pullEnd(available.y)
+                return Velocity.Zero
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(glass.canvas)
             .statusBarsPadding()
             .navigationBarsPadding()
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.changes.isNotEmpty() && event.changes.none { it.pressed }) {
+                            if (pulled()) pullEnd(0f)
+                        }
+                    }
+                }
+            }
             .testTag("player"),
     ) {
         PlayerHeader(
@@ -141,12 +223,15 @@ fun PlayerContent(
             activity = activity,
             isPlaying = ui.isPlaying && !ui.busy,
             onClose = onClose,
+            dragState = headerDragState,
+            onDragStopped = { velocity -> if (pulled()) pullEnd(velocity) },
         )
 
         Column(
             modifier = Modifier
                 .weight(1f)
-                .verticalScroll(rememberScrollState())
+                .nestedScroll(pullConnection)
+                .verticalScroll(bodyScroll)
                 .padding(horizontal = geometry.spacing.xl)
                 .padding(bottom = geometry.spacing.xxl),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -156,6 +241,8 @@ fun PlayerContent(
                 size = geometry.player.heroSize,
                 seedKey = identity,
                 number = identity,
+                tileAlpha = heroTileAlpha,
+                onTilePositioned = onHeroTilePositioned,
                 modifier = Modifier
                     .graphicsLayer {
                         scaleX = heroScale
@@ -232,12 +319,19 @@ private fun PlayerHeader(
     activity: String,
     isPlaying: Boolean,
     onClose: () -> Unit,
+    dragState: DraggableState,
+    onDragStopped: suspend CoroutineScope.(Float) -> Unit,
 ) {
     val glass = LocalGlassColors.current
     val geometry = LocalHawraaGeometry.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .draggable(
+                orientation = Orientation.Vertical,
+                state = dragState,
+                onDragStopped = onDragStopped,
+            )
             .padding(horizontal = geometry.spacing.lg, vertical = geometry.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {

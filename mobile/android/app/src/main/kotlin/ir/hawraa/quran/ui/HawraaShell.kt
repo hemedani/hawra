@@ -23,6 +23,7 @@ import ir.hawraa.quran.ui.components.NowPlayingUi
 import ir.hawraa.quran.ui.navigation.HawraaNavHost
 import ir.hawraa.quran.ui.navigation.Routes
 import ir.hawraa.quran.ui.screens.auth.AuthScreen
+import ir.hawraa.quran.ui.screens.player.NowPlayingSheet
 
 /**
  * The app shell: an ambient canvas, the navigation graph, and the dock floating over both
@@ -60,8 +61,9 @@ fun HawraaShell(
             is AuthState.SignedIn -> {
                 HawraaNavHost(navController = navController)
                 // The full-screen player covers the whole app, so the dock gets out of the way
-                // while it is open. The player is drawn by the reader (it owns the engine), above
-                // the nav host; the dock is the only shell chrome that must yield to it.
+                // while it is open. Both are shell chrome: the sheet is drawn here, above the
+                // nav host and the dock, so it survives navigation and morphs out of the dock's
+                // own row rather than appearing as a second surface.
                 if (!playerExpanded) {
                     AppDock(
                         selectedRoute = route ?: Routes.HOME,
@@ -75,6 +77,7 @@ fun HawraaShell(
                         onMiniPlayerRect = viewModel::onMiniPlayerRect,
                     )
                 }
+                NowPlayingSheet(store = viewModel.playerStore, backdropBlur = 0f)
             }
         }
     }

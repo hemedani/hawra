@@ -217,6 +217,15 @@ data class SheetGeometry(
     val handleWidth: Dp = 36.dp,
     val handleHeight: Dp = 4.dp,
     val crestTravel: Float = 5.2f,
+    /** How far the full player must be pulled down before it dismisses. */
+    val pullDismiss: Dp = 105.dp,
+    /**
+     * The pull is normalised over at least this much travel, so a short screen does not
+     * fling the player away on what is really a small nudge.
+     */
+    val pullFloor: Dp = 420.dp,
+    /** Downward release speed that completes a pull dismiss. */
+    val pullFling: Dp = 520.dp,
 )
 
 /** Skeleton loading rows. */

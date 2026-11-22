@@ -459,3 +459,22 @@ without opening Pejvak.
   `app/build/screenshots/dock-*.png`, all inspected. DESIGN.md §10.4–10.5 now matches the shipped
   dock (FrostedSurface, radius rules, textSecondary nav, wave placement). `assembleDebug` green;
   `./gradlew test` 391/391.
+- 2026-11-22 — **Task 6, step 2 — shell owns the player.** `HawraaShell` now mounts
+  `NowPlayingSheet(store, backdropBlur = 0f)` above the nav host and the dock (both siblings of
+  screen content) when signed in, and keeps `AmbientCanvas` behind; the dock still hides while
+  `expanded`. `ShellViewModel` exposes `playerStore`. Removed the reader's route-level overlay:
+  `ReaderScreen`/`ReaderContent` lost `playerOpen`, `onClosePlayer`, `playerStore` and their call
+  sites, and `screens/reader/NowPlayingScreen.kt` is deleted. `ReaderViewModel.openPlayer`/
+  `closePlayer` remain (they flip the store's expanded flag); the mini-player still opens through
+  `store.openControls()`. `assembleDebug` + `compileDebugUnitTestKotlin` green (full suite not run).
+- 2026-11-22 — **Task 6, step 3 — the morph is under test.** Added `MorphMathTest` (14 cases)
+  pinning the corner (`mini` at t=0, `0` at t=1, monotonic through 0.5 and the 1.6 exponent),
+  the content/mini-row fades, content scale, and per-edge `lerpRect` including reversed and
+  crossing rects plus the empty-window `morphAlpha` step. `NowPlayingSheet` gained a documented
+  `progressOverride: Float? = null` hook: non-null pins `t`, skips the springs and the mounted
+  gate, and reports the pinned progress to the shell; production callers leave it null.
+  `NowPlayingScreenshotTest` now captures `sheet-{mini|mid|full}-{light|dark}-{fa|en}.png` (12)
+  from the store's measured dock rect at t=0/0.5/1; all inspected — the capsule starts on the
+  dock row, the mid frame hands the mini row off to the flying identity tile, and the full frame
+  matches the standalone player in both themes and both scripts. `./gradlew test assembleDebug`
+  green, 421/421.

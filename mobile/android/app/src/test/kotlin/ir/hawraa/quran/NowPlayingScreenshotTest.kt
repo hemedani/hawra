@@ -7,22 +7,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
 import ir.hawraa.quran.data.quran.QuranContentRepository
+import ir.hawraa.quran.domain.AppLanguage
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.domain.preset.PresetStepKind
 import ir.hawraa.quran.domain.recitation.PlaybackSpeed
+import ir.hawraa.quran.ui.LocalizedApp
 import ir.hawraa.quran.ui.components.AmbientCanvas
 import ir.hawraa.quran.ui.recitation.NowPlayingStore
 import ir.hawraa.quran.ui.recitation.PlayerPreset
 import ir.hawraa.quran.ui.recitation.PlayerReciter
 import ir.hawraa.quran.ui.recitation.PlayerUi
 import ir.hawraa.quran.ui.recitation.PlayerVerse
+import ir.hawraa.quran.ui.screens.player.NowPlayingSheet
 import ir.hawraa.quran.ui.screens.player.PlayerContent
+import ir.hawraa.quran.ui.theme.HawraaGeometry
 import ir.hawraa.quran.ui.theme.HawraaTheme
 import ir.hawraa.quran.ui.theme.LocalMotionPreference
 import ir.hawraa.quran.ui.theme.MotionPreference
@@ -152,6 +157,63 @@ class NowPlayingScreenshotTest {
         File(dir, name).outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /**
+     * The dock's measured player half at the capture device's size, in root pixels.
+     *
+     * The sheet morphs out of this rect, so the mini capture is only truthful if the rect matches
+     * where the dock would actually sit: inset by the dock margin, one player row tall, resting on
+     * the bottom edge.
+     */
+    private fun sheetRect(): Rect {
+        val metrics = ApplicationProvider.getApplicationContext<Context>().resources.displayMetrics
+        val density = metrics.density
+        val dock = HawraaGeometry().dock
+        val margin = dock.margin.value * density
+        val rowHeight = dock.playerHeight.value * density
+        val bottom = metrics.heightPixels - margin
+        return Rect(
+            left = margin,
+            top = bottom - rowHeight,
+            right = metrics.widthPixels - margin,
+            bottom = bottom,
+        )
+    }
+
+    private fun renderSheet(
+        mode: ThemeMode,
+        language: AppLanguage,
+        progress: Float,
+    ) {
+        store.publish(player(persian = language == AppLanguage.PERSIAN, isPlaying = true))
+        store.setMiniPlayerRect(sheetRect())
+        store.setExpanded(true)
+        composeRule.setContent {
+            LocalizedApp(language) {
+                HawraaTheme(themeMode = mode) {
+                    Box(Modifier.fillMaxSize()) {
+                        AmbientCanvas()
+                        CompositionLocalProvider(
+                            LocalMotionPreference provides MotionPreference.Reduced,
+                        ) {
+                            NowPlayingSheet(
+                                store = store,
+                                backdropBlur = 0f,
+                                progressOverride = progress,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun sheet(progress: Float, state: String, mode: ThemeMode, language: AppLanguage) {
+        renderSheet(mode, language, progress)
+        val theme = if (mode == ThemeMode.LIGHT) "light" else "dark"
+        val locale = if (language == AppLanguage.PERSIAN) "fa" else "en"
+        capture("sheet-$state-$theme-$locale.png")
+    }
+
     @Test
     fun player_light_persian_playing() {
         render(ThemeMode.LIGHT, persian = true, isPlaying = true, activePreset = true)
@@ -183,4 +245,48 @@ class NowPlayingScreenshotTest {
         render(ThemeMode.DARK, persian = true, isPlaying = true, juz = 1)
         capture("player-dark-fa-juz.png")
     }
+
+    // The morph itself, pinned at the three frames that matter: the dock's own capsule, the
+    // hand-off where content and the mini row cross-fade, and the full-screen player.
+    @Test
+    fun sheet_mini_light_fa() = sheet(0f, "mini", ThemeMode.LIGHT, AppLanguage.PERSIAN)
+
+    @Test
+    fun sheet_mini_dark_fa() = sheet(0f, "mini", ThemeMode.DARK, AppLanguage.PERSIAN)
+
+    @Test
+    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
+    fun sheet_mini_light_en() = sheet(0f, "mini", ThemeMode.LIGHT, AppLanguage.ENGLISH)
+
+    @Test
+    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
+    fun sheet_mini_dark_en() = sheet(0f, "mini", ThemeMode.DARK, AppLanguage.ENGLISH)
+
+    @Test
+    fun sheet_mid_light_fa() = sheet(0.5f, "mid", ThemeMode.LIGHT, AppLanguage.PERSIAN)
+
+    @Test
+    fun sheet_mid_dark_fa() = sheet(0.5f, "mid", ThemeMode.DARK, AppLanguage.PERSIAN)
+
+    @Test
+    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
+    fun sheet_mid_light_en() = sheet(0.5f, "mid", ThemeMode.LIGHT, AppLanguage.ENGLISH)
+
+    @Test
+    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
+    fun sheet_mid_dark_en() = sheet(0.5f, "mid", ThemeMode.DARK, AppLanguage.ENGLISH)
+
+    @Test
+    fun sheet_full_light_fa() = sheet(1f, "full", ThemeMode.LIGHT, AppLanguage.PERSIAN)
+
+    @Test
+    fun sheet_full_dark_fa() = sheet(1f, "full", ThemeMode.DARK, AppLanguage.PERSIAN)
+
+    @Test
+    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
+    fun sheet_full_light_en() = sheet(1f, "full", ThemeMode.LIGHT, AppLanguage.ENGLISH)
+
+    @Test
+    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
+    fun sheet_full_dark_en() = sheet(1f, "full", ThemeMode.DARK, AppLanguage.ENGLISH)
 }

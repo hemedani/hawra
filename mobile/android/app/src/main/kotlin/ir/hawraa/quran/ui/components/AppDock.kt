@@ -329,6 +329,8 @@ internal fun MiniPlayerRow(
     onNext: () -> Unit,
     onExpand: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Hides the tile while the full player flies its own copy between the dock and hero. */
+    tileAlpha: Float = 1f,
 ) {
     val tokens = LocalHawraaTokens.current
     val geometry = LocalHawraaGeometry.current
@@ -352,6 +354,11 @@ internal fun MiniPlayerRow(
                 seedKey = nowPlaying.number,
                 number = nowPlaying.number,
                 size = geometry.tiles.md,
+                modifier = if (tileAlpha < 1f) {
+                    Modifier.graphicsLayer { alpha = tileAlpha }
+                } else {
+                    Modifier
+                },
             )
             Spacer(Modifier.width(geometry.spacing.md))
             Column(modifier = Modifier.weight(1f)) {
