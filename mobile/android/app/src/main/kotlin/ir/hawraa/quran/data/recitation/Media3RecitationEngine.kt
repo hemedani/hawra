@@ -184,6 +184,10 @@ class Media3RecitationEngine @Inject constructor(
         _state.update { it.copy(index = index, ended = false, failed = false) }
     }
 
+    override fun seekToPosition(positionMs: Long) {
+        player?.seekTo(positionMs.coerceAtLeast(0L))
+    }
+
     override fun setSpeed(speed: PlaybackSpeed) {
         player?.setPlaybackSpeed(speed.value)
         _state.update { it.copy(speed = speed) }

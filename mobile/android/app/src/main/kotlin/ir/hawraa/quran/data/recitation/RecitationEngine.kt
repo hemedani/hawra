@@ -48,6 +48,15 @@ interface RecitationEngine {
 
     fun seekToIndex(index: Int, play: Boolean = true)
 
+    /**
+     * Seeks within the current track. Used by the full-screen player's scrubber.
+     *
+     * Position is otherwise deliberately absent from [PlaybackState] (see [currentPositionMs]); a
+     * user-initiated seek is an explicit command, not a poll. Defaults to a no-op so a fake engine
+     * and a non-audio cue need not implement it.
+     */
+    fun seekToPosition(positionMs: Long) = Unit
+
     fun setSpeed(speed: PlaybackSpeed)
 
     fun setRepeatAyah(repeat: Boolean)

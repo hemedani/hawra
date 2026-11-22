@@ -45,8 +45,11 @@ import ir.hawraa.quran.domain.session.SessionMode
 import ir.hawraa.quran.domain.session.VerseRef
 import ir.hawraa.quran.domain.settings.ReadingSettings
 import ir.hawraa.quran.domain.settings.RecitationSettings
-import ir.hawraa.quran.ui.recitation.NowPlaying
 import ir.hawraa.quran.ui.recitation.NowPlayingStore
+import ir.hawraa.quran.ui.recitation.PlayerPreset
+import ir.hawraa.quran.ui.recitation.PlayerReciter
+import ir.hawraa.quran.ui.recitation.PlayerUi
+import ir.hawraa.quran.ui.recitation.PlayerVerse
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -269,12 +272,25 @@ class ReaderViewModel @Inject constructor(
         }
         // The dock's play button is chrome: it has no verse context, so it resumes from the page
         // the reader is looking at. Bound here and withdrawn in `onCleared`, because this screen
-        // owns the engine.
-        nowPlaying.bindTransport(
+        // owns the engine. The same binding serves the full-screen player: every command routes to
+        // the implementation that already existed for the reader.
+        nowPlaying.bindCommands(
             onToggle = { onPlayPause(focused = null, visiblePage = lastVisiblePage) },
             onNext = { onNextAyah() },
+            onPrevious = { onPreviousAyah() },
+            onSeek = { positionMs -> seekTo(positionMs) },
+            onCycleSpeed = { onCycleSpeed() },
+            onToggleRepeat = { onToggleRepeat() },
+            onSelectReciter = { key -> selectReciter(key) },
+            onDownload = { downloadCurrentPage() },
+            onPlayPreset = { clientId -> onPlayPreset(clientId) },
+            onExitPreset = { onExitPreset() },
             onOpenControls = { openPlayer() },
+            onClose = { closePlayer() },
         )
+        nowPlaying.bindPositionProvider {
+            currentPositionMs().toPositionInt() to currentDurationMs().toPositionInt()
+        }
         viewModelScope.launch {
             settingsRepository.recitationSettings.collect { settings ->
                 val previousKey = reciter?.key
@@ -495,6 +511,16 @@ class ReaderViewModel @Inject constructor(
     fun currentPositionMs(): Long = engine.currentPositionMs()
 
     fun currentDurationMs(): Long = engine.currentDurationMs()
+
+    /**
+     * Seeks within the sounding track. A preset run interleaves recitation with spoken cues, so a
+     * raw millisecond seek has no single meaning there; it is ignored until plain recitation is
+     * back in charge. The sheet's scrubber reads the same position source either way.
+     */
+    fun seekTo(positionMs: Long) {
+        if (activePreset != null) return
+        engine.seekToPosition(positionMs)
+    }
 
     /** Switches the standing reciter; the settings collector rebuilds the queue on the new voice. */
     fun selectReciter(key: String) {
@@ -916,54 +942,82 @@ class ReaderViewModel @Inject constructor(
     }
 
     /**
-     * Mirrors the recitation half of the state into the app-wide store the dock reads.
+     * Mirrors the reader's playback state into the app-wide store the dock and the full-screen
+     * player read.
      *
-     * Only the fields the dock draws are copied, so a scroll does not push a new dock model and
-     * the dock does not recompose while the reader scrolls.
+     * One snapshot, not one model per consumer: the dock takes its [PlayerUi.mini] fraction and the
+     * sheet takes the rest, so the two can never disagree about what is sounding. Raw data is
+     * carried (script pairs, numbers, the verse) and the view chooses a language.
      */
     private fun publishNowPlaying(state: ReaderUiState) {
         val recitation = state.recitation
+        val juz = recitation.playingJuz
+        val verse = recitation.playingVerse
 
         // A juz-granularity reciter has no verse to show, but it does have something playing:
         // the dock shows the juz instead of hiding the player entirely.
-        val juz = recitation.playingJuz
-        if (juz != null) {
-            val start = AyahNumbering.juzStart(juz)
-            val surah = start?.let { state.surahs[it.first] }
-            nowPlaying.publish(
-                NowPlaying(
-                    surahNumber = surah?.number ?: 0,
-                    surahNameFa = surah?.nameFa.orEmpty(),
-                    surahNameEn = surah?.nameEn.orEmpty(),
-                    ayah = start?.second ?: 0,
-                    reciterNameFa = recitation.reciterNameFa,
-                    reciterNameEn = recitation.reciterNameEn,
-                    isPlaying = recitation.isPlaying,
-                    busy = recitation.buffering,
-                    juzNumber = juz,
-                ),
-            )
-            return
+        val surahNumber = if (juz != null) {
+            AyahNumbering.juzStart(juz)?.first
+        } else {
+            verse?.first
         }
-
-        val verse = recitation.playingVerse
-        val surah = verse?.let { state.surahs[it.first] }
-        if (verse == null || surah == null) {
+        val surah = surahNumber?.let { state.surahs[it] }
+        if (surah == null) {
             nowPlaying.publish(null)
             return
         }
+
+        val featured = state.currentVerse()
+        val ayah = if (juz != null) {
+            AyahNumbering.juzStart(juz)?.second ?: 0
+        } else {
+            verse?.second ?: 0
+        }
+
         nowPlaying.publish(
-            NowPlaying(
+            PlayerUi(
                 surahNumber = surah.number,
                 surahNameFa = surah.nameFa,
                 surahNameEn = surah.nameEn,
-                ayah = verse.second,
+                ayah = ayah,
+                juzNumber = juz,
                 reciterNameFa = recitation.reciterNameFa,
                 reciterNameEn = recitation.reciterNameEn,
+                presetNameFa = recitation.activePresetName,
+                stepKind = recitation.activeStep,
                 isPlaying = recitation.isPlaying,
                 busy = recitation.buffering,
-                presetNameFa = recitation.activePresetName,
-                stepKind = recitation.activeStep?.wire,
+                failed = recitation.failed,
+                speed = recitation.speed,
+                repeatAyah = recitation.repeatAyah,
+                reciters = state.reciters.map {
+                    PlayerReciter(
+                        key = it.key,
+                        nameFa = it.nameFa,
+                        nameEn = it.nameEn,
+                        perAyah = it.perAyah,
+                    )
+                },
+                selectedReciterKey = state.selectedReciterKey,
+                presets = recitation.presets.map {
+                    PlayerPreset(
+                        clientId = it.clientId,
+                        nameFa = it.nameFa,
+                        isDefault = it.isDefault,
+                        stepCount = it.stepCount,
+                    )
+                },
+                featuredVerse = featured?.let { item ->
+                    PlayerVerse(
+                        surah = item.verse.surah,
+                        ayah = item.verse.ayah,
+                        page = item.page,
+                        arabic = item.verse.textUthmani,
+                        translation = item.verse.translations.firstOrNull()?.text,
+                    )
+                },
+                downloadablePage = lastVisiblePage.takeIf { it > 0 } ?: featured?.page,
+                fontSizeSp = state.settings.fontSizeSp,
             ),
         )
     }
@@ -976,7 +1030,7 @@ class ReaderViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         // The player half of the dock belongs to this screen's playback; leaving must clear it.
-        nowPlaying.unbindTransport()
+        nowPlaying.unbind()
         nowPlaying.publish(null)
         // The player is this screen's overlay; if it was open, the shell must get its dock back.
         nowPlaying.setExpanded(false)
@@ -1034,3 +1088,6 @@ internal fun presetVoice(
         ?: perAyah.firstOrNull()
         ?: selected
 }
+
+/** The store carries positions as `Int`; a track shorter than ~24 days always fits. */
+private fun Long.toPositionInt(): Int = coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()

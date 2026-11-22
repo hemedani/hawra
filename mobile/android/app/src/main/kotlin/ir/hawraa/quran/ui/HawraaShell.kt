@@ -22,7 +22,6 @@ import ir.hawraa.quran.ui.components.DockTab
 import ir.hawraa.quran.ui.components.NowPlayingUi
 import ir.hawraa.quran.ui.navigation.HawraaNavHost
 import ir.hawraa.quran.ui.navigation.Routes
-import ir.hawraa.quran.ui.recitation.NowPlayingStore
 import ir.hawraa.quran.ui.screens.auth.AuthScreen
 
 /**
@@ -47,7 +46,7 @@ fun HawraaShell(
     viewModel: ShellViewModel = hiltViewModel(),
 ) {
     val navController = rememberNavController()
-    val nowPlaying by viewModel.nowPlaying.collectAsStateWithLifecycle()
+    val player by viewModel.player.collectAsStateWithLifecycle()
     val playerExpanded by viewModel.playerExpanded.collectAsStateWithLifecycle()
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -68,11 +67,12 @@ fun HawraaShell(
                         selectedRoute = route ?: Routes.HOME,
                         onSelect = { tab -> navController.navigateTopLevel(tab.navigationRoute()) },
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        nowPlaying = nowPlaying?.let { it.toUi() },
+                        nowPlaying = player?.mini()?.let { it.toUi() },
+                        miniProgress = viewModel.miniProgress,
                         onPlayPause = viewModel::togglePlayPause,
                         onNext = viewModel::nextAyah,
                         onExpand = viewModel::openControls,
-                        onMiniPlayerRect = {},
+                        onMiniPlayerRect = viewModel::onMiniPlayerRect,
                     )
                 }
             }
