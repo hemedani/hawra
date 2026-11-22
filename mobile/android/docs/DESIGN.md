@@ -266,7 +266,7 @@ Screen padding 20–24 · card gap 12–16 · card inner padding 16.
 | Group | Tokens (dp) |
 |---|---|
 | Controls (circular) | `sm 32, md 36, lg 40, xl 44, play 52` |
-| Tiles | `sm 32, md 38, lg 48` |
+| Tiles | `sm 32, md 40, lg 48` |
 | Icons | `xs 13, sm 15, md 18, lg 22, xl 26, hero 44` |
 | Hairlines | 1 dp (`1.dp`), or `Dp.Hairline` for dividers inside a pane |
 | Max content width | 760 |
@@ -439,9 +439,9 @@ Material specifies for icon-only docks, and it leaves room for a fifth (`Search`
 
 ### 10.5 `MiniPlayerRow`
 
-The dock's player half. Identity tile 40 dp (`tiles.md`, `radius.sm`), title (`label`) over subtitle
-(`caption`, `textSecondary`), then trailing controls: **play/pause** (filled accent bubble, 40) and
-**next** (outlined, 36). A `WavyProgress` wave sits under the title/subtitle inside the leading
+The dock's player half. Identity tile 40 dp (`geometry.tiles.md`, `radius.sm`), title (`label`) over
+subtitle (`caption`, `textSecondary`), then trailing controls: **play/pause** (filled accent bubble,
+40) and **next** (outlined, 36). A `WavyProgress` wave sits under the title/subtitle inside the leading
 region, and the whole leading region is one tap target that opens the player.
 
 - Tapping the row opens the player / reader context; the trailing buttons must not steal that tap.
@@ -541,6 +541,42 @@ because a 20 dp glyph is not a tap target and an unlabelled toggle is invisible 
 It is drawn rather than imported for the same reason as the transport glyphs (§8):
 `material-icons-core` ships neither `Visibility` nor `VisibilityOff`. It takes a `tint` rather than
 reading a theme colour so it can sit at `textTertiary` in a field and warm to `accent` on focus.
+
+### 10.12 The player morph
+
+The full player is not a second surface that appears over the dock: it is the dock's mini half
+**unfolding** into the screen. `NowPlayingSheet` is owned by the shell and mounted as a **sibling**
+of the nav host and the dock — never inside either — and it reads `NowPlayingStore`; it knows
+nothing about navigation, and the reader keeps the engine and session tracking.
+
+One normalised progress `t` (`0` = the dock capsule, `1` = full screen) drives every channel:
+
+- **Bounds** interpolate from the dock's measured `miniPlayerRect` to the viewport, so the capsule
+  starts exactly on the dock row and no surface ever jumps.
+- **Corner** is `mini * (1 - t^1.6)`, where `mini` is the dock's `radius.xl`; the capsule lets go
+  quickly at first and eases into the square full-screen edge.
+- **Cross-fade:** the dock row fades out over `t 0.12 → 0.52` while `PlayerContent` fades in over
+  `t 0.34 → 0.90` (scale `0.84 → 1`); hit-test order hands off at `t = 0.5`. A faded layer
+  swallows pointers, so the invisible one is never the live target.
+- **Glass → opaque:** the card's glass fill, frost scrim and rim fade out as the reading canvas
+  fades in; scripture never lands on glass.
+- **Hero flight:** the identity is one `PaletteTile` interpolated from the dock tile's rect to the
+  hero's measured rect, with both endpoints hiding their own copy during the flight. The hero is
+  `geometry.player.heroSize` (180 dp) carrying `Typography.heroNumeral` (56 sp) — no artwork (D5).
+
+**Pull to dismiss.** A downward drag drives the same `t`. Travel is normalised over at least
+`pullFloor` (420 dp), so a short screen cannot fling the player away on a nudge. On release the
+player dismisses if it has travelled past `pullDismiss` (105 dp) or is flung down faster than
+`pullFling` (520 dp); otherwise it springs back to `t = 1`. A slow lift at full screen always
+settles open.
+
+**Backdrop.** The shell blurs the content box (nav host + dock) by `frost.backdrop × t` on API 31+;
+the player itself sits outside that blur — it is the surface the blur exists to reveal. API 29–30
+has no `RenderEffect`, so the sheet fades the same progress into a frost scrim (`scrimMax`, 0.30)
+instead; legibility never depends on the blur.
+
+**Reduced motion** snaps every channel to its end value — open, close and pull included — and the
+sheet never withholds content to make a transition work.
 
 ---
 

@@ -213,7 +213,7 @@ may extend it, not replace it).
 
 ---
 
-### Task 6 — Shell-owned player: store, morphing sheet, content
+### Task 6 — Shell-owned player: store, morphing sheet, content ✅
 
 **Goal:** the full player expands from the mini-player exactly as Pejvak's does.
 
@@ -493,3 +493,29 @@ without opening Pejvak.
   and reads `t` from `graphicsLayer`/`offset`/pointer lambdas at layer time, so `PlayerContent` is
   skipped frame after frame even while the card bounds and flying artwork still recompose the
   sheet. `./gradlew test assembleDebug` green, 421/421; all 12 `sheet-*` captures re-inspected.
+- 2026-11-22 — **Task 6 complete — the shell-owned player.** (6a store) `NowPlayingStore` now
+  carries the full `PlayerUi` snapshot (surah/juz, identity number, reciter, featured verse +
+  translation, preset step, play/busy/failed/speed/repeat, reciters/presets, downloadable page),
+  the command set (`toggle`, `next`, `previous`, `seek`, `cycleSpeed`, `toggleRepeat`,
+  `selectReciter`, `download`, `playPreset`, `exitPreset`, `close`), a `positionProvider`, and the
+  dock's measured `miniPlayerRect`; `ReaderViewModel` publishes it and keeps the Media3 engine and
+  session tracking, `ShellViewModel` exposes the store. (6b content) `PlayerContent` is the reduced
+  Pejvak body — header/close, hero identity tile, surah/juz + reciter, featured verse on the opaque
+  reading surface, scrubber, transport, and the speed/repeat/reciter/download/preset chips — with no
+  queue/sleep/tone/enhancer controls and a leaf ticker so position never recomposes the sheet.
+  (6c sheet/wiring) `NowPlayingSheet` morphs one surface from the dock rect to full screen
+  (`corner = mini * (1 - t^1.6)`), cross-fades the dock row and the content, flies the shared
+  `PaletteTile` to the measured hero, and owns pull-dismiss (`pullDismiss` 105 dp, `pullFloor`
+  420 dp, `pullFling` 520 dp) plus reduced-motion snapping; `HawraaShell` mounts it as a sibling of
+  the nav host and dock, `ReaderScreen` no longer owns the player, and
+  `screens/reader/NowPlayingScreen.kt` is gone. **Blur:** the shell blurs the content box (nav host
+  + dock) at `frost.backdrop × progress` on API 31+ and passes the same radius to the sheet; API
+  29–30 fades the frost scrim (`scrimMax` 0.30) instead, and the player stays outside the blur.
+  **Review fixes:** the dock keeps its wave during the morph, the mini row stays composed and both
+  faded layers swallow pointer events in the Initial pass, card bounds stay continuous at the
+  hand-off, `PlayerUi`/`NowPlaying`/reciter/preset/verse are `@Immutable` and the store `@Stable`,
+  callbacks and modifiers are remembered and `t` is read at layer time so `PlayerContent` is
+  skipped per frame, and every morph/card number is a token. `MorphMathTest` (14) and
+  `NowPlayingScreenshotTest` (12 `sheet-*` captures at mini/mid/full × light/dark × fa/en) pass;
+  `./gradlew test assembleDebug` green, 421/421. DESIGN.md now documents the morph as §10.12 and
+  the tile ramp reads 40 dp.
