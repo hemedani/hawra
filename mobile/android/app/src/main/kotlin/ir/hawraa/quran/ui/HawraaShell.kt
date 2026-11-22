@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -30,9 +31,16 @@ import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.ui.components.AmbientCanvas
 import ir.hawraa.quran.ui.components.AppDock
 import ir.hawraa.quran.ui.components.DockTab
+import ir.hawraa.quran.ui.components.LocalBackdrop
+import ir.hawraa.quran.ui.components.LocalSheetPresence
+import ir.hawraa.quran.ui.components.LocalShellInsets
 import ir.hawraa.quran.ui.components.NavWaveKind
 import ir.hawraa.quran.ui.components.NowPlayingUi
+import ir.hawraa.quran.ui.components.SheetPresence
+import ir.hawraa.quran.ui.components.ShellInsets
 import ir.hawraa.quran.ui.components.WaveSweep
+import ir.hawraa.quran.ui.components.backdropSource
+import ir.hawraa.quran.ui.components.rememberBackdrop
 import ir.hawraa.quran.ui.navigation.HawraaNavHost
 import ir.hawraa.quran.ui.navigation.Routes
 import ir.hawraa.quran.ui.navigation.navWaveKind
@@ -106,7 +114,16 @@ fun HawraaShell(
     // player opens. The radius is computed for both API bands: on 31+ it feeds `Modifier.blur`,
     // and on 29–30 the sheet reads it as its scrim alpha (there is no RenderEffect blur there).
     var morphProgress by remember { mutableFloatStateOf(0f) }
-    val backdropRadius: Dp = geometry.frost.backdrop * morphProgress.coerceIn(0f, 1f)
+    val sheetPresence = remember { SheetPresence() }
+    val backdrop = rememberBackdrop()
+    val shellInsets = remember(geometry.dock.dockInset) {
+        ShellInsets(bottom = geometry.dock.dockInset)
+    }
+    val playerRadius: Dp = geometry.frost.backdrop * morphProgress.coerceIn(0f, 1f)
+    val backdropRadius: Dp = when {
+        sheetPresence.count > 0 -> geometry.frost.backdrop
+        else -> playerRadius
+    }
     val backdropBlurModifier = if (
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && backdropRadius.value > 0f
     ) {
@@ -120,11 +137,17 @@ fun HawraaShell(
             navTrigger = navTrigger,
             navShiftX = canvasShiftX,
             navShiftY = canvasShiftY,
+            modifier = Modifier.backdropSource(backdrop, zIndex = 0f),
         )
         when (authState) {
             AuthState.Restoring -> Unit
             AuthState.SignedOut -> AuthScreen()
             is AuthState.SignedIn -> {
+                CompositionLocalProvider(
+                    LocalBackdrop provides backdrop,
+                    LocalShellInsets provides shellInsets,
+                    LocalSheetPresence provides sheetPresence,
+                ) {
                 // The nav host and the dock are the chrome the player frosts. They live in their
                 // own box so the blur never touches the sheet, which is the surface the blur is
                 // there to reveal.
@@ -166,6 +189,7 @@ fun HawraaShell(
                     onExpandProgress = { morphProgress = it },
                     miniProgress = viewModel.miniProgress,
                 )
+                }
             }
         }
     }
