@@ -130,7 +130,7 @@
     <!-- Downloads -->
     <string name="settings_downloads">دانلود تلاوت‌ها</string>
     <string name="settings_downloads_hint">ذخیرهٔ آفلاین، آیه‌به‌آیه یا جزء‌به‌جزء</string>
-    <string name="downloads_title">دانلود تلاوت‌ها</string>
+    <string name="downloads_title">دانلودها</string>
     <string name="downloads_storage">فضای استفاده‌شده</string>
     <string name="downloads_pending">%1$s فایل در صف</string>
     <string name="downloads_reciter">قاری</string>

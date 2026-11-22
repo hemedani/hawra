@@ -14,23 +14,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,7 +35,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.hawraa.quran.R
@@ -56,11 +46,19 @@ import ir.hawraa.quran.domain.download.EditionInfo
 import ir.hawraa.quran.domain.download.SizeUnit
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.ui.appLocale
+import ir.hawraa.quran.ui.components.BubbleButton
 import ir.hawraa.quran.ui.components.GlassChip
+import ir.hawraa.quran.ui.components.GlassHeader
 import ir.hawraa.quran.ui.components.GlassSegments
 import ir.hawraa.quran.ui.components.GlassSurface
+import ir.hawraa.quran.ui.components.ICON_GLYPHS
+import ir.hawraa.quran.ui.components.Icon
+import ir.hawraa.quran.ui.components.LocalShellInsets
+import ir.hawraa.quran.ui.components.ScreenFrame
 import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
+import ir.hawraa.quran.ui.theme.OceanCascade
+import ir.hawraa.quran.ui.theme.oceanEntrance
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -109,7 +107,7 @@ fun DownloadsScreen(
 }
 
 /** Stateless body, so a screenshot test can render it without Hilt or a database. */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun DownloadsContent(
     state: DownloadsUiState,
@@ -130,47 +128,49 @@ internal fun DownloadsContent(
 ) {
     val geometry = LocalHawraaGeometry.current
     val glass = LocalGlassColors.current
+    val shellInsets = LocalShellInsets.current
     val persian = LocalConfiguration.current.appLocale().language == "fa"
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.downloads_title)) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+    ScreenFrame(
+        header = { headerModifier ->
+            GlassHeader(
+                modifier = headerModifier,
+                title = stringResource(R.string.downloads_title),
+                userTitle = true,
+                leading = {
+                    BubbleButton(
+                        icon = ICON_GLYPHS.getValue("back"),
+                        contentDescription = stringResource(R.string.back),
+                        onClick = onBack,
+                        size = geometry.controls.md,
+                    )
                 },
             )
         },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = geometry.screenPadding,
-                    end = geometry.screenPadding,
-                    top = geometry.spacing.sm,
-                    bottom = geometry.dock.dockInset,
-                ),
-        ) {
-            StorageSummary(
-                totalBytes = state.totalBytes,
-                pendingFiles = state.pendingFiles,
-                persian = persian,
-            )
+    ) { topInset ->
+        OceanCascade {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = geometry.screenPadding,
+                        end = geometry.screenPadding,
+                        top = topInset,
+                        bottom = shellInsets.bottom,
+                    ),
+            ) {
+                StorageSummary(
+                    totalBytes = state.totalBytes,
+                    pendingFiles = state.pendingFiles,
+                    persian = persian,
+                    modifier = Modifier.oceanEntrance(0),
+                )
 
-            if (state.catalogueUnavailable) {
-                Spacer(Modifier.height(geometry.spacing.xl))
-                CatalogueUnavailable()
-            }
+                if (state.catalogueUnavailable) {
+                    Spacer(Modifier.height(geometry.spacing.xl))
+                    CatalogueUnavailable(modifier = Modifier.oceanEntrance(1))
+                }
 
             if (state.reciters.isNotEmpty()) {
                 Spacer(Modifier.height(geometry.spacing.xxl))
@@ -365,7 +365,7 @@ internal fun DownloadsContent(
                     color = glass.textTertiary,
                 )
             } else {
-                groups.forEach { group ->
+                groups.forEachIndexed { index, group ->
                     EditionGroupCard(
                         group = group,
                         state = state,
@@ -373,9 +373,11 @@ internal fun DownloadsContent(
                         onRetry = onRetry,
                         onDelete = onDelete,
                         onDeleteGroup = { onDeleteGroup(group) },
+                        modifier = Modifier.oceanEntrance(index + 2),
                     )
                     Spacer(Modifier.height(geometry.spacing.md))
                 }
+            }
             }
         }
     }
@@ -466,6 +468,13 @@ private fun NumberPicker(
             value = value.coerceIn(first, last).toFloat(),
             onValueChange = { raw -> onChange(raw.roundToInt().coerceIn(first, last)) },
             valueRange = first.toFloat()..last.toFloat(),
+            colors = SliderDefaults.colors(
+                thumbColor = glass.accent,
+                activeTrackColor = glass.accent,
+                inactiveTrackColor = glass.glassBorder,
+                activeTickColor = glass.onAccent,
+                inactiveTickColor = glass.textTertiary,
+            ),
             modifier = Modifier.fillMaxWidth().testTag(testTag),
         )
         Spacer(Modifier.height(geometry.spacing.xxs))
@@ -475,11 +484,16 @@ private fun NumberPicker(
 // ---- sections ------------------------------------------------------------------------
 
 @Composable
-private fun StorageSummary(totalBytes: Long, pendingFiles: Int, persian: Boolean) {
+private fun StorageSummary(
+    totalBytes: Long,
+    pendingFiles: Int,
+    persian: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val geometry = LocalHawraaGeometry.current
     val glass = LocalGlassColors.current
     GlassSurface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(geometry.radius.card),
         strong = true,
     ) {
@@ -514,26 +528,29 @@ private fun StorageSummary(totalBytes: Long, pendingFiles: Int, persian: Boolean
 }
 
 @Composable
-private fun CatalogueUnavailable() {
+private fun CatalogueUnavailable(modifier: Modifier = Modifier) {
     val geometry = LocalHawraaGeometry.current
     val glass = LocalGlassColors.current
     val shape = RoundedCornerShape(geometry.radius.sm)
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(glass.danger.copy(alpha = if (glass.dark) 0.18f else 0.09f))
-            .border(BorderStroke(1.dp, glass.danger.copy(alpha = 0.32f)), shape)
+            .border(
+                BorderStroke(geometry.glass.borderWidth, glass.danger.copy(alpha = 0.32f)),
+                shape,
+            )
             .padding(horizontal = geometry.spacing.md, vertical = geometry.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(geometry.spacing.sm),
     ) {
         Icon(
-            imageVector = Icons.Filled.Warning,
+            name = "warning",
             contentDescription = null,
             tint = glass.danger,
-            modifier = Modifier.size(geometry.icons.sm),
+            size = geometry.icons.sm,
         )
         Text(
             text = stringResource(R.string.downloads_catalogue_unavailable),
@@ -584,6 +601,7 @@ private fun EditionGroupCard(
     onRetry: (DownloadBatch) -> Unit,
     onDelete: (DownloadBatch) -> Unit,
     onDeleteGroup: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val geometry = LocalHawraaGeometry.current
     val glass = LocalGlassColors.current
@@ -597,7 +615,7 @@ private fun EditionGroupCard(
         .orEmpty()
 
     GlassSurface(
-        modifier = Modifier.fillMaxWidth().testTag("download_group_${group.editionKey}"),
+        modifier = modifier.fillMaxWidth().testTag("download_group_${group.editionKey}"),
         shape = RoundedCornerShape(geometry.radius.md),
         rimLight = false,
     ) {
@@ -786,7 +804,13 @@ private fun PrimaryAction(label: String, enabled: Boolean, busy: Boolean, onClic
             .fillMaxWidth()
             .clip(shape)
             .background(if (active) glass.accent else glass.glassFill)
-            .border(BorderStroke(1.dp, if (active) glass.accent else glass.glassBorder), shape)
+            .border(
+                BorderStroke(
+                    geometry.glass.borderWidth,
+                    if (active) glass.accent else glass.glassBorder,
+                ),
+                shape,
+            )
             .clickable(enabled = active, onClick = onClick)
             .padding(vertical = geometry.spacing.md)
             .testTag("download_action"),

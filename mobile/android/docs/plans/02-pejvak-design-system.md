@@ -546,3 +546,15 @@ without opening Pejvak.
   the summary, day headers and rows. `history_title` fa is «تاریخ» (en "History"). The screenshot
   test now stages light/dark × fa/en through `LocalizedApp`; four captures inspected. `./gradlew
   test assembleDebug` green, APK at `app/build/outputs/apk/debug/app-debug.apk`.
+- 2026-11-22 — **Task 8b complete — Downloads chrome.** `DownloadsScreen` dropped `Scaffold` +
+  `TopAppBar` for `ScreenFrame` + a floating `GlassHeader` («دانلودها», leading back bubble, en
+  "Downloads"); the body starts below the measured `topInset` and clears the dock with
+  `LocalShellInsets.current.bottom` instead of `dockInset`. Storage and edition cards keep the
+  current `GlassSurface` recipe (`radius.card` strong / `radius.md`, no group rim); the catalogue
+  warning now uses the semantic `warning` glyph and the glass border token. Every remaining literal
+  is gone — borders read `geometry.glass.borderWidth`, the `NumberPicker` slider uses the glass
+  `SliderDefaults` palette instead of Material's lavender, and the accent action keeps its token
+  fill. `OceanCascade` + `oceanEntrance` stagger the summary, warning and edition cards. The
+  screenshot test stages light/dark × fa/en through `LocalizedApp` plus the juz-only and saved-list
+  captures; all six inspected. `./gradlew test assembleDebug` green, APK at
+  `app/build/outputs/apk/debug/app-debug.apk`.

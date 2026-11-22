@@ -12,11 +12,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import ir.hawraa.quran.data.local.DownloadBatch
+import ir.hawraa.quran.domain.AppLanguage
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.domain.download.DownloadScope
 import ir.hawraa.quran.domain.download.EditionGranularity
 import ir.hawraa.quran.domain.download.EditionInfo
 import ir.hawraa.quran.domain.download.ReciterInfo
+import ir.hawraa.quran.ui.LocalizedApp
 import ir.hawraa.quran.ui.screens.downloads.DownloadNotice
 import ir.hawraa.quran.ui.screens.downloads.DownloadsContent
 import ir.hawraa.quran.ui.screens.downloads.DownloadsUiState
@@ -154,33 +156,53 @@ class DownloadsScreenshotTest {
         }
     }
 
-    @Test
-    fun downloads_light_persian() {
+    private fun stage(
+        language: AppLanguage,
+        theme: ThemeMode,
+        name: String,
+        notice: DownloadNotice? = null,
+    ) {
         composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "settings") {
-                    DownloadsContent(state = state(), onBack = {})
+            LocalizedApp(language) {
+                HawraaTheme(themeMode = theme) {
+                    TestShell(selected = "settings") {
+                        DownloadsContent(state = state(notice = notice), onBack = {})
+                    }
                 }
             }
         }
-        capture("downloads-light-fa.png")
+        capture(name)
     }
 
     @Test
-    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
-    fun downloads_dark_english() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.DARK) {
-                TestShell(selected = "settings") {
-                    DownloadsContent(
-                        state = state(notice = DownloadNotice.Queued(files = 286, alreadyHave = 0)),
-                        onBack = {},
-                    )
-                }
-            }
-        }
-        capture("downloads-dark.png")
-    }
+    fun downloads_light_fa() = stage(
+        language = AppLanguage.PERSIAN,
+        theme = ThemeMode.LIGHT,
+        name = "downloads-light-fa.png",
+    )
+
+    @Test
+    fun downloads_dark_fa() = stage(
+        language = AppLanguage.PERSIAN,
+        theme = ThemeMode.DARK,
+        name = "downloads-dark-fa.png",
+        notice = DownloadNotice.Queued(files = 286, alreadyHave = 0),
+    )
+
+    @Test
+    fun downloads_light_en() = stage(
+        language = AppLanguage.ENGLISH,
+        theme = ThemeMode.LIGHT,
+        name = "downloads-light-en.png",
+    )
+
+    @Test
+    fun downloads_dark_en() = stage(
+        language = AppLanguage.ENGLISH,
+        theme = ThemeMode.DARK,
+        name = "downloads-dark-en.png",
+        notice = DownloadNotice.Queued(files = 286, alreadyHave = 0),
+    )
 
     /**
      * A juz-granularity edition offers exactly one scope.
@@ -196,9 +218,11 @@ class DownloadsScreenshotTest {
             selectedEditionKey = "shakernejad-tartil-juz-24",
         )
         composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "settings") {
-                    DownloadsContent(state = juzOnly, onBack = {})
+            LocalizedApp(AppLanguage.PERSIAN) {
+                HawraaTheme(themeMode = ThemeMode.LIGHT) {
+                    TestShell(selected = "settings") {
+                        DownloadsContent(state = juzOnly, onBack = {})
+                    }
                 }
             }
         }
@@ -215,9 +239,11 @@ class DownloadsScreenshotTest {
     @Test
     fun downloads_saved_list() {
         composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "settings") {
-                    DownloadsContent(state = state(mode = ScopeMode.JUZ), onBack = {})
+            LocalizedApp(AppLanguage.PERSIAN) {
+                HawraaTheme(themeMode = ThemeMode.LIGHT) {
+                    TestShell(selected = "settings") {
+                        DownloadsContent(state = state(mode = ScopeMode.JUZ), onBack = {})
+                    }
                 }
             }
         }
