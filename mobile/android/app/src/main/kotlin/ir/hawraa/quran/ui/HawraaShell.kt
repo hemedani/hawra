@@ -15,11 +15,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -71,8 +74,8 @@ fun HawraaShell(
 ) {
     val navController = rememberNavController()
     val player by viewModel.player.collectAsStateWithLifecycle()
-    val playerExpanded by viewModel.playerExpanded.collectAsStateWithLifecycle()
     val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val density = LocalDensity.current
     val backStackEntry by navController.currentBackStackEntryAsState()
     val route = backStackEntry?.destination?.route
     val geometry = LocalHawraaGeometry.current
@@ -116,14 +119,15 @@ fun HawraaShell(
     var morphProgress by remember { mutableFloatStateOf(0f) }
     val sheetPresence = remember { SheetPresence() }
     val backdrop = rememberBackdrop()
-    val shellInsets = remember(geometry.dock.dockInset) {
-        ShellInsets(bottom = geometry.dock.dockInset)
-    }
+    // The dock reports its real height; the token is only the first-frame seed.
+    var dockClearance by remember { mutableStateOf(geometry.dock.dockInset) }
+    val shellInsets = ShellInsets(bottom = dockClearance)
     val playerRadius: Dp = geometry.frost.backdrop * morphProgress.coerceIn(0f, 1f)
     val backdropRadius: Dp = when {
         sheetPresence.count > 0 -> geometry.frost.backdrop
         else -> playerRadius
     }
+    backdrop.paused = backdropRadius > 0.dp
     val backdropBlurModifier = if (
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && backdropRadius.value > 0f
     ) {
@@ -133,60 +137,82 @@ fun HawraaShell(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AmbientCanvas(
-            navTrigger = navTrigger,
-            navShiftX = canvasShiftX,
-            navShiftY = canvasShiftY,
-            modifier = Modifier.backdropSource(backdrop, zIndex = 0f),
-        )
         when (authState) {
-            AuthState.Restoring -> Unit
-            AuthState.SignedOut -> AuthScreen()
+            AuthState.Restoring -> AmbientCanvas(
+                navTrigger = navTrigger,
+                navShiftX = canvasShiftX,
+                navShiftY = canvasShiftY,
+            )
+            AuthState.SignedOut -> {
+                AmbientCanvas(
+                    navTrigger = navTrigger,
+                    navShiftX = canvasShiftX,
+                    navShiftY = canvasShiftY,
+                )
+                AuthScreen()
+            }
             is AuthState.SignedIn -> {
                 CompositionLocalProvider(
                     LocalBackdrop provides backdrop,
                     LocalShellInsets provides shellInsets,
                     LocalSheetPresence provides sheetPresence,
                 ) {
-                // The nav host and the dock are the chrome the player frosts. They live in their
-                // own box so the blur never touches the sheet, which is the surface the blur is
-                // there to reveal.
-                Box(modifier = Modifier.fillMaxSize().then(backdropBlurModifier)) {
-                    HawraaNavHost(navController = navController)
-                    // The full-screen player covers the whole app, so the dock gets out of the
-                    // way while it is open.
-                    if (!playerExpanded) {
-                        AppDock(
-                            selectedRoute = route ?: Routes.HOME,
-                            onSelect = { tab -> navController.navigateTopLevel(tab.navigationRoute()) },
-                            modifier = Modifier.align(Alignment.BottomCenter),
-                            nowPlaying = player?.mini()?.let { it.toUi() },
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        // The whole shell — canvas, content, dock and crest — frosts while a
+                        // modal is open. The sheet is the sibling below, the one surface the
+                        // blur exists to reveal.
+                        Box(modifier = Modifier.fillMaxSize().then(backdropBlurModifier)) {
+                            AmbientCanvas(
+                                navTrigger = navTrigger,
+                                navShiftX = canvasShiftX,
+                                navShiftY = canvasShiftY,
+                                modifier = Modifier.backdropSource(backdrop, zIndex = 0f),
+                            )
+                            HawraaNavHost(navController = navController)
+                            // The dock stays composed under the sheet, so its measured row
+                            // and wave survive the open/close morph.
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .onGloballyPositioned { coords ->
+                                        if (coords.isAttached && coords.size.height > 0) {
+                                            dockClearance = with(density) {
+                                                coords.size.height.toDp()
+                                            }
+                                        }
+                                    },
+                            ) {
+                                AppDock(
+                                    selectedRoute = route ?: Routes.HOME,
+                                    onSelect = { tab ->
+                                        navController.navigateTopLevel(tab.navigationRoute())
+                                    },
+                                    nowPlaying = player?.mini()?.let { it.toUi() },
+                                    miniProgress = viewModel.miniProgress,
+                                    onPlayPause = viewModel::togglePlayPause,
+                                    onNext = viewModel::nextAyah,
+                                    onExpand = viewModel::openControls,
+                                    onMiniPlayerRect = viewModel::onMiniPlayerRect,
+                                )
+                            }
+                            // `WaveSweep` mirrors the logical tab direction itself for RTL,
+                            // so the shell passes the classifier's kind unchanged.
+                            WaveSweep(
+                                trigger = navTrigger,
+                                kind = navKind,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                        // The sheet is a sibling of the blurred shell, drawn above it, so it
+                        // survives navigation and morphs out of the dock's own row rather than
+                        // appearing as a second surface.
+                        NowPlayingSheet(
+                            store = viewModel.playerStore,
+                            backdropBlur = backdropRadius.value,
+                            onExpandProgress = { morphProgress = it },
                             miniProgress = viewModel.miniProgress,
-                            onPlayPause = viewModel::togglePlayPause,
-                            onNext = viewModel::nextAyah,
-                            onExpand = viewModel::openControls,
-                            onMiniPlayerRect = viewModel::onMiniPlayerRect,
                         )
                     }
-                    // The crest crosses above the chrome but stays inside the blurred
-                    // box, so the player sheet remains the topmost surface. `WaveSweep`
-                    // mirrors the logical tab direction itself for RTL, so the shell
-                    // passes the classifier's kind unchanged.
-                    WaveSweep(
-                        trigger = navTrigger,
-                        kind = navKind,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-                // The sheet is a sibling of the blurred chrome, drawn above it, so it survives
-                // navigation and morphs out of the dock's own row rather than appearing as a
-                // second surface.
-                NowPlayingSheet(
-                    store = viewModel.playerStore,
-                    backdropBlur = backdropRadius.value,
-                    onExpandProgress = { morphProgress = it },
-                    miniProgress = viewModel.miniProgress,
-                )
                 }
             }
         }
