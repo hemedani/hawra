@@ -48,13 +48,24 @@ fun WaveSweep(
     trigger: Int,
     kind: NavWaveKind,
     modifier: Modifier = Modifier,
+    /**
+     * Pins the crest at a fixed progress for previews and screenshot tests.
+     *
+     * Production callers leave this null, so the sweep follows [trigger] and the motion
+     * preference. A non-null value skips the animation and the motion gate, which lets a
+     * test capture a deterministic mid-sweep frame (`0.5` is the crest's full-strength
+     * midpoint). Never set this from app code.
+     */
+    progressOverride: Float? = null,
 ) {
     val tokens = LocalHawraaTokens.current
     val sweep = LocalHawraaGeometry.current.waveSweep
     val motion = useMotionEnabled()
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val pinned = progressOverride?.coerceIn(0f, 1f)
     val progress = remember { Animatable(0f) }
-    LaunchedEffect(trigger, motion) {
+    LaunchedEffect(trigger, motion, pinned) {
+        if (pinned != null) return@LaunchedEffect
         if (trigger <= 0 || !motion) {
             progress.snapTo(0f)
             return@LaunchedEffect
@@ -62,8 +73,9 @@ fun WaveSweep(
         progress.snapTo(0f)
         progress.animateTo(1f, tween(sweep.durationMs, easing = WaveSweepEasing))
     }
-    val eased = progress.value
-    if (!motion || eased <= 0f || eased >= 1f) return
+    val eased = pinned ?: progress.value
+    if (pinned == null && (!motion || eased <= 0f || eased >= 1f)) return
+    if (pinned != null && (eased <= 0f || eased >= 1f)) return
     Canvas(modifier) {
         val w = size.width
         val h = size.height

@@ -169,14 +169,12 @@ fun HawraaShell(
                         )
                     }
                     // The crest crosses above the chrome but stays inside the blurred
-                    // box, so the player sheet remains the topmost surface.
+                    // box, so the player sheet remains the topmost surface. `WaveSweep`
+                    // mirrors the logical tab direction itself for RTL, so the shell
+                    // passes the classifier's kind unchanged.
                     WaveSweep(
                         trigger = navTrigger,
-                        kind = when (val kind = navKind) {
-                            is NavWaveKind.TabDrift ->
-                                NavWaveKind.TabDrift(if (rtl) -kind.dir else kind.dir)
-                            else -> kind
-                        },
+                        kind = navKind,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

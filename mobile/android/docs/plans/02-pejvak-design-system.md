@@ -260,7 +260,7 @@ open→play→close if available.
 
 ---
 
-### Task 7 — Shell and navigation motion
+### Task 7 — Shell and navigation motion ✅
 
 **Goal:** the shell owns the backdrop, modal blur, page transitions, ambient surge and WaveSweep.
 
@@ -519,3 +519,20 @@ without opening Pejvak.
   `NowPlayingScreenshotTest` (12 `sheet-*` captures at mini/mid/full × light/dark × fa/en) pass;
   `./gradlew test assembleDebug` green, 421/421. DESIGN.md now documents the morph as §10.12 and
   the tile ramp reads 40 dp.
+- 2026-11-22 — **Task 7 complete — the shell and navigation motion.** The shell now owns the
+  backdrop (`LocalBackdrop` via `rememberBackdrop`), `LocalShellInsets`, `LocalSheetPresence`, the
+  ambient canvas and the navigation current: `HawraaNavHost` carries Pejvak's page transitions
+  (`oceanEnter`/`oceanExit`/`oceanPopEnter`/`oceanPopExit` — tab drift with lateral + vertical +
+  scale, push rise, pop dive, all `OceanSwellEasing` and gated by `useMotionEnabled`), the shell
+  records one `NavWaveKind` per back-stack change, `AmbientCanvas` surges on the same trigger, and
+  `WaveSweep` draws the aqua band + two crests + swimmer/wake inside the blurred chrome box so the
+  player sheet stays the topmost surface. The tab transition mirrors for RTL through
+  `tabDriftDirection`, and the crest now mirrors exactly once: `WaveSweep` applies the layout
+  direction itself, so the shell passes the classifier's logical `TabDrift` unchanged (the earlier
+  shell-side mirror double-flipped the crest in fa). `WaveSweep` gained a documented
+  `progressOverride: Float? = null` that pins the crest at any `t` for previews/tests (null in
+  production). New `WaveSweepScreenshotTest` renders `AmbientCanvas` + the crest at `t = 0.5` for
+  `TabDrift(+1)` / `Push` / `Pop` × light/dark × fa/en — 12 `wavesweep-{tab|push|pop}-{light|dark}-{fa|en}.png`
+  captures, all inspected: the band sits inside the viewport, both crests and the swimmer/wake are
+  present, tab drift mirrors in fa while push/pop stay vertical. `./gradlew test assembleDebug`
+  green, 437/437.
