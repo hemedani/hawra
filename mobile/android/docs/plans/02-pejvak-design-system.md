@@ -299,7 +299,7 @@ motion; screenshots of a tab switch and a push in both themes.
 |---|---|---|---|
 | Home | — | overline + «خانه» | settings bubble |
 | Reader | back (when pushed) | overline + surah/page context | settings, download, player |
-| History | — | overline + «تاریخ» | (existing actions only) |
+| History | back (when pushed) | «تاریخ» | (existing actions only) |
 | Settings | back | «تنظیمات» | — |
 | Downloads | back | «دانلودها» | — |
 | Presets / Preset editor | back | title | save/delete as today |
@@ -536,3 +536,13 @@ without opening Pejvak.
   captures, all inspected: the band sits inside the viewport, both crests and the swimmer/wake are
   present, tab drift mirrors in fa while push/pop stay vertical. `./gradlew test assembleDebug`
   green, 437/437.
+- 2026-11-22 — **Task 8a complete — History chrome.** `HistoryScreen` dropped `Scaffold` +
+  `TopAppBar` for `ScreenFrame` + a floating `GlassHeader` («تاریخ», leading back bubble); its body
+  starts below the measured `topInset` and clears the dock with `LocalShellInsets.current.bottom`
+  instead of `dockInset`. The summary card and session rows now use the current `GlassSurface`
+  recipe (`radius.card` / `radius.md`, strong summary, no row rim) rather than Material `Surface`
+  or the opaque `QuranColors.pageVariant`; values/labels/rules read only `LocalHawraaTokens`, and
+  all spacing comes from geometry (no dp/color literals). `OceanCascade` + `oceanEntrance` stagger
+  the summary, day headers and rows. `history_title` fa is «تاریخ» (en "History"). The screenshot
+  test now stages light/dark × fa/en through `LocalizedApp`; four captures inspected. `./gradlew
+  test assembleDebug` green, APK at `app/build/outputs/apk/debug/app-debug.apk`.

@@ -6,7 +6,9 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
+import ir.hawraa.quran.domain.AppLanguage
 import ir.hawraa.quran.domain.ThemeMode
+import ir.hawraa.quran.ui.LocalizedApp
 import ir.hawraa.quran.ui.screens.history.HistoryContent
 import ir.hawraa.quran.ui.screens.history.HistoryDay
 import ir.hawraa.quran.ui.screens.history.HistoryRow
@@ -22,7 +24,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** Screenshots of the History screen with seeded sessions, in both themes. */
+/** Screenshots of the History screen with seeded sessions, in both themes and both locales. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(application = Application::class, qualifiers = "fa-rIR-w411dp-h891dp-xxhdpi")
@@ -77,27 +79,44 @@ class HistoryScreenshotTest {
         }
     }
 
-    @Test
-    fun history_light() {
+    private fun stage(language: AppLanguage, theme: ThemeMode, name: String) {
         composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "history") {
-                    HistoryContent(state = state(), onBack = {})
+            LocalizedApp(language) {
+                HawraaTheme(themeMode = theme) {
+                    TestShell(selected = "history") {
+                        HistoryContent(state = state(), onBack = {})
+                    }
                 }
             }
         }
-        capture("history-light.png")
+        capture(name)
     }
 
     @Test
-    fun history_dark() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.DARK) {
-                TestShell(selected = "history") {
-                    HistoryContent(state = state(), onBack = {})
-                }
-            }
-        }
-        capture("history-dark.png")
-    }
+    fun history_light_fa() = stage(
+        language = AppLanguage.PERSIAN,
+        theme = ThemeMode.LIGHT,
+        name = "history-light-fa.png",
+    )
+
+    @Test
+    fun history_dark_fa() = stage(
+        language = AppLanguage.PERSIAN,
+        theme = ThemeMode.DARK,
+        name = "history-dark-fa.png",
+    )
+
+    @Test
+    fun history_light_en() = stage(
+        language = AppLanguage.ENGLISH,
+        theme = ThemeMode.LIGHT,
+        name = "history-light-en.png",
+    )
+
+    @Test
+    fun history_dark_en() = stage(
+        language = AppLanguage.ENGLISH,
+        theme = ThemeMode.DARK,
+        name = "history-dark-en.png",
+    )
 }

@@ -44,7 +44,7 @@ class LocalizedAppTest {
     @Test
     fun device_default_is_persian() {
         composeRule.setContent { LocalizedApp(AppLanguage.SYSTEM) { Sample() } }
-        composeRule.onNodeWithText("تاریخچه").assertIsDisplayed()
+        composeRule.onNodeWithText("تاریخ").assertIsDisplayed()
         composeRule.onNodeWithText("direction:Rtl").assertIsDisplayed()
     }
 
@@ -59,7 +59,7 @@ class LocalizedAppTest {
     @Test
     fun persian_override_keeps_persian_and_rtl() {
         composeRule.setContent { LocalizedApp(AppLanguage.PERSIAN) { Sample() } }
-        composeRule.onNodeWithText("تاریخچه").assertIsDisplayed()
+        composeRule.onNodeWithText("تاریخ").assertIsDisplayed()
         composeRule.onNodeWithText("direction:Rtl").assertIsDisplayed()
     }
 
@@ -71,7 +71,7 @@ class LocalizedAppTest {
     fun switching_at_runtime_retranslates() {
         val language = mutableStateOf(AppLanguage.SYSTEM)
         composeRule.setContent { LocalizedApp(language.value) { Sample() } }
-        composeRule.onNodeWithText("تاریخچه").assertIsDisplayed()
+        composeRule.onNodeWithText("تاریخ").assertIsDisplayed()
 
         composeRule.runOnIdle { language.value = AppLanguage.ENGLISH }
 

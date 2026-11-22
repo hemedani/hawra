@@ -96,7 +96,7 @@ class PersianLaunchTest {
             HistoryContent(state = HistoryUiState(isLoading = false), onBack = {})
         }
         val tree = composeRule.onRoot().printToString()
-        assertTrue(tree.contains("تاریخچه"))
+        assertTrue(tree.contains("تاریخ"))
     }
 
     @Test
