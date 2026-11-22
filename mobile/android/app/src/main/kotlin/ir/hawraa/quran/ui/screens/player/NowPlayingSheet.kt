@@ -64,6 +64,7 @@ import ir.hawraa.quran.ui.theme.tileRadius
 import ir.hawraa.quran.ui.theme.useMotionEnabled
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -107,6 +108,8 @@ fun NowPlayingSheet(
      */
     progressOverride: Float? = null,
     modifier: Modifier = Modifier,
+    /** The dock's wave, so the capsule keeps it while the sheet folds. */
+    miniProgress: StateFlow<Float>? = null,
 ) {
     val glass = LocalGlassColors.current
     val geometry = LocalHawraaGeometry.current
@@ -404,7 +407,7 @@ fun NowPlayingSheet(
                 ) {
                     MiniPlayerRow(
                         nowPlaying = ui.mini().toMiniUi(),
-                        miniProgress = null,
+                        miniProgress = miniProgress,
                         onPlayPause = store::toggle,
                         onNext = store::next,
                         onExpand = {},

@@ -77,7 +77,11 @@ fun HawraaShell(
                         onMiniPlayerRect = viewModel::onMiniPlayerRect,
                     )
                 }
-                NowPlayingSheet(store = viewModel.playerStore, backdropBlur = 0f)
+                NowPlayingSheet(
+                    store = viewModel.playerStore,
+                    backdropBlur = 0f,
+                    miniProgress = viewModel.miniProgress,
+                )
             }
         }
     }
