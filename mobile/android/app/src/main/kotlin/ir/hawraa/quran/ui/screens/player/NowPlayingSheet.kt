@@ -40,11 +40,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -139,8 +142,21 @@ fun NowPlayingSheet(
     val pinnedProgress = progressOverride?.coerceIn(0f, 1f)
     val mounted = pinnedProgress != null || expanded || animating
 
-    // Drive the morph on open/close, and preserve a mid-flight reversal if the reader taps the
-    // mini-player again while the sheet is folding away.
+    // The current morph progress as a *pull*, so the animated channels can read it from
+    // `graphicsLayer`/`offset`/pointer lambdas. Reading `expand.value` in composition would
+    // recompose the sheet (and everything it passes down) on every frame; reading it at the
+    // layer/layout pass only invalidates that layer.
+    val latestPinned = rememberUpdatedState(pinnedProgress)
+    val currentT: () -> Float = remember {
+        {
+            val pinned = latestPinned.value
+            (pinned ?: interactiveExpand ?: expand.value).coerceIn(0f, 1f)
+        }
+    }
+
+    // Drive the morph on open/close. Closing is owned by [requestDismiss] (the pull or the close
+    // button); there is no reopen path while it folds, so `expanded` only has to settle the
+    // spring toward the end it names.
     LaunchedEffect(expanded, motion, pinnedProgress) {
         if (pinnedProgress != null) return@LaunchedEffect
         if (expanded) {
@@ -289,6 +305,54 @@ fun NowPlayingSheet(
             }
         }
 
+        // Stable entry points for [PlayerContent]. The sheet recomposes while it morphs (its card
+        // bounds and the flying artwork are composition values), but these callbacks must not:
+        // a new lambda each frame would recompose the whole player body with it.
+        val latestRequestDismiss by rememberUpdatedState<() -> Unit> { requestDismiss() }
+        val latestFinishPull by rememberUpdatedState<(Float) -> Unit> { finishPull(it) }
+        val onCloseStable = remember { { latestRequestDismiss() } }
+        val onPullDownStable = remember(pullTravelPx) {
+            { dy: Float ->
+                settleJob?.cancel()
+                settleJob = null
+                isDismissing = false
+                pullSettled = false
+                val current = interactiveExpand ?: expand.value
+                interactiveExpand = (current - dy / pullTravelPx).coerceIn(0f, 1f)
+            }
+        }
+        val onPullEndStable = remember { { velocityY: Float -> latestFinishPull(velocityY) } }
+        val isPulledStable = remember { { (interactiveExpand ?: expand.value) < 0.999f } }
+
+        // The animated channels read `currentT` at the layer/pointer pass, not in composition.
+        // Both modifiers are remembered so their identity survives the sheet's own recompositions;
+        // [PlayerContent] can then be skipped frame after frame.
+        val contentModifier = remember {
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val t = currentT()
+                    alpha = morphContentAlpha(t)
+                    val scale = morphContentScale(t)
+                    scaleX = scale
+                    scaleY = scale
+                    transformOrigin = TransformOrigin(0.5f, 0.14f)
+                }
+                .consumeTouchesWhile { morphContentAlpha(currentT()) < 0.99f }
+        }
+        val miniRowModifier = remember {
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val t = currentT()
+                    alpha = morphMiniRowAlpha(t)
+                    val scale = morphMiniRowScale(t)
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .consumeTouchesWhile { morphMiniRowAlpha(currentT()) < 0.9f }
+        }
+
         val t = (pinnedProgress ?: interactiveExpand ?: expand.value).coerceIn(0f, 1f)
         val cardRect = lerpRect(miniRect, Rect(0f, 0f, maxW, maxH), t)
         val cardW = cardRect.width.coerceAtLeast(1f)
@@ -300,12 +364,10 @@ fun NowPlayingSheet(
         val rimAlpha = ((1f - t) / 0.22f).coerceIn(0f, 1f)
         val cardShadowDp = geometry.spacing.sm * ((1f - t) * 1.15f).coerceIn(0f, 1f)
 
-        val contentAlpha = morphContentAlpha(t)
-        val contentScale = morphContentScale(t)
-        val miniRowAlpha = morphMiniRowAlpha(t)
-        val miniRowScale = morphMiniRowScale(t)
-
         var heroRectInRoot by remember { mutableStateOf<Rect?>(null) }
+        val onHeroPositioned = remember {
+            { coords: LayoutCoordinates -> heroRectInRoot = coords.toRootRectOrNull() }
+        }
         val canFlyArt = heroRectInRoot != null && t > 0.005f && t < 0.995f
         val tileFadeAlpha = if (canFlyArt) 0f else 1f
 
@@ -341,7 +403,10 @@ fun NowPlayingSheet(
         // Full screen at t = 1, the dock's own capsule at t = 0. One surface throughout.
         Box(
             modifier = Modifier
-                .offset { IntOffset(cardRect.left.roundToInt(), cardRect.top.roundToInt()) }
+                .offset {
+                    val rect = lerpRect(miniRect, Rect(0f, 0f, maxW, maxH), currentT())
+                    IntOffset(rect.left.roundToInt(), rect.top.roundToInt())
+                }
                 .size(cardWDp, cardHDp)
                 .then(cardElevationModifier)
                 .clip(cardShape)
@@ -360,61 +425,45 @@ fun NowPlayingSheet(
                 ),
         ) {
             // A fixed viewport keeps the controls from reflowing while the card shrinks.
+            // Below the mini row while the capsule is still the live target, above it once the
+            // row has handed off: only one of the two overlapping surfaces is hit-tested.
             Box(
                 modifier = Modifier
                     .wrapContentSize(align = Alignment.TopCenter, unbounded = true)
-                    .size(maxWDp, maxHDp),
+                    .size(maxWDp, maxHDp)
+                    .zIndex(if (t < HANDOFF_T) 0f else 1f),
             ) {
                 PlayerContent(
                     ui = ui,
                     store = store,
-                    onClose = { requestDismiss() },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            alpha = contentAlpha
-                            scaleX = contentScale
-                            scaleY = contentScale
-                            transformOrigin = TransformOrigin(0.5f, 0.14f)
-                        },
+                    onClose = onCloseStable,
+                    modifier = contentModifier,
                     heroTileAlpha = tileFadeAlpha,
-                    onHeroTilePositioned = { coords ->
-                        heroRectInRoot = coords.toRootRectOrNull()
-                    },
-                    onPullDown = { dy ->
-                        settleJob?.cancel()
-                        settleJob = null
-                        isDismissing = false
-                        pullSettled = false
-                        val current = interactiveExpand ?: expand.value
-                        interactiveExpand = (current - dy / pullTravelPx).coerceIn(0f, 1f)
-                    },
-                    onPullEnd = { velocityY -> finishPull(velocityY) },
-                    isPulled = { (interactiveExpand ?: expand.value) < 0.999f },
+                    onHeroTilePositioned = onHeroPositioned,
+                    onPullDown = onPullDownStable,
+                    onPullEnd = onPullEndStable,
+                    isPulled = isPulledStable,
                 )
             }
 
-            if (miniRowAlpha > 0f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            alpha = miniRowAlpha
-                            scaleX = miniRowScale
-                            scaleY = miniRowScale
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    MiniPlayerRow(
-                        nowPlaying = ui.mini().toMiniUi(),
-                        miniProgress = miniProgress,
-                        onPlayPause = store::toggle,
-                        onNext = store::next,
-                        onExpand = {},
-                        modifier = Modifier.height(geometry.dock.playerHeight),
-                        tileAlpha = tileFadeAlpha,
-                    )
-                }
+            // Always composed: the row must not enter/leave composition as the morph crosses its
+            // fade threshold. Its alpha (and the tap gate) is read from the layer pass instead.
+            // It stays on top only while it is still the surface being handed off from.
+            Box(
+                modifier = miniRowModifier.zIndex(if (t < HANDOFF_T) 1f else 0f),
+                contentAlignment = Alignment.Center,
+            ) {
+                MiniPlayerRow(
+                    nowPlaying = ui.mini().toMiniUi(),
+                    miniProgress = miniProgress,
+                    onPlayPause = store::toggle,
+                    onNext = store::next,
+                    // There is no truthful reopen action in this transient copy; the dock owns
+                    // the real one. A null target keeps the leading region non-clickable.
+                    onExpand = null,
+                    modifier = Modifier.height(geometry.dock.playerHeight),
+                    tileAlpha = tileFadeAlpha,
+                )
             }
 
             // The catchlight bevel only exists while the sheet is a floating card.
@@ -481,6 +530,32 @@ fun NowPlayingSheet(
         }
     }
 }
+
+/**
+ * Progress at which the mini row and the player content swap hit-test order.
+ *
+ * Both are full-card siblings, so only the topmost one can receive a pointer. Below this the row
+ * is the live surface (the capsule); above it the player is. The visual cross-fade is already
+ * nearly done here, so the swap cannot be seen.
+ */
+private const val HANDOFF_T = 0.5f
+
+/**
+ * Swallows every pointer event in the **Initial** pass while [blocked] is true.
+ *
+ * Used on surfaces that are still on screen but have faded past the point of being a truthful
+ * target: the event is consumed before a child's clickable or the player's pull sees it, and the
+ * predicate is read at event time so it follows the morph without recomposing the node.
+ */
+private fun Modifier.consumeTouchesWhile(blocked: () -> Boolean): Modifier =
+    pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (blocked()) event.changes.forEach { it.consume() }
+            }
+        }
+    }
 
 private fun LayoutCoordinates.toRootRectOrNull(): Rect? {
     if (!isAttached) return null

@@ -1,5 +1,7 @@
 package ir.hawraa.quran.ui.recitation
 
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.geometry.Rect
 import ir.hawraa.quran.domain.preset.PresetStepKind
 import ir.hawraa.quran.domain.recitation.PlaybackSpeed
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * Both scripts are carried rather than one resolved name: the app's language is a setting, not the
  * process locale, so the *view* decides which to show.
  */
+@Immutable
 data class NowPlaying(
     val surahNumber: Int,
     val surahNameFa: String,
@@ -47,6 +50,7 @@ data class NowPlaying(
 )
 
 /** A reciter the full-screen player can switch to: identity plus both scripts. */
+@Immutable
 data class PlayerReciter(
     val key: String,
     val nameFa: String,
@@ -56,6 +60,7 @@ data class PlayerReciter(
 )
 
 /** A preset the full-screen player can start: identity plus a readable shape. */
+@Immutable
 data class PlayerPreset(
     val clientId: String,
     val nameFa: String,
@@ -69,6 +74,7 @@ data class PlayerPreset(
  *
  * Sacred text is copied verbatim from the bundled content; the player styles it and never edits it.
  */
+@Immutable
 data class PlayerVerse(
     val surah: Int,
     val ayah: Int,
@@ -86,6 +92,7 @@ data class PlayerVerse(
  *
  * A null store state means nothing is queued; a non-null snapshot always names what is sounding.
  */
+@Immutable
 data class PlayerUi(
     /** The surah's number, or the juz's starting surah when [juzNumber] is set. */
     val surahNumber: Int,
@@ -154,6 +161,7 @@ data class PlayerUi(
  * of. Every command is a null-safe no-op until the owner binds it, so the shell can be composed (and
  * previewed) with no reader alive.
  */
+@Stable
 @Singleton
 class NowPlayingStore @Inject constructor() {
 

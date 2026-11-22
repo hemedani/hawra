@@ -478,3 +478,18 @@ without opening Pejvak.
   dock row, the mid frame hands the mini row off to the flying identity tile, and the full frame
   matches the standalone player in both themes and both scripts. `./gradlew test assembleDebug`
   green, 421/421.
+- 2026-11-22 — **Task 6, step 4 — review fixes (behaviour/perf).** `HawraaShell` now holds the
+  sheet's `onExpandProgress` in state, wraps the nav host + dock in a content box and blurs that
+  box at `frost.backdrop × progress` on API 31+ (skipped at zero), while the player sheet stays a
+  sibling outside the blur; the same radius is passed to the sheet as `backdropBlur`, so the
+  API 29–30 scrim fallback now actually fades in. The dock still hides while `expanded`. In
+  `NowPlayingSheet`, the mini row is always composed and both the mini row (`miniRowAlpha < 0.9`)
+  and `PlayerContent` (`contentAlpha < 0.99`) swallow pointer events in the Initial pass while
+  faded, so neither faded layer intercepts taps; the mini row's dead `onExpand = {}` became a
+  nullable `MiniPlayerRow` target (non-clickable in the sheet), and the misleading "mid-flight
+  reversal" comment was replaced with the real close-ownership note. `PlayerUi`, `NowPlaying`,
+  `PlayerReciter`, `PlayerPreset` and `PlayerVerse` are `@Immutable`, `NowPlayingStore` is
+  `@Stable`; the sheet remembers its `PlayerContent` callbacks and its content/mini-row modifiers,
+  and reads `t` from `graphicsLayer`/`offset`/pointer lambdas at layer time, so `PlayerContent` is
+  skipped frame after frame even while the card bounds and flying artwork still recompose the
+  sheet. `./gradlew test assembleDebug` green, 421/421; all 12 `sheet-*` captures re-inspected.

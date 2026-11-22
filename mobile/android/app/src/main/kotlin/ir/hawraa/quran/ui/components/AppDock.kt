@@ -320,6 +320,10 @@ private fun DockDestination(tab: DockTab, selected: Boolean, onClick: () -> Unit
  * region (tile, text and wave) is one tap target that opens the full player; the trailing
  * bubbles sit outside it so they never steal that tap. [StandaloneMiniPlayer] draws the
  * same row on routes without the dock, so the two cannot drift apart.
+ *
+ * A null [onExpand] makes the leading region non-clickable. The morphing sheet uses that while
+ * it is a transient copy of the row: there is nothing truthful for the tap to do there, so it
+ * must not pretend to be an affordance.
  */
 @Composable
 internal fun MiniPlayerRow(
@@ -327,13 +331,18 @@ internal fun MiniPlayerRow(
     miniProgress: StateFlow<Float>?,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
-    onExpand: () -> Unit,
+    onExpand: (() -> Unit)?,
     modifier: Modifier = Modifier,
     /** Hides the tile while the full player flies its own copy between the dock and hero. */
     tileAlpha: Float = 1f,
 ) {
     val tokens = LocalHawraaTokens.current
     val geometry = LocalHawraaGeometry.current
+    val expandModifier = if (onExpand != null) {
+        Modifier.clickable(onClickLabel = nowPlaying.title, onClick = onExpand)
+    } else {
+        Modifier
+    }
 
     Row(
         modifier = modifier
@@ -346,7 +355,7 @@ internal fun MiniPlayerRow(
                 .weight(1f)
                 .fillMaxWidth()
                 .height(geometry.dock.playerHeight)
-                .clickable(onClickLabel = nowPlaying.title, onClick = onExpand)
+                .then(expandModifier)
                 .testTag("dock-player"),
             verticalAlignment = Alignment.CenterVertically,
         ) {

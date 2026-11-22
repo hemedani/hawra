@@ -1,13 +1,19 @@
 package ir.hawraa.quran.ui
 
+import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -24,6 +30,7 @@ import ir.hawraa.quran.ui.navigation.HawraaNavHost
 import ir.hawraa.quran.ui.navigation.Routes
 import ir.hawraa.quran.ui.screens.auth.AuthScreen
 import ir.hawraa.quran.ui.screens.player.NowPlayingSheet
+import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 
 /**
  * The app shell: an ambient canvas, the navigation graph, and the dock floating over both
@@ -52,6 +59,20 @@ fun HawraaShell(
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val route = backStackEntry?.destination?.route
+    val geometry = LocalHawraaGeometry.current
+
+    // The sheet streams its morph progress here so the chrome behind it can frost while the
+    // player opens. The radius is computed for both API bands: on 31+ it feeds `Modifier.blur`,
+    // and on 29–30 the sheet reads it as its scrim alpha (there is no RenderEffect blur there).
+    var morphProgress by remember { mutableFloatStateOf(0f) }
+    val backdropRadius: Dp = geometry.frost.backdrop * morphProgress.coerceIn(0f, 1f)
+    val backdropBlurModifier = if (
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && backdropRadius.value > 0f
+    ) {
+        Modifier.blur(backdropRadius)
+    } else {
+        Modifier
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AmbientCanvas()
@@ -59,27 +80,34 @@ fun HawraaShell(
             AuthState.Restoring -> Unit
             AuthState.SignedOut -> AuthScreen()
             is AuthState.SignedIn -> {
-                HawraaNavHost(navController = navController)
-                // The full-screen player covers the whole app, so the dock gets out of the way
-                // while it is open. Both are shell chrome: the sheet is drawn here, above the
-                // nav host and the dock, so it survives navigation and morphs out of the dock's
-                // own row rather than appearing as a second surface.
-                if (!playerExpanded) {
-                    AppDock(
-                        selectedRoute = route ?: Routes.HOME,
-                        onSelect = { tab -> navController.navigateTopLevel(tab.navigationRoute()) },
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                        nowPlaying = player?.mini()?.let { it.toUi() },
-                        miniProgress = viewModel.miniProgress,
-                        onPlayPause = viewModel::togglePlayPause,
-                        onNext = viewModel::nextAyah,
-                        onExpand = viewModel::openControls,
-                        onMiniPlayerRect = viewModel::onMiniPlayerRect,
-                    )
+                // The nav host and the dock are the chrome the player frosts. They live in their
+                // own box so the blur never touches the sheet, which is the surface the blur is
+                // there to reveal.
+                Box(modifier = Modifier.fillMaxSize().then(backdropBlurModifier)) {
+                    HawraaNavHost(navController = navController)
+                    // The full-screen player covers the whole app, so the dock gets out of the
+                    // way while it is open.
+                    if (!playerExpanded) {
+                        AppDock(
+                            selectedRoute = route ?: Routes.HOME,
+                            onSelect = { tab -> navController.navigateTopLevel(tab.navigationRoute()) },
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            nowPlaying = player?.mini()?.let { it.toUi() },
+                            miniProgress = viewModel.miniProgress,
+                            onPlayPause = viewModel::togglePlayPause,
+                            onNext = viewModel::nextAyah,
+                            onExpand = viewModel::openControls,
+                            onMiniPlayerRect = viewModel::onMiniPlayerRect,
+                        )
+                    }
                 }
+                // The sheet is a sibling of the blurred chrome, drawn above it, so it survives
+                // navigation and morphs out of the dock's own row rather than appearing as a
+                // second surface.
                 NowPlayingSheet(
                     store = viewModel.playerStore,
-                    backdropBlur = 0f,
+                    backdropBlur = backdropRadius.value,
+                    onExpandProgress = { morphProgress = it },
                     miniProgress = viewModel.miniProgress,
                 )
             }
