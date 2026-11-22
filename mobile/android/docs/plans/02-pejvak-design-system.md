@@ -157,7 +157,7 @@ These bind every task; a reviewer must treat them as the rubric.
 
 ---
 
-### Task 4 — App dock and mini-player
+### Task 4 — App dock and mini-player ✅
 
 **Goal:** the exact Pejvak dock: one frost panel, collapsible mini half, icon-only nav half.
 
@@ -438,3 +438,24 @@ without opening Pejvak.
   and the Task 5 test line now match the shipped Pejvak scrubber/`PlayerPartsScreenshotTest`;
   DESIGN.md's transport-glyph sentence points at `ICON_GLYPHS`. `./gradlew test` 374/374,
   `assembleDebug` green.
+- 2026-11-21 — **Task 4 complete.** Replaced the old `items: List<DockItem>` dock with the Pejvak
+  API: `NowPlayingUi(title, subtitle, number, isPlaying, waiting)`, a four-peer `DockTab` enum
+  (`route`, `labelRes`, semantic `glyph`; `matches()` understands the reader's page argument), and
+  `AppDock(selectedRoute, onSelect, nowPlaying, miniProgress, onPlayPause, onNext, onExpand,
+  onMiniPlayerRect)`. One `FrostedSurface` — `radius.xl` with a mini half, `radius.pill` nav-only —
+  with both halves at 58 dp. The mini half animates with `expandVertically + fadeIn` /
+  `shrinkVertically + fadeOut` (zero-duration specs under reduced motion), retains its last
+  snapshot while exiting, and keeps the `HairlineWave` seam inside the fading group. `MiniPlayerRow`
+  is an identity `PaletteTile` + title/subtitle + leaf-collected `WavyProgress` + filled play/pause
+  (spinner while waiting) + outlined next; the leading region opens the player. Nav peers are
+  icon-only: filled `accent` disc with `onAccent` glyph when selected, `textSecondary` otherwise,
+  44 dp touch, press spring `1 → 0.92 → 1.05 → 1` + `HapticIntent.Select`. The dock publishes its
+  measured player-half `Rect` in root coordinates through `onMiniPlayerRect`. Added the
+  `StandaloneMiniPlayer` pill (`screens/player/`) and the `home`/`read` semantic glyphs
+  (`Rounded.Home`, `AutoMirrored.Rounded.MenuBook`). `HawraaShell` now maps `NowPlaying` →
+  `NowPlayingUi` and maps the four `DockTab`s to routes; the backdrop/player morph stays in Tasks
+  6–7. Updated `DockNowPlayingTest` (juz tile/title agreement + rect publication) and added
+  `DockScreenshotTest` (16 captures: nav-only / playing / juz / busy × light/dark × fa/en) at
+  `app/build/screenshots/dock-*.png`, all inspected. DESIGN.md §10.4–10.5 now matches the shipped
+  dock (FrostedSurface, radius rules, textSecondary nav, wave placement). `assembleDebug` green;
+  `./gradlew test` 391/391.

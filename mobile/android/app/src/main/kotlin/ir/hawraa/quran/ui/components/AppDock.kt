@@ -1,6 +1,11 @@
 package ir.hawraa.quran.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,137 +25,198 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.hawraa.quran.R
-import ir.hawraa.quran.domain.quran.toPersianDigits
-import ir.hawraa.quran.ui.theme.LocalGlassColors
+import ir.hawraa.quran.core.HapticIntent
+import ir.hawraa.quran.core.rememberHaptics
+import ir.hawraa.quran.ui.components.player.WavyProgress
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
-
-/** One destination in the dock's navigation half. */
-data class DockItem(
-    val key: String,
-    val label: String,
-    val icon: ImageVector,
-    val selected: Boolean,
-    val onClick: () -> Unit,
-)
+import ir.hawraa.quran.ui.theme.LocalHawraaTokens
+import ir.hawraa.quran.ui.theme.useMotionEnabled
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 /**
- * What the dock's player half draws. Only the fields the row needs, so a state change elsewhere
- * cannot recompose the dock.
+ * The dock's now-playing half — only the fields the mini row draws.
+ *
+ * This is deliberately a **dock-local** model, not the player store's. A once-a-second
+ * position tick updates [miniProgress], which the wave collects in its own leaf, so the
+ * dock never recomposes for a tick; Task 6 maps the store to this shape at the boundary.
  */
 data class NowPlayingUi(
-    /** Surah name, e.g. «فاتحه». */
+    /** Surah name, e.g. «فاتحه» / «Al-Fatiha». */
     val title: String,
-    /** The line under it, e.g. «آیه ۳ · پرهیزگار». */
+    /** The line under it, e.g. «آیۀ ۳ · پرهیزگار» / «Ayah 3 · Parhizgar». */
     val subtitle: String,
-    /** The number drawn on the identity tile — the surah's, in Persian digits. */
-    val tileNumber: Int,
+    /**
+     * The numeral on the identity tile — the surah's, or the juz's for a juz-granularity
+     * reciter. Already in the display script: the shell localises it once.
+     */
+    val number: String,
     val isPlaying: Boolean,
-    /** The player is fetching and has nothing to report yet. Keeps its press. */
-    val busy: Boolean = false,
+    /** Fetching/buffering with nothing to report yet. Keeps its press and shows a spinner. */
+    val waiting: Boolean = false,
 )
 
 /**
- * The dock: the now-playing row and the navigation, **as one panel** (`docs/DESIGN.md` §10.4).
+ * One dock destination. Four peers (plan 02 D2), in reading order; the row follows the
+ * layout direction, so in RTL the same list reads right-to-left.
+ */
+enum class DockTab(
+    /** Selection key; a route *pattern* for destinations with arguments (the reader). */
+    val route: String,
+    @StringRes val labelRes: Int,
+    /** Semantic name in [ICON_GLYPHS] — never a per-screen drawing. */
+    val glyph: String,
+) {
+    Home("home", R.string.home_title, "home"),
+    Read("reader", R.string.reader_title, "read"),
+    History("history", R.string.history_title, "history"),
+    Settings("settings", R.string.settings_title, "settings"),
+    ;
+
+    /** True when [selectedRoute] belongs to this destination (the reader carries a page). */
+    fun matches(selectedRoute: String?): Boolean =
+        selectedRoute == route || selectedRoute?.startsWith("$route?") == true
+}
+
+/**
+ * The dock (DESIGN.md §10.4): **one** frost panel with a collapsible mini-player half
+ * over an icon-only navigation half.
  *
  * ## Why one panel
  *
- * These used to be two floating surfaces in the reference app, and two surfaces mean their
- * geometry is a negotiation — one that went wrong, leaving a raised centre button 32 dp underneath
- * the now-playing row. Inside a single panel the question cannot be asked: one surface, one radius,
- * one shadow, no clearance to get wrong. Both halves are the same height (58) so the seam divides
- * the panel in half rather than cutting a tall nav off a short player.
+ * Two floating surfaces mean their geometry is a negotiation, and it went wrong in the
+ * reference app: a raised centre button ended up under the now-playing row. Inside one
+ * panel the question cannot be asked — one surface, one radius, one shadow, no clearance
+ * to get wrong. Both halves are [DockGeometry.playerHeight] / [DockGeometry.navHeight],
+ * so the seam divides the panel in half.
  *
  * ## Why the row collapses
  *
- * With nothing playing there is nothing to report, and a permanent empty row is a permanent lie
- * about the dock's size. The panel animates between `navHeight` and
- * `playerHeight + navHeight + hairline`, and the seam lives *inside* the fading group so the
- * divider cannot outlive the row it divides.
+ * With nothing playing there is nothing to report, and a permanently empty row is a
+ * permanent lie about the dock's size. The panel animates between nav-only and
+ * player + nav + seam, and the seam lives *inside* the fading group so it cannot outlive
+ * the row it divides.
  *
- * ## Why no labels and no raised centre action
+ * ## Navigation
  *
- * Four icon-only peers. A label under each glyph makes every slot carry two elements and pushes
- * the row taller for no extra information; a raised centre button is the single most
- * template-looking element a dock can have. The selected state is a filled accent disc with the
- * glyph knocked out — the same "filled accent circle means this is the current thing" rule the
- * play bubble follows, so the panel reads as one object with one rule.
+ * Four icon-only peers. No labels (two elements per slot for no extra information), no
+ * raised centre action (the most template-looking dock element there is). The selected
+ * destination is a filled `accent` disc with the glyph knocked out — the same "filled
+ * accent circle means this is the current thing" rule the play bubble follows.
+ *
+ * [onMiniPlayerRect] publishes the measured player-half rect in root coordinates so the
+ * full player can morph out of it (Task 6).
  */
 @Composable
 fun AppDock(
-    items: List<DockItem>,
+    selectedRoute: String,
+    onSelect: (DockTab) -> Unit,
     modifier: Modifier = Modifier,
     nowPlaying: NowPlayingUi? = null,
+    miniProgress: StateFlow<Float>? = null,
     onPlayPause: () -> Unit = {},
     onNext: () -> Unit = {},
-    onOpenPlayer: () -> Unit = {},
+    onExpand: () -> Unit = {},
+    onMiniPlayerRect: (Rect) -> Unit = {},
 ) {
+    val tokens = LocalHawraaTokens.current
     val geometry = LocalHawraaGeometry.current
     val dock = geometry.dock
+    val motion = useMotionEnabled()
+    val shape = if (nowPlaying != null) {
+        RoundedCornerShape(geometry.radius.xl)
+    } else {
+        RoundedCornerShape(geometry.radius.pill)
+    }
+    val playerHeightPx = with(LocalDensity.current) { dock.playerHeight.toPx() }
+    val currentOnRect by rememberUpdatedState(onMiniPlayerRect)
+    val lastRect = remember { mutableStateOf<Rect?>(null) }
+
+    // AnimatedVisibility retains its content while it exits, but the content lambda would
+    // otherwise read the now-null state and collapse before the shrink can play. Keep the
+    // last non-null snapshot so the row has something to shrink.
+    val shown = remember { mutableStateOf(nowPlaying) }
+    if (nowPlaying != null) shown.value = nowPlaying
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = dock.inset, vertical = 0.dp)
+            .padding(horizontal = dock.margin)
             .padding(bottom = dock.margin),
     ) {
-        GlassSurface(
+        FrostedSurface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(geometry.radius.card),
-            strong = true,
-            elevation = GlassElevation.Dock,
+            shape = shape,
+            softElevation = dockElevation(),
         ) {
             Column(Modifier.fillMaxWidth()) {
-                // `AnimatedVisibility` owns the height change, so the panel's size and its
-                // content can never disagree about whether the player half is showing.
                 AnimatedVisibility(
                     visible = nowPlaying != null,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut(),
+                    enter = if (motion) {
+                        expandVertically() + fadeIn()
+                    } else {
+                        expandVertically(animationSpec = tween(0)) + fadeIn(animationSpec = tween(0))
+                    },
+                    exit = if (motion) {
+                        shrinkVertically() + fadeOut()
+                    } else {
+                        shrinkVertically(animationSpec = tween(0)) + fadeOut(animationSpec = tween(0))
+                    },
                 ) {
-                    val playing = nowPlaying
-                    if (playing != null) {
-                        Column {
+                    shown.value?.let { playing ->
+                        Column(
+                            Modifier.onGloballyPositioned { coords ->
+                                if (!coords.isAttached || coords.size.width == 0) return@onGloballyPositioned
+                                val topLeft = coords.positionInRoot()
+                                val rect = Rect(
+                                    left = topLeft.x,
+                                    top = topLeft.y,
+                                    right = topLeft.x + coords.size.width,
+                                    bottom = topLeft.y + playerHeightPx,
+                                )
+                                if (rect != lastRect.value) {
+                                    lastRect.value = rect
+                                    currentOnRect(rect)
+                                }
+                            },
+                        ) {
                             MiniPlayerRow(
                                 nowPlaying = playing,
+                                miniProgress = miniProgress,
                                 onPlayPause = onPlayPause,
                                 onNext = onNext,
-                                onOpenPlayer = onOpenPlayer,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(dock.playerHeight)
-                                    .testTag("dock-player"),
+                                onExpand = onExpand,
+                                modifier = Modifier.height(dock.playerHeight),
                             )
-                            // The seam, inset so it reads as a division inside the panel rather
-                            // than a line drawn across the screen.
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = geometry.spacing.md)
-                                    .height(1.dp)
-                                    .background(LocalGlassColors.current.track),
+                            HairlineWave(
+                                Modifier
+                                    .padding(horizontal = dock.inset)
+                                    .height(geometry.spacing.sm),
+                                color = tokens.glassBorder,
                             )
                         }
                     }
@@ -165,10 +231,11 @@ fun AppDock(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    items.forEach { item ->
+                    DockTab.entries.forEach { tab ->
                         DockDestination(
-                            item = item,
-                            modifier = Modifier.weight(1f),
+                            tab = tab,
+                            selected = tab.matches(selectedRoute),
+                            onClick = { onSelect(tab) },
                         )
                     }
                 }
@@ -178,91 +245,92 @@ fun AppDock(
 }
 
 @Composable
-private fun DockDestination(item: DockItem, modifier: Modifier = Modifier) {
-    val glass = LocalGlassColors.current
+private fun DockDestination(tab: DockTab, selected: Boolean, onClick: () -> Unit) {
+    val tokens = LocalHawraaTokens.current
     val geometry = LocalHawraaGeometry.current
+    val dock = geometry.dock
+    val motion = useMotionEnabled()
+    val haptics = rememberHaptics()
+    val scope = rememberCoroutineScope()
+    val scale = remember { Animatable(1f) }
+    val label = stringResource(tab.labelRes)
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(geometry.dock.navHeight)
+        modifier = Modifier
+            .size(dock.touch)
+            .graphicsLayer {
+                scaleX = scale.value
+                scaleY = scale.value
+            }
             .clip(CircleShape)
             .clickable(
                 role = Role.Tab,
-                onClickLabel = item.label,
-                onClick = item.onClick,
+                onClickLabel = label,
+                onClick = {
+                    haptics.trigger(HapticIntent.Select)
+                    if (motion) {
+                        scope.launch {
+                            scale.animateTo(0.92f, spring(stiffness = Spring.StiffnessHigh))
+                            scale.animateTo(1.05f, spring(stiffness = Spring.StiffnessHigh))
+                            scale.animateTo(1f, spring(stiffness = Spring.StiffnessMedium))
+                        }
+                    }
+                    onClick()
+                },
             )
-            .testTag("dock-${item.key}"),
+            .testTag("dock-${tab.name.lowercase()}"),
         contentAlignment = Alignment.Center,
     ) {
-        if (item.selected) {
+        if (selected) {
             Box(
                 modifier = Modifier
-                    .size(geometry.dock.indicator)
+                    .size(dock.indicator)
                     .clip(CircleShape)
-                    .background(glass.accent)
-                    // The same specular top edge every frosted pane gets, at disc scale: it makes
-                    // the indicator read as a lit sphere rather than a flat sticker.
-                    .drawWithContent {
-                        drawContent()
-                        val rim = 3.dp.toPx()
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(glass.glassHighlight, Color.Transparent),
-                                startY = 0f,
-                                endY = rim,
-                            ),
-                            topLeft = Offset.Zero,
-                            size = Size(size.width, rim),
-                        )
-                    },
+                    .background(tokens.accent),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = item.icon,
-                    contentDescription = item.label,
-                    tint = glass.onAccent,
-                    modifier = Modifier.size(geometry.dock.iconActive),
+                    name = tab.glyph,
+                    contentDescription = label,
+                    tint = tokens.onAccent,
+                    size = dock.iconActive,
                 )
             }
         } else {
             Icon(
-                imageVector = item.icon,
-                contentDescription = item.label,
-                tint = glass.textTertiary,
-                modifier = Modifier.size(geometry.dock.icon),
+                name = tab.glyph,
+                contentDescription = label,
+                tint = tokens.textSecondary,
+                size = dock.icon,
             )
         }
     }
 }
 
 /**
- * The dock's player half — artwork tile, title and subtitle, play and next.
+ * The dock's player half — identity tile, title and subtitle, wave, play/pause and next.
  *
- * A plain row with **no surface of its own**: the dock owns the panel. The whole left side is one
- * tap target that opens the full player, and the trailing bubbles sit outside it so they never
- * steal that tap.
- *
- * Hawraa has no artwork and never fetches any, so the tile is a deterministic **identity tile**:
- * the surah number set in the mushaf face on the accent wash — or, for a juz-granularity reciter,
- * the juz number, because that is what the title beside it says (`docs/DESIGN.md` §10.5).
+ * A plain row with **no surface of its own**: the dock owns the panel. The whole leading
+ * region (tile, text and wave) is one tap target that opens the full player; the trailing
+ * bubbles sit outside it so they never steal that tap. [StandaloneMiniPlayer] draws the
+ * same row on routes without the dock, so the two cannot drift apart.
  */
 @Composable
-private fun MiniPlayerRow(
+internal fun MiniPlayerRow(
     nowPlaying: NowPlayingUi,
+    miniProgress: StateFlow<Float>?,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
-    onOpenPlayer: () -> Unit,
+    onExpand: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val glass = LocalGlassColors.current
+    val tokens = LocalHawraaTokens.current
     val geometry = LocalHawraaGeometry.current
 
     Row(
-        modifier = modifier.padding(
-            start = geometry.spacing.md,
-            end = geometry.spacing.xs,
-        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = geometry.spacing.md, end = geometry.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -270,70 +338,73 @@ private fun MiniPlayerRow(
                 .weight(1f)
                 .fillMaxWidth()
                 .height(geometry.dock.playerHeight)
-                .clickable(onClickLabel = nowPlaying.title, onClick = onOpenPlayer),
+                .clickable(onClickLabel = nowPlaying.title, onClick = onExpand)
+                .testTag("dock-player"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(geometry.radius.sm))
-                    .background(glass.accentSoft),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = nowPlaying.tileNumber.toPersianDigits(),
-                    // The **UI** face, deliberately not the mushaf face. Scheherazade draws «۱» as
-                    // a single thin calligraphic stroke: at 19 sp inside a 38 dp tile that is a
-                    // slanted smudge, not a numeral — it reads as a rendering artefact. The mushaf
-                    // face is for scripture; chrome gets the UI face, at a size and weight that
-                    // survive the pale wash.
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 18.sp,
-                        lineHeight = 18.sp,
-                    ),
-                    color = glass.accent,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                )
-            }
+            PaletteTile(
+                seedKey = nowPlaying.number,
+                number = nowPlaying.number,
+                size = geometry.tiles.md,
+            )
             Spacer(Modifier.width(geometry.spacing.md))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = nowPlaying.title,
                     style = MaterialTheme.typography.labelLarge,
-                    color = glass.text,
+                    color = tokens.text,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = nowPlaying.subtitle,
                     style = MaterialTheme.typography.labelSmall,
-                    color = glass.textSecondary,
+                    color = tokens.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (miniProgress != null) {
+                    MiniWave(
+                        progress = miniProgress,
+                        isPlaying = nowPlaying.isPlaying,
+                        waiting = nowPlaying.waiting,
+                    )
+                }
             }
         }
 
         BubbleButton(
-            icon = if (nowPlaying.isPlaying) TransportIcons.Pause else TransportIcons.Play,
+            icon = ICON_GLYPHS.getValue(if (nowPlaying.isPlaying) "pause" else "play"),
             contentDescription = stringResource(
                 if (nowPlaying.isPlaying) R.string.recitation_pause else R.string.recitation_play,
             ),
             onClick = onPlayPause,
             size = geometry.controls.md,
-            iconSize = 17.dp,
             filled = true,
-            busy = nowPlaying.busy,
+            busy = nowPlaying.waiting,
             modifier = Modifier.testTag("dock-play"),
         )
         BubbleButton(
-            icon = TransportIcons.Next,
+            icon = ICON_GLYPHS.getValue("next"),
             contentDescription = stringResource(R.string.recitation_next_ayah),
             onClick = onNext,
             size = geometry.controls.sm,
-            iconSize = 15.dp,
             modifier = Modifier.testTag("dock-next"),
         )
     }
+}
+
+/**
+ * The wave is its own leaf so the once-a-second progress tick recomposes it — and only
+ * it — rather than the dock's title row.
+ */
+@Composable
+private fun MiniWave(progress: StateFlow<Float>, isPlaying: Boolean, waiting: Boolean) {
+    val value by progress.collectAsStateWithLifecycle()
+    WavyProgress(
+        progress = value,
+        isPlaying = isPlaying,
+        waiting = waiting,
+        modifier = Modifier.padding(top = LocalHawraaGeometry.current.spacing.xxs),
+    )
 }

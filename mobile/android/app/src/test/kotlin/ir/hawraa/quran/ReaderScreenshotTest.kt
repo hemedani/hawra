@@ -90,11 +90,11 @@ class ReaderScreenshotTest {
         composeRule.setContent {
             HawraaTheme(themeMode = ThemeMode.LIGHT) {
                 TestShell(
-                    selected = "read",
+                    selected = "reader",
                     nowPlaying = NowPlayingUi(
                         title = "فاتحه",
                         subtitle = "آیۀ ۳ · شهریار پرهیزگار",
-                        tileNumber = 1,
+                        number = "۱",
                         isPlaying = true,
                     ),
                 ) {
@@ -115,7 +115,7 @@ class ReaderScreenshotTest {
     fun reader_shell_dock_idle() {
         composeRule.setContent {
             HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "read") {
+                TestShell(selected = "reader") {
                     ReaderContent(state = state(ReadingSettings()), onSettings = {})
                 }
             }
@@ -129,11 +129,11 @@ class ReaderScreenshotTest {
         composeRule.setContent {
             HawraaTheme(themeMode = ThemeMode.DARK) {
                 TestShell(
-                    selected = "read",
+                    selected = "reader",
                     nowPlaying = NowPlayingUi(
                         title = "فاتحه",
                         subtitle = "آیۀ ۳ · شهریار پرهیزگار",
-                        tileNumber = 1,
+                        number = "۱",
                         isPlaying = true,
                     ),
                 ) {

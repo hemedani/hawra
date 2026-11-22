@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.PlaylistPlay
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LibraryMusic
@@ -91,6 +93,8 @@ val ICON_GLYPHS: Map<String, ImageVector> = mapOf(
     "refresh" to Icons.Rounded.Refresh,
     "sync" to Icons.Rounded.Sync,
     "download" to Icons.Rounded.Download,
+    "home" to Icons.Rounded.Home,
+    "read" to Icons.AutoMirrored.Rounded.MenuBook,
     "history" to Icons.Rounded.History,
     "notes" to Icons.Rounded.EditNote,
     "note" to Icons.Rounded.EditNote,

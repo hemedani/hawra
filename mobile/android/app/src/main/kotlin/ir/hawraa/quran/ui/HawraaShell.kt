@@ -2,10 +2,6 @@ package ir.hawraa.quran.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,8 +18,7 @@ import ir.hawraa.quran.domain.auth.AuthState
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.ui.components.AmbientCanvas
 import ir.hawraa.quran.ui.components.AppDock
-import ir.hawraa.quran.ui.components.DockIcons
-import ir.hawraa.quran.ui.components.DockItem
+import ir.hawraa.quran.ui.components.DockTab
 import ir.hawraa.quran.ui.components.NowPlayingUi
 import ir.hawraa.quran.ui.navigation.HawraaNavHost
 import ir.hawraa.quran.ui.navigation.Routes
@@ -70,12 +65,14 @@ fun HawraaShell(
                 // the nav host; the dock is the only shell chrome that must yield to it.
                 if (!playerExpanded) {
                     AppDock(
-                        items = dockItems(navController, route),
+                        selectedRoute = route ?: Routes.HOME,
+                        onSelect = { tab -> navController.navigateTopLevel(tab.navigationRoute()) },
                         modifier = Modifier.align(Alignment.BottomCenter),
                         nowPlaying = nowPlaying?.let { it.toUi() },
                         onPlayPause = viewModel::togglePlayPause,
                         onNext = viewModel::nextAyah,
-                        onOpenPlayer = viewModel::openControls,
+                        onExpand = viewModel::openControls,
+                        onMiniPlayerRect = {},
                     )
                 }
             }
@@ -83,41 +80,13 @@ fun HawraaShell(
     }
 }
 
-/**
- * The four destinations, in order. Icon-only peers — no labels, no raised centre action
- * (`docs/DESIGN.md` §10.4).
- */
-@Composable
-private fun dockItems(navController: NavHostController, route: String?): List<DockItem> = listOf(
-    DockItem(
-        key = "home",
-        label = stringResource(R.string.home_title),
-        icon = Icons.Filled.Home,
-        selected = route == Routes.HOME,
-        onClick = { navController.navigateTopLevel(Routes.HOME) },
-    ),
-    DockItem(
-        key = "read",
-        label = stringResource(R.string.reader_title),
-        icon = Icons.AutoMirrored.Filled.List,
-        selected = route?.startsWith("reader") == true,
-        onClick = { navController.navigateTopLevel(Routes.reader()) },
-    ),
-    DockItem(
-        key = "history",
-        label = stringResource(R.string.history_title),
-        icon = DockIcons.History,
-        selected = route == Routes.HISTORY,
-        onClick = { navController.navigateTopLevel(Routes.HISTORY) },
-    ),
-    DockItem(
-        key = "settings",
-        label = stringResource(R.string.settings_title),
-        icon = Icons.Filled.Settings,
-        selected = route == Routes.SETTINGS,
-        onClick = { navController.navigateTopLevel(Routes.SETTINGS) },
-    ),
-)
+/** The navigable route for a dock peer. The reader is opened at its saved/start page. */
+private fun DockTab.navigationRoute(): String = when (this) {
+    DockTab.Home -> Routes.HOME
+    DockTab.Read -> Routes.reader()
+    DockTab.History -> Routes.HISTORY
+    DockTab.Settings -> Routes.SETTINGS
+}
 
 /**
  * The dock's navigation is a **sibling switch**, not a push.
@@ -149,26 +118,24 @@ private fun ir.hawraa.quran.ui.recitation.NowPlaying.toUi(): NowPlayingUi {
         // The tile carries the **juz** number, not the juz's starting surah: the title already
         // reads «جزء ۵», and a tile reading «۴» beside it would put two different numbers in one
         // 58 dp row with nothing to say which is which.
+        val number = if (persian) juz.toPersianDigits() else juz.toString()
         return NowPlayingUi(
-            title = stringResource(
-                R.string.dock_juz_title,
-                if (persian) juz.toPersianDigits() else juz.toString(),
-            ),
+            title = stringResource(R.string.dock_juz_title, number),
             subtitle = stringResource(R.string.dock_juz_subtitle, reciter),
-            tileNumber = juz,
+            number = number,
             isPlaying = isPlaying,
-            busy = busy,
+            waiting = busy,
         )
     }
     return NowPlayingUi(
         title = surahName,
         subtitle = stringResource(
             R.string.dock_now_playing,
-            ayah.toPersianDigits(),
+            if (persian) ayah.toPersianDigits() else ayah.toString(),
             reciter,
         ),
-        tileNumber = surahNumber,
+        number = if (persian) surahNumber.toPersianDigits() else surahNumber.toString(),
         isPlaying = isPlaying,
-        busy = busy,
+        waiting = busy,
     )
 }

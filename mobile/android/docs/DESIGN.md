@@ -413,10 +413,10 @@ app, because that structure exists for a reason worth repeating:
 **Anatomy**
 
 ```
-╭─────────────────────────────────────────╮  glassFillStrong, radius.card, elevation.dock
+╭─────────────────────────────────────────╮  FrostedSurface, radius.xl (pill when nav-only)
 │  ▢  Surah al-Fatiha          (▶)  (⏭)  │  playerHeight 58   ← only while playing
 │  ▢  ayah 3 · Parhizgar                  │
-├─────────────────────────────────────────┤  seam: 1 dp, mark? no — track, inset 12
+├─────────────────────────────────────────┤  seam: HairlineWave, inset 12
 │    ⌂        ▤         ◷        ⚙        │  navHeight 58
 ╰─────────────────────────────────────────╯
    margin 10 from the safe-area edge, inset 12 horizontal
@@ -428,8 +428,8 @@ app, because that structure exists for a reason worth repeating:
 - **The player half fades in and out as one group**, seam included, so the divider cannot outlive
   the row it divides.
 - **Navigation is icon-only, 4–5 peers.** No labels, no raised centre action. Selected = filled
-  `accent` circle (`indicator` 40) with the glyph knocked out in `onAccent`, plus a 3 dp rim light
-  at 55 % opacity so it reads as a sphere rather than a flat disc. Unselected = `textTertiary` glyph.
+  `accent` circle (`indicator` 40) with the glyph knocked out in `onAccent` at `dock.iconActive`.
+  Unselected = `textSecondary` glyph at `dock.icon`; every peer has a 44 dp touch target.
 - **No motion on destination switch.** A dock tap happens hundreds of times a day.
 - The dock is a **sibling** of the scrolling content, never inside it, so the content's scroll does
   not drag the dock and the dock's shadow does not clip.
@@ -439,16 +439,18 @@ Material specifies for icon-only docks, and it leaves room for a fifth (`Search`
 
 ### 10.5 `MiniPlayerRow`
 
-The dock's player half. Artwork tile 38 dp (`radius.sm`), title (`label`) over subtitle (`caption`,
-`textSecondary`), then trailing controls: **play/pause** (filled accent bubble, 36) and **next**
-(outlined, 32). A hairline progress wave may sit at the bottom edge of the row, inset 12.
+The dock's player half. Identity tile 40 dp (`tiles.md`, `radius.sm`), title (`label`) over subtitle
+(`caption`, `textSecondary`), then trailing controls: **play/pause** (filled accent bubble, 40) and
+**next** (outlined, 36). A `WavyProgress` wave sits under the title/subtitle inside the leading
+region, and the whole leading region is one tap target that opens the player.
 
 - Tapping the row opens the player / reader context; the trailing buttons must not steal that tap.
 - While buffering, the play bubble shows a spinner and **keeps its press** — the same control, same
   job.
 - The row is a plain `Row` with **no surface of its own**. The dock owns the panel.
-- Hawraa has no artwork: the tile is a deterministic **identity tile** — `accentSoft` fill, the
-  surah number in `accent` at 18 sp semibold, centred. No image assets, no network.
+- Hawraa has no artwork: the tile is a deterministic **identity tile** (`PaletteTile`) — an aurora
+  ramp derived from the number, with the numeral in the UI face, centred. No image assets, no
+  network; the same number paints the same tile on every device.
   - For a **juz-granularity reciter** the tile carries the **juz** number, matching the title beside
     it. The juz's starting surah would put `جزء ۵` and `۴` in the same 58 dp row with nothing to say
     which is which.
