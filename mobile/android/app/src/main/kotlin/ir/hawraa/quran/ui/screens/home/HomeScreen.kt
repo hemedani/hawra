@@ -1,8 +1,8 @@
 package ir.hawraa.quran.ui.screens.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,11 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,22 +34,32 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.hawraa.quran.R
 import ir.hawraa.quran.domain.quran.toPersianDigits
+import ir.hawraa.quran.ui.components.BubbleButton
 import ir.hawraa.quran.ui.components.ChevronIcon
 import ir.hawraa.quran.ui.components.DiamondBullet
+import ir.hawraa.quran.ui.components.GlassHeader
+import ir.hawraa.quran.ui.components.GlassSurface
+import ir.hawraa.quran.ui.components.ICON_GLYPHS
+import ir.hawraa.quran.ui.components.LocalShellInsets
+import ir.hawraa.quran.ui.components.PrimaryButton
+import ir.hawraa.quran.ui.components.ScreenFrame
 import ir.hawraa.quran.ui.quran.QuranLettersFontFamily
 import ir.hawraa.quran.ui.quran.QuranText
 import ir.hawraa.quran.ui.quran.quranLineHeight
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
+import ir.hawraa.quran.ui.theme.LocalHawraaTokens
 import ir.hawraa.quran.ui.theme.LocalQuranColors
+import ir.hawraa.quran.ui.theme.OceanCascade
+import ir.hawraa.quran.ui.theme.oceanEntrance
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -66,6 +72,9 @@ import kotlin.math.sin
  * the tracking is quiet but present (today's minutes against a small daily goal, and the
  * streak). Everything else is restrained — one filled action, two ghost ones — because a
  * reading app's home screen should invite one thing, not five.
+ *
+ * The chrome is the shell's: a floating glass header over the same ambient canvas every
+ * destination uses, with the body scrolling behind it.
  */
 @Composable
 fun HomeScreen(
@@ -94,64 +103,86 @@ internal fun HomeContent(
     onHistory: () -> Unit,
     onSettings: () -> Unit,
 ) {
-    val quran = LocalQuranColors.current
     val geometry = LocalHawraaGeometry.current
+    val shellInsets = LocalShellInsets.current
 
-    // No opaque background: the app shell paints the ambient canvas behind every screen, and an
-    // opaque page colour here would hide it — which is exactly what makes the glass stop reading
-    // as glass.
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = geometry.dock.dockInset),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            HeroHeader()
-
-            Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp)) {
-                ContinueCard(
-                    state = state,
-                    onOpen = {
-                        val resume = state.resume
-                        if (resume != null) onResume(resume.pageIndex) else onStartReading()
-                    },
-                )
-
-                Spacer(Modifier.height(14.dp))
-                TodayStrip(state = state)
-                Spacer(Modifier.height(22.dp))
-
-                Button(
-                    onClick = onStartReading,
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = quran.accent,
-                        contentColor = quran.onAccent,
-                    ),
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_start_reading),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-
-                Spacer(Modifier.height(10.dp))
-
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    GhostAction(
-                        label = stringResource(R.string.history_title),
-                        onClick = onHistory,
-                        modifier = Modifier.weight(1f),
-                    )
-                    GhostAction(
-                        label = stringResource(R.string.settings_title),
+    ScreenFrame(
+        header = { headerModifier ->
+            GlassHeader(
+                modifier = headerModifier,
+                title = stringResource(R.string.home_title),
+                overline = stringResource(R.string.auth_title_signin),
+                userTitle = true,
+                actions = {
+                    BubbleButton(
+                        icon = ICON_GLYPHS.getValue("settings"),
+                        contentDescription = stringResource(R.string.settings_title),
                         onClick = onSettings,
-                        modifier = Modifier.weight(1f),
                     )
+                },
+            )
+        },
+    ) { topInset ->
+        OceanCascade {
+            // No opaque background: the app shell paints the ambient canvas behind every screen,
+            // and an opaque page colour here would hide it — which is exactly what makes the glass
+            // stop reading as glass. The body scrolls under the floating header.
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        top = topInset,
+                        bottom = shellInsets.bottom + geometry.spacing.xxl,
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                HeroHeader(modifier = Modifier.oceanEntrance(0))
+
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = geometry.spacing.xl),
+                ) {
+                    ContinueCard(
+                        state = state,
+                        onOpen = {
+                            val resume = state.resume
+                            if (resume != null) onResume(resume.pageIndex) else onStartReading()
+                        },
+                        modifier = Modifier.oceanEntrance(1),
+                    )
+
+                    Spacer(Modifier.height(geometry.spacing.md))
+                    TodayStrip(
+                        state = state,
+                        modifier = Modifier.oceanEntrance(2),
+                    )
+                    Spacer(Modifier.height(geometry.spacing.xl))
+
+                    PrimaryButton(
+                        label = stringResource(R.string.home_start_reading),
+                        onClick = onStartReading,
+                        modifier = Modifier.oceanEntrance(3),
+                    )
+
+                    Spacer(Modifier.height(geometry.spacing.sm))
+
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(geometry.spacing.sm),
+                    ) {
+                        GhostAction(
+                            label = stringResource(R.string.history_title),
+                            onClick = onHistory,
+                            modifier = Modifier.weight(1f).oceanEntrance(4),
+                        )
+                        GhostAction(
+                            label = stringResource(R.string.settings_title),
+                            onClick = onSettings,
+                            modifier = Modifier.weight(1f).oceanEntrance(5),
+                        )
+                    }
                 }
             }
         }
@@ -164,17 +195,19 @@ internal fun HomeContent(
  * the ayah marker, at 7% opacity: a texture, not an illustration.
  */
 @Composable
-private fun HeroHeader() {
+private fun HeroHeader(modifier: Modifier = Modifier) {
     val quran = LocalQuranColors.current
+    val tokens = LocalHawraaTokens.current
+    val geometry = LocalHawraaGeometry.current
 
     Box(
-        modifier = Modifier.fillMaxWidth().height(252.dp),
+        modifier = modifier.fillMaxWidth().height(geometry.home.heroHeight),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            val step = 44.dp.toPx()
+            val step = geometry.spacing.huge.toPx()
             val radius = step * 0.46f
-            val hairline = 1.dp.toPx()
+            val hairline = geometry.glass.hairline.toPx()
             val ink = quran.mark.copy(alpha = 0.07f)
             // The lattice is stroked with a gradient brush rather than a solid colour, so it fades
             // out towards the cards by itself. Fading it with a box painted over the top does not
@@ -207,19 +240,19 @@ private fun HeroHeader() {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             // The wordmark is set in the mushaf face: the app should look like the book.
             Text(
-                text = stringResource(R.string.home_title),
+                text = stringResource(R.string.app_name),
                 fontFamily = QuranLettersFontFamily,
-                fontSize = 70.sp,
-                color = quran.accent,
+                fontSize = geometry.home.wordmarkSizeSp.sp,
+                color = tokens.accent,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(geometry.spacing.xs))
             OrnamentRule()
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(geometry.spacing.sm))
             Text(
                 text = stringResource(R.string.home_subtitle),
                 style = MaterialTheme.typography.labelLarge,
-                color = quran.translation,
+                color = tokens.textSecondary,
                 textAlign = TextAlign.Center,
             )
         }
@@ -230,17 +263,28 @@ private fun HeroHeader() {
 @Composable
 private fun OrnamentRule() {
     val quran = LocalQuranColors.current
+    val geometry = LocalHawraaGeometry.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(54.dp).height(1.dp).background(quran.mark.copy(alpha = 0.5f)))
-        Spacer(Modifier.width(9.dp))
         Box(
             Modifier
-                .size(6.dp)
+                .width(geometry.home.ornamentRuleWidth)
+                .height(geometry.glass.hairline)
+                .background(quran.mark.copy(alpha = 0.5f)),
+        )
+        Spacer(Modifier.width(geometry.spacing.sm))
+        Box(
+            Modifier
+                .size(geometry.home.ornamentDiamond)
                 .rotate(45f)
                 .background(quran.mark.copy(alpha = 0.85f)),
         )
-        Spacer(Modifier.width(9.dp))
-        Box(Modifier.width(54.dp).height(1.dp).background(quran.mark.copy(alpha = 0.5f)))
+        Spacer(Modifier.width(geometry.spacing.sm))
+        Box(
+            Modifier
+                .width(geometry.home.ornamentRuleWidth)
+                .height(geometry.glass.hairline)
+                .background(quran.mark.copy(alpha = 0.5f)),
+        )
     }
 }
 
@@ -248,31 +292,45 @@ private fun OrnamentRule() {
  * "Pick up where you left off", shown as a page rather than a row: the opening verses of
  * the page the reader stopped on, set in the mushaf face at reading size. Before there is
  * any history it falls back to the basmala, so the card is never empty.
+ *
+ * The card itself is glass chrome, but the verses sit on an opaque [QuranColors.page]
+ * inset — scripture is never painted directly on a glass token.
  */
 @Composable
-private fun ContinueCard(state: HomeUiState, onOpen: () -> Unit) {
+private fun ContinueCard(
+    state: HomeUiState,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val quran = LocalQuranColors.current
+    val tokens = LocalHawraaTokens.current
+    val geometry = LocalHawraaGeometry.current
     val resume = state.resume
     val preview = resume?.preview?.takeIf { it.isNotBlank() } ?: state.basmala
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val shape = RoundedCornerShape(geometry.radius.card)
 
-    Surface(
-        onClick = onOpen,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = quran.onAccent,
-        border = BorderStroke(1.dp, quran.mark.copy(alpha = 0.5f)),
-        shadowElevation = 2.dp,
+    GlassSurface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .clickable(role = Role.Button, onClick = onOpen),
+        shape = shape,
+        strong = true,
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = geometry.spacing.lg, vertical = geometry.spacing.md),
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.home_resume_hint),
                         style = MaterialTheme.typography.labelSmall,
-                        color = quran.translation,
+                        color = tokens.textSecondary,
                     )
-                    Spacer(Modifier.height(5.dp))
+                    Spacer(Modifier.height(geometry.spacing.xs))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = resume?.surahName
@@ -280,55 +338,66 @@ private fun ContinueCard(state: HomeUiState, onOpen: () -> Unit) {
                                 ?: stringResource(R.string.home_subtitle),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = quran.accent,
+                            color = tokens.accent,
                         )
-                        Spacer(Modifier.width(9.dp))
+                        Spacer(Modifier.width(geometry.spacing.sm))
                         DiamondBullet(tint = quran.mark)
-                        Spacer(Modifier.width(9.dp))
+                        Spacer(Modifier.width(geometry.spacing.sm))
                         Text(
                             text = stringResource(
                                 R.string.home_page,
                                 (resume?.page ?: 1).toPersianDigits(),
                             ),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = quran.translation,
+                            color = tokens.textSecondary,
                         )
                     }
                 }
                 ChevronIcon(
                     pointsLeft = rtl,
-                    tint = quran.mark.copy(alpha = 0.8f),
-                    size = 20.dp,
-                    strokeWidth = 1.6.dp,
+                    tint = tokens.textSecondary,
+                    size = geometry.icons.md,
+                    strokeWidth = geometry.glass.borderWidth,
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(geometry.spacing.md))
 
             if (preview.isNotBlank()) {
-                QuranText(
-                    text = preview,
-                    letterColor = quran.letter,
-                    diacriticColor = quran.diacritic,
-                    fontSize = 26.sp,
-                    lineHeight = quranLineHeight(26),
-                    textAlign = TextAlign.Start,
-                    maxLines = 2,
-                )
-                Spacer(Modifier.height(12.dp))
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(geometry.radius.md))
+                        .background(quran.page)
+                        .padding(
+                            horizontal = geometry.spacing.md,
+                            vertical = geometry.spacing.sm,
+                        ),
+                ) {
+                    QuranText(
+                        text = preview,
+                        letterColor = quran.letter,
+                        diacriticColor = quran.diacritic,
+                        fontSize = geometry.home.previewSizeSp.sp,
+                        lineHeight = quranLineHeight(geometry.home.previewSizeSp.toInt()),
+                        textAlign = TextAlign.Start,
+                        maxLines = 2,
+                    )
+                }
+                Spacer(Modifier.height(geometry.spacing.md))
             }
 
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(1.dp)
-                    .background(quran.hairline.copy(alpha = 0.55f)),
+                    .height(geometry.glass.hairline)
+                    .background(tokens.glassBorder),
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(geometry.spacing.sm))
             Text(
                 text = stringResource(R.string.home_open),
                 style = MaterialTheme.typography.labelLarge,
-                color = quran.accent,
+                color = tokens.accent,
             )
         }
     }
@@ -336,24 +405,31 @@ private fun ContinueCard(state: HomeUiState, onOpen: () -> Unit) {
 
 /** Today against the daily goal, plus the streak when there is one worth showing. */
 @Composable
-private fun TodayStrip(state: HomeUiState) {
-    val quran = LocalQuranColors.current
+private fun TodayStrip(
+    state: HomeUiState,
+    modifier: Modifier = Modifier,
+) {
+    val tokens = LocalHawraaTokens.current
+    val geometry = LocalHawraaGeometry.current
     val goalMinutes = state.dailyGoalSeconds / 60
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+    GlassSurface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(geometry.radius.lg),
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = geometry.spacing.lg, vertical = geometry.spacing.md),
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.home_today),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = tokens.textSecondary,
                     )
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(geometry.spacing.xs))
                     Text(
                         text = if (state.hasReadToday) {
                             stringResource(
@@ -364,11 +440,7 @@ private fun TodayStrip(state: HomeUiState) {
                             stringResource(R.string.home_nothing_yet)
                         },
                         style = MaterialTheme.typography.titleMedium,
-                        color = if (state.hasReadToday) {
-                            quran.accent
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
+                        color = if (state.hasReadToday) tokens.accent else tokens.textSecondary,
                     )
                 }
                 if (state.streakDays > 1) {
@@ -376,9 +448,9 @@ private fun TodayStrip(state: HomeUiState) {
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(geometry.spacing.md))
             GoalBar(fraction = state.goalFraction)
-            Spacer(Modifier.height(7.dp))
+            Spacer(Modifier.height(geometry.spacing.sm))
             Text(
                 text = if (state.goalFraction >= 1f) {
                     stringResource(R.string.home_goal_met)
@@ -390,11 +462,7 @@ private fun TodayStrip(state: HomeUiState) {
                     )
                 },
                 style = MaterialTheme.typography.labelSmall,
-                color = if (state.goalFraction >= 1f) {
-                    quran.accent
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
+                color = if (state.goalFraction >= 1f) tokens.accent else tokens.textSecondary,
             )
         }
     }
@@ -402,31 +470,41 @@ private fun TodayStrip(state: HomeUiState) {
 
 @Composable
 private fun StreakPill(days: Int) {
-    val quran = LocalQuranColors.current
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = quran.mark.copy(alpha = 0.14f),
-        border = BorderStroke(1.dp, quran.mark.copy(alpha = 0.35f)),
+    val tokens = LocalHawraaTokens.current
+    val geometry = LocalHawraaGeometry.current
+    GlassSurface(
+        shape = RoundedCornerShape(geometry.radius.pill),
+        filled = false,
+        rimLight = false,
     ) {
         Text(
             text = stringResource(R.string.home_streak_days, days.toPersianDigits()),
             style = MaterialTheme.typography.labelMedium,
-            color = quran.mark,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            color = tokens.accentTeal,
+            modifier = Modifier.padding(
+                horizontal = geometry.spacing.md,
+                vertical = geometry.spacing.xs,
+            ),
         )
     }
 }
 
 @Composable
 private fun GoalBar(fraction: Float) {
-    val quran = LocalQuranColors.current
+    val tokens = LocalHawraaTokens.current
+    val geometry = LocalHawraaGeometry.current
     // Progress runs from the leading edge, which is the right side in RTL. The canvas is
     // not mirrored for us, so the fill is placed explicitly.
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    Canvas(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50))) {
+    Canvas(
+        Modifier
+            .fillMaxWidth()
+            .height(geometry.bars.thick)
+            .clip(RoundedCornerShape(geometry.radius.pill)),
+    ) {
         val radius = CornerRadius(size.height / 2f)
         drawRoundRect(
-            color = quran.mark.copy(alpha = 0.18f),
+            color = tokens.glassBorder,
             size = size,
             cornerRadius = radius,
         )
@@ -435,7 +513,7 @@ private fun GoalBar(fraction: Float) {
             val left = if (rtl) size.width - filled else 0f
             drawRoundRect(
                 brush = Brush.horizontalGradient(
-                    listOf(quran.accent, quran.mark),
+                    listOf(tokens.accent, tokens.accentTeal),
                     startX = if (rtl) size.width else 0f,
                     endX = if (rtl) size.width - filled else filled,
                 ),
@@ -453,15 +531,25 @@ private fun GhostAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val quran = LocalQuranColors.current
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.height(46.dp),
-        shape = RoundedCornerShape(14.dp),
-        border = BorderStroke(1.dp, quran.mark.copy(alpha = 0.45f)),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = quran.accent),
+    val tokens = LocalHawraaTokens.current
+    val geometry = LocalHawraaGeometry.current
+    val shape = RoundedCornerShape(geometry.radius.md)
+    GlassSurface(
+        modifier = modifier
+            .height(geometry.controls.lg)
+            .clip(shape)
+            .clickable(role = Role.Button, onClick = onClick),
+        shape = shape,
+        filled = false,
+        rimLight = false,
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelLarge)
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = tokens.text,
+            )
+        }
     }
 }
 

@@ -4,7 +4,7 @@
     <string name="action_close">بستن</string>
 
     <!-- Navigation / screens -->
-    <string name="home_title">حوراء</string>
+    <string name="home_title">خانه</string>
     <string name="home_subtitle">قرآن کریم</string>
     <string name="reader_title">خواندن</string>
     <string name="history_title">تاریخچه</string>

@@ -374,6 +374,16 @@ data class SkeletonGeometry(
     val lineWidthSmall: Float = 0.4f,
 )
 
+/** Home's hero and ornament scale (DESIGN.md §11.2). */
+@Immutable
+data class HomeGeometry(
+    val heroHeight: Dp = 192.dp,
+    val wordmarkSizeSp: Float = 64f,
+    val previewSizeSp: Float = 24f,
+    val ornamentRuleWidth: Dp = 52.dp,
+    val ornamentDiamond: Dp = 6.dp,
+)
+
 @Immutable
 data class HawraaGeometry(
     val radius: Radius = Radius(),
@@ -393,6 +403,7 @@ data class HawraaGeometry(
     val sheet: SheetGeometry = SheetGeometry(),
     val playerMorph: PlayerMorph = PlayerMorph(),
     val skeleton: SkeletonGeometry = SkeletonGeometry(),
+    val home: HomeGeometry = HomeGeometry(),
     val navMotion: NavMotionGeometry = NavMotionGeometry(),
     val waveSweep: WaveSweepGeometry = WaveSweepGeometry(),
     val maxContentWidth: Dp = 760.dp,
