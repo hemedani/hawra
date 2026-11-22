@@ -354,12 +354,13 @@ never rely on the platform flag alone.
 | Dock height change | height animation 220 ms, emphasized easing |
 | Action box appear | fade + 8 dp rise, 160 ms |
 | Sheet open/close | spring, 280 ms, no bounce on dismiss |
-| Tab / destination switch | **none** — the press spring is the whole interaction |
+| Tab / destination switch | ocean current: lateral tab drift, push rise, pop reverse; WaveSweep crest + ambient surge, `OceanSwellEasing` |
 | Playing-ayah wash | 180 ms cross-fade of the wash colour only |
 | Follow-along scroll | `animateScrollToItem`, and only when the verse is off screen |
 
-**Never animate:** Quran text size changes, scroll position after a deliberate reader scroll, the
-canvas (unless the reduced-motion-aware drift of §3 is implemented).
+**Never animate:** Quran text size changes, scroll position after a deliberate reader scroll, or the
+canvas at idle (the navigation surge is its only movement). Under reduced motion the switch is
+instant and the crest is absent.
 
 ---
 
@@ -430,7 +431,9 @@ app, because that structure exists for a reason worth repeating:
 - **Navigation is icon-only, 4–5 peers.** No labels, no raised centre action. Selected = filled
   `accent` circle (`indicator` 40) with the glyph knocked out in `onAccent` at `dock.iconActive`.
   Unselected = `textSecondary` glyph at `dock.icon`; every peer has a 44 dp touch target.
-- **No motion on destination switch.** A dock tap happens hundreds of times a day.
+- **The navigation current explains the switch.** A dock tap drifts laterally along the tab order,
+  a pushed screen rises and a pop reverses; the WaveSweep crest rides the same current. Under
+  reduced motion the switch is instant and the crest is absent.
 - The dock is a **sibling** of the scrolling content, never inside it, so the content's scroll does
   not drag the dock and the dock's shadow does not clip.
 

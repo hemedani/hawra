@@ -45,6 +45,9 @@ fun useMotionEnabled(): Boolean {
 /** Ocean-current easing: crisp gentle surge followed by a long silky glide to rest. */
 val OceanSwellEasing = CubicBezierEasing(0.22f, 1.0f, 0.36f, 1f)
 
+/** The WaveSweep crest: a softer swell that carries the wake across the screen. */
+val WaveSweepEasing = CubicBezierEasing(0.22f, 0.72f, 0.32f, 1f)
+
 /** Physics springs (damping ratio, stiffness) ported from Pejvak's motion spec. */
 object HawraaSpring {
     val bouncy: SpringSpec<Float> = spring(dampingRatio = 0.6f, stiffness = 400f)

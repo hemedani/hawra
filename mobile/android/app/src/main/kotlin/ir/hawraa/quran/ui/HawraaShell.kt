@@ -4,16 +4,21 @@ import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -25,9 +30,12 @@ import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.ui.components.AmbientCanvas
 import ir.hawraa.quran.ui.components.AppDock
 import ir.hawraa.quran.ui.components.DockTab
+import ir.hawraa.quran.ui.components.NavWaveKind
 import ir.hawraa.quran.ui.components.NowPlayingUi
+import ir.hawraa.quran.ui.components.WaveSweep
 import ir.hawraa.quran.ui.navigation.HawraaNavHost
 import ir.hawraa.quran.ui.navigation.Routes
+import ir.hawraa.quran.ui.navigation.navWaveKind
 import ir.hawraa.quran.ui.screens.auth.AuthScreen
 import ir.hawraa.quran.ui.screens.player.NowPlayingSheet
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
@@ -61,6 +69,39 @@ fun HawraaShell(
     val route = backStackEntry?.destination?.route
     val geometry = LocalHawraaGeometry.current
 
+    // One recorded current per route change: the ambient canvas surges and the WaveSweep
+    // crest crosses in the same direction. The kind is decided from the tab order first,
+    // then from the back-stack depth, so a dock tap drifts while a detail screen rises.
+    var previousRoute by remember { mutableStateOf<String?>(null) }
+    var previousDepth by remember { mutableIntStateOf(0) }
+    var navTrigger by remember { mutableIntStateOf(0) }
+    var navKind by remember { mutableStateOf<NavWaveKind>(NavWaveKind.Push) }
+    LaunchedEffect(backStackEntry?.id) {
+        val entry = backStackEntry ?: return@LaunchedEffect
+        val toRoute = entry.destination.route
+        val depth = navController.currentBackStack.value.size
+        if (previousRoute == null) {
+            previousRoute = toRoute
+            previousDepth = depth
+            return@LaunchedEffect
+        }
+        navKind = navWaveKind(previousRoute, toRoute, previousDepth, depth)
+        previousRoute = toRoute
+        previousDepth = depth
+        navTrigger++
+    }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val horizontalSign = if (rtl) -1f else 1f
+    val nav = geometry.navMotion
+    val (canvasShiftX, canvasShiftY) = when (val kind = navKind) {
+        is NavWaveKind.TabDrift -> {
+            val x = if (kind.dir >= 0) -nav.canvasTabShift else nav.canvasTabShift
+            x * horizontalSign to nav.canvasTabY
+        }
+        NavWaveKind.Push -> nav.canvasPushX to nav.canvasPushY
+        NavWaveKind.Pop -> nav.canvasPopX to nav.canvasPopY
+    }
+
     // The sheet streams its morph progress here so the chrome behind it can frost while the
     // player opens. The radius is computed for both API bands: on 31+ it feeds `Modifier.blur`,
     // and on 29–30 the sheet reads it as its scrim alpha (there is no RenderEffect blur there).
@@ -75,7 +116,11 @@ fun HawraaShell(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AmbientCanvas()
+        AmbientCanvas(
+            navTrigger = navTrigger,
+            navShiftX = canvasShiftX,
+            navShiftY = canvasShiftY,
+        )
         when (authState) {
             AuthState.Restoring -> Unit
             AuthState.SignedOut -> AuthScreen()
@@ -100,6 +145,17 @@ fun HawraaShell(
                             onMiniPlayerRect = viewModel::onMiniPlayerRect,
                         )
                     }
+                    // The crest crosses above the chrome but stays inside the blurred
+                    // box, so the player sheet remains the topmost surface.
+                    WaveSweep(
+                        trigger = navTrigger,
+                        kind = when (val kind = navKind) {
+                            is NavWaveKind.TabDrift ->
+                                NavWaveKind.TabDrift(if (rtl) -kind.dir else kind.dir)
+                            else -> kind
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
                 // The sheet is a sibling of the blurred chrome, drawn above it, so it survives
                 // navigation and morphs out of the dock's own row rather than appearing as a

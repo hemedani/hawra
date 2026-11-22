@@ -250,6 +250,106 @@ data class SheetGeometry(
     val contentOriginY: Float = 0.14f,
 )
 
+/**
+ * Navigation motion (DESIGN.md §9 / plan 02 Task 7): the page-transition channels, the
+ * ambient-canvas surge and the WaveSweep crest. Durations and amplitudes live here so no
+ * navigation composable carries a raw number.
+ */
+@Immutable
+data class NavMotionGeometry(
+    val ambientSurgeMs: Int = 760,
+    val ambientShiftX: Float = 0.06f,
+    val ambientShiftY: Float = 0.055f,
+    /** Ambient-canvas drift while crossing tabs; mirrored by the shell in RTL. */
+    val canvasTabShift: Float = 1f,
+    val canvasTabY: Float = -0.25f,
+    val canvasPushX: Float = 0.25f,
+    val canvasPushY: Float = -1f,
+    val canvasPopX: Float = -0.25f,
+    val canvasPopY: Float = 1f,
+    /** Tab switch: lateral glide + buoyant crest. */
+    val tabFadeInMs: Int = 240,
+    val tabEnterMs: Int = 380,
+    val tabEnterHorizontalDivisor: Int = 8,
+    val tabEnterVerticalDivisor: Int = 48,
+    val tabEnterScale: Float = 0.978f,
+    val tabFadeOutMs: Int = 200,
+    val tabExitMs: Int = 320,
+    val tabExitHorizontalDivisor: Int = 10,
+    val tabExitScale: Float = 0.975f,
+    /** Push: rise into clarity while the parent recedes. */
+    val pushFadeInMs: Int = 260,
+    val pushEnterMs: Int = 420,
+    val pushEnterVerticalDivisor: Int = 10,
+    val pushEnterScale: Float = 0.945f,
+    val pushFadeOutMs: Int = 210,
+    val pushExitMs: Int = 360,
+    val pushExitVerticalDivisor: Int = 22,
+    val pushExitScale: Float = 0.96f,
+    /** Pop: mirror the dive on the way back. */
+    val popFadeInMs: Int = 260,
+    val popEnterMs: Int = 380,
+    val popEnterVerticalDivisor: Int = 22,
+    val popEnterScale: Float = 0.96f,
+    val popFadeOutMs: Int = 210,
+    val popExitMs: Int = 360,
+    val popExitVerticalDivisor: Int = 9,
+    val popExitScale: Float = 0.95f,
+)
+
+/** The WaveSweep crest (DESIGN.md §9): aqua band, dual crests, swimmer and wake. */
+@Immutable
+data class WaveSweepGeometry(
+    val durationMs: Int = 660,
+    val wavelength: Dp = 88.dp,
+    val bandHalf: Dp = 58.dp,
+    val bandCyanAlpha: Float = 0.065f,
+    val bandTealAlpha: Float = 0.045f,
+    /** Tab drift: lateral swim at mid-height. */
+    val tabCenterFraction: Float = 0.48f,
+    val tabCenterOffset: Dp = 18.dp,
+    val tabAmplitude: Dp = 8.dp,
+    val tabPhaseSpan: Float = 4.2f,
+    val tabEchoLag: Dp = 22.dp,
+    /** Push: swim up from the bottom. */
+    val pushStartX: Float = 0.12f,
+    val pushSpanX: Float = 0.76f,
+    val pushStartY: Float = 0.88f,
+    val pushSpanY: Float = 0.76f,
+    val pushAmplitude: Dp = 7.dp,
+    val pushPhaseSpan: Float = 3.6f,
+    val pushEchoLag: Dp = 24.dp,
+    /** Pop: swim down from the top. */
+    val popStartX: Float = 0.88f,
+    val popSpanX: Float = 0.76f,
+    val popStartY: Float = 0.14f,
+    val popSpanY: Float = 0.74f,
+    val popAmplitude: Dp = 6.5.dp,
+    val popPhaseSpan: Float = 3.4f,
+    val popEchoLag: Dp = 24.dp,
+    val crestAlpha: Float = 0.28f,
+    val echoCrestAlpha: Float = 0.22f,
+    val crestStroke: Dp = 1.6.dp,
+    val echoCrestStroke: Dp = 1.1.dp,
+    val crestTaper: Dp = 28.dp,
+    val crestVariation: Float = 0.35f,
+    val echoAmplitudeScale: Float = 0.62f,
+    val wakeSpread: Dp = 8.5.dp,
+    val wakePhaseShift: Float = 0.85f,
+    val wakeLength: Float = 128f,
+    val wakeEchoLength: Float = 112f,
+    val wakeAlpha: Float = 0.34f,
+    val wakeEchoAlpha: Float = 0.28f,
+    val wakeAmplitudeScale: Float = 0.42f,
+    val haloRadius: Dp = 8.dp,
+    val haloAlpha: Float = 0.18f,
+    val tailLength: Dp = 11.dp,
+    val tailStroke: Dp = 2.4.dp,
+    val tailAlpha: Float = 0.55f,
+    val headRadius: Dp = 2.8.dp,
+    val headAlpha: Float = 0.86f,
+)
+
 /** The player body's own motion (DESIGN.md §10.12): hero entrance and the playing pulse. */
 @Immutable
 data class PlayerMorph(
@@ -293,6 +393,8 @@ data class HawraaGeometry(
     val sheet: SheetGeometry = SheetGeometry(),
     val playerMorph: PlayerMorph = PlayerMorph(),
     val skeleton: SkeletonGeometry = SkeletonGeometry(),
+    val navMotion: NavMotionGeometry = NavMotionGeometry(),
+    val waveSweep: WaveSweepGeometry = WaveSweepGeometry(),
     val maxContentWidth: Dp = 760.dp,
 ) {
     val touchTarget: Dp get() = dock.touch

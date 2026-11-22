@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalHawraaTokens
 import ir.hawraa.quran.ui.theme.RampBlue
 import ir.hawraa.quran.ui.theme.RampCyan
@@ -40,6 +41,7 @@ fun AmbientCanvas(
     navShiftY: Float = 0f,
 ) {
     val tokens = LocalHawraaTokens.current
+    val nav = LocalHawraaGeometry.current.navMotion
     val motion = useMotionEnabled()
     val surge = remember { Animatable(0f) }
     LaunchedEffect(navTrigger, motion) {
@@ -48,7 +50,7 @@ fun AmbientCanvas(
             return@LaunchedEffect
         }
         surge.snapTo(0f)
-        surge.animateTo(1f, tween(760, easing = LinearEasing))
+        surge.animateTo(1f, tween(nav.ambientSurgeMs, easing = LinearEasing))
     }
     // Dark has the contrast headroom for a rich, colourful field: white text on the
     // deep base still clears 4.5:1 behind the frost even at 0.38 (and where two cool
@@ -60,8 +62,8 @@ fun AmbientCanvas(
         val h = size.height
         val s = surge.value
         val arc = if (s > 0f && s < 1f) sin(s * PI).toFloat() else 0f
-        val dx = navShiftX * arc * w * 0.06f
-        val dy = navShiftY * arc * h * 0.055f
+        val dx = navShiftX * arc * w * nav.ambientShiftX
+        val dy = navShiftY * arc * h * nav.ambientShiftY
         val bloomAlpha = baseBloomAlpha + (if (tokens.isDark) 0.05f else 0.025f) * arc
         // Four large soft blooms from the COOL aurora stops (teal / blue / cyan /
         // purple). Cool-only keeps the field dark enough for the contrast contract
