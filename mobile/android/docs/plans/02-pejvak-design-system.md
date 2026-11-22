@@ -174,7 +174,7 @@ These bind every task; a reviewer must treat them as the rubric.
 3. Nav: icon-only peers, selected = solid `accent` circle (`dock.indicator`) with `onAccent` glyph at
    `dock.iconActive`, unselected at `dock.icon` in `textSecondary`; press spring
    `1 → 0.92 → 1.05 → 1` + `HapticIntent.Select`; no travelling indicator.
-4. Mini row: identity tile (surah/juz number, `accentSoft` wash, UI face), title/subtitle, wave,
+4. Mini row: identity tile (surah/juz number, `PaletteTile` aurora, UI face), title/subtitle, wave,
    filled play/pause bubble, outlined next bubble; whole leading region opens the player.
 5. Dock publishes its measured mini-player `Rect` through a callback/store so Task 6 can morph.
 6. RTL: nav order follows the existing destination list; wave and press are direction-agnostic.

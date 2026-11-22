@@ -458,7 +458,7 @@ region, and the whole leading region is one tap target that opens the player.
     play bubble, selected destination) turns the accent into decoration and loses the rule that
     "filled accent = the current thing".
   - It is **not** set in the mushaf face. Scheherazade draws «۱» as one thin calligraphic stroke;
-    at 19 sp inside a 38 dp tile that is a slanted smudge rather than a numeral, and it reads as a
+    at 19 sp inside a 40 dp tile that is a slanted smudge rather than a numeral, and it reads as a
     rendering artefact. **The mushaf face is for scripture; chrome uses the UI face.**
 
 ### 10.6 `SelectionActionBox` — the floating action box

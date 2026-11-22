@@ -300,7 +300,7 @@ mobile/android/
         │   │       ├── navigation/         # HawraaNavHost + Routes
         │   │       ├── components/         # GlassSurface, AmbientCanvas, BubbleButton, GlassChip,
         │   │       │                       #   GlassSegments (one-of-N, glass palette), EyeGlyph/
-        │   │       │                       #   PasswordReveal, AppDock (+DockIcons), SelectionActionBox,
+        │   │       │                       #   PasswordReveal, AppDock, SelectionActionBox,
         │   │       │                       #   SegmentedPill, ChevronIcon/DiamondBullet, TransportIcons
         │   │       ├── quran/              # QuranFont, QuranText (two ink layers + muted spans),
         │   │       │                       #   QuranTypeScale, AyahOrnament (licensed icon),
@@ -629,7 +629,7 @@ shadda of the `uni0647.fina.allah` ligature).
   column/region histogram over `captureToImage()` output is the honest test.
 - **A screenshot fixture that passes the same icon twice hides a glyph nobody ever sees.** The dock
   capture used `Icons.Filled.Settings` for both *History* and *Settings*, so the hand-drawn
-  `DockIcons.History` clock was never rendered by any screenshot. Fixtures must mirror what the real
+  hand-drawn History clock was never rendered by any screenshot. Fixtures must mirror what the real
   screen passes — that is the whole point of a visual gate.
 - **Persian «۱» is a single thin slanted stroke in every Arabic-derived face** (Scheherazade *and* the
   system face). In a 38 dp tile at 14 sp it reads as a smudge, not a numeral. The identity tile

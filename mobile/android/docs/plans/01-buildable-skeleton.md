@@ -264,7 +264,7 @@ and a reading session is recorded locally → finalized → synced to the backen
       `IconSizes`/`DockGeometry` with `dockInset = 146`), `Theme.kt` (derives the Material scheme from
       the glass tokens and provides all three locals).
       Components: `GlassSurface` (fill → 2 dp sheen → hairline, no `RenderEffect`), `AmbientCanvas`,
-      `BubbleButton`, `GlassChip`, `AppDock` (+`DockIcons`), `SelectionActionBox`, `RecitationSheet`
+      `BubbleButton`, `GlassChip`, `AppDock`, `SelectionActionBox`, `RecitationSheet`
       (replaces `RecitationBar`, deleted).
       Shell: `HawraaShell` (canvas + NavHost + dock), `ShellViewModel`, `NowPlayingStore`; the reader
       lost its `onBack` and its bottom bar, gained a floating `ReaderTopBar` and the anchored action
@@ -697,7 +697,7 @@ no hardcoded direction; pure logic in `domain/`; single-owner repositories. Full
      dark 90 % → 94 % → 98 %; the ghost is now 1.6 % / 3 lum); the identity tile's digit was 14 sp and
      vanished (18 sp semibold in the UI face — the mushaf face draws «۱» as a slanted stroke that
      reads as a smudge at tile size); and the dock screenshot fixture passed `Icons.Filled.Settings`
-     for both *History* and *Settings*, which meant the hand-drawn `DockIcons.History` clock had never
+     for both *History* and *Settings*, which meant the hand-drawn History clock had never
      been rendered by any capture.
   5. Two more found only because the screen captures were made honest. Every screen is transparent by
      design (the shell paints the canvas), so `HomeScreenshotTest`/`HistoryScreenshotTest`/

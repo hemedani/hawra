@@ -28,12 +28,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -159,9 +159,12 @@ fun AppDock(
 
     // AnimatedVisibility retains its content while it exits, but the content lambda would
     // otherwise read the now-null state and collapse before the shrink can play. Keep the
-    // last non-null snapshot so the row has something to shrink.
+    // last non-null snapshot so the row has something to shrink. The holder is updated in
+    // an effect, never written during composition.
     val shown = remember { mutableStateOf(nowPlaying) }
-    if (nowPlaying != null) shown.value = nowPlaying
+    LaunchedEffect(nowPlaying) {
+        if (nowPlaying != null) shown.value = nowPlaying
+    }
 
     Box(
         modifier = modifier
