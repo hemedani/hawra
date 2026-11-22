@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.hawraa.quran.R
@@ -278,6 +280,7 @@ private fun DockDestination(tab: DockTab, selected: Boolean, onClick: () -> Unit
                     onClick()
                 },
             )
+            .semantics { this.selected = selected }
             .testTag("dock-${tab.name.lowercase()}"),
         contentAlignment = Alignment.Center,
     ) {
@@ -330,7 +333,7 @@ internal fun MiniPlayerRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = geometry.spacing.md, end = geometry.spacing.xs),
+            .padding(horizontal = geometry.dock.inset),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -373,6 +376,7 @@ internal fun MiniPlayerRow(
             }
         }
 
+        Spacer(Modifier.width(geometry.spacing.sm))
         BubbleButton(
             icon = ICON_GLYPHS.getValue(if (nowPlaying.isPlaying) "pause" else "play"),
             contentDescription = stringResource(
@@ -384,11 +388,13 @@ internal fun MiniPlayerRow(
             busy = nowPlaying.waiting,
             modifier = Modifier.testTag("dock-play"),
         )
+        Spacer(Modifier.width(geometry.spacing.xs))
         BubbleButton(
             icon = ICON_GLYPHS.getValue("next"),
             contentDescription = stringResource(R.string.recitation_next_ayah),
             onClick = onNext,
             size = geometry.controls.sm,
+            mirrorInRtl = true,
             modifier = Modifier.testTag("dock-next"),
         )
     }

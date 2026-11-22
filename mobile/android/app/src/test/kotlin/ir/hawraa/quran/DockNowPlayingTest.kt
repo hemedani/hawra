@@ -9,8 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
@@ -62,6 +65,36 @@ class DockNowPlayingTest {
         File(dir, name).outputStream().use {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
+    }
+
+    @Test
+    fun nav_only_has_no_player_half_and_marks_the_current_tab() {
+        composeRule.setContent {
+            HawraaTheme(themeMode = ThemeMode.LIGHT) {
+                TestShell(selected = "home", nowPlaying = null) {
+                    // The dock is the subject; the screen behind it is empty on purpose.
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("dock-player").assertDoesNotExist()
+        composeRule.onNodeWithTag("dock-home").assertIsSelected()
+        composeRule.onNodeWithTag("dock-read").assertIsNotSelected()
+    }
+
+    @Test
+    fun playing_draws_the_player_half_and_marks_the_reader_tab() {
+        composeRule.setContent {
+            HawraaTheme(themeMode = ThemeMode.DARK) {
+                TestShell(selected = "reader?page=2", nowPlaying = juzNowPlaying()) {
+                    // The dock is the subject; the screen behind it is empty on purpose.
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("dock-player").assertIsDisplayed()
+        composeRule.onNodeWithTag("dock-read").assertIsSelected()
+        composeRule.onNodeWithTag("dock-home").assertIsNotSelected()
     }
 
     @Test
