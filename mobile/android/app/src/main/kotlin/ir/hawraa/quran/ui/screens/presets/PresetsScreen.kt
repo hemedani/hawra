@@ -1,8 +1,5 @@
 package ir.hawraa.quran.ui.screens.presets
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,17 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,8 +26,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.hawraa.quran.R
@@ -49,10 +36,18 @@ import ir.hawraa.quran.domain.preset.PresetStep
 import ir.hawraa.quran.domain.preset.PresetStepKind
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.ui.appLocale
-import ir.hawraa.quran.ui.components.GlassChip
+import ir.hawraa.quran.ui.components.BubbleButton
+import ir.hawraa.quran.ui.components.GlassHeader
 import ir.hawraa.quran.ui.components.GlassSurface
+import ir.hawraa.quran.ui.components.ICON_GLYPHS
+import ir.hawraa.quran.ui.components.LocalShellInsets
+import ir.hawraa.quran.ui.components.PrimaryButton
+import ir.hawraa.quran.ui.components.ScreenFrame
+import ir.hawraa.quran.ui.components.SkeletonRows
 import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
+import ir.hawraa.quran.ui.theme.OceanCascade
+import ir.hawraa.quran.ui.theme.oceanEntrance
 import java.util.Locale
 
 /**
@@ -82,7 +77,6 @@ fun PresetsScreen(
 }
 
 /** Stateless body, so a screenshot test can render it without Hilt. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun PresetsContent(
     state: PresetsUiState,
@@ -94,60 +88,71 @@ internal fun PresetsContent(
 ) {
     val geometry = LocalHawraaGeometry.current
     val glass = LocalGlassColors.current
+    val shellInsets = LocalShellInsets.current
     val persian = LocalConfiguration.current.appLocale().language == "fa"
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.presets_title)) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+    ScreenFrame(
+        header = { headerModifier ->
+            GlassHeader(
+                modifier = headerModifier,
+                title = stringResource(R.string.presets_title),
+                userTitle = true,
+                leading = {
+                    BubbleButton(
+                        icon = ICON_GLYPHS.getValue("back"),
+                        contentDescription = stringResource(R.string.back),
+                        onClick = onBack,
+                        size = geometry.controls.md,
+                    )
                 },
             )
         },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = geometry.screenPadding,
-                    end = geometry.screenPadding,
-                    top = geometry.spacing.sm,
-                    bottom = geometry.dock.dockInset,
-                ),
-        ) {
-            PrimaryAction(
-                label = stringResource(R.string.presets_new),
-                onClick = onNew,
-                modifier = Modifier.testTag("presets_new"),
-            )
-
-            Spacer(Modifier.height(geometry.spacing.xl))
-            if (state.isEmpty) {
-                Text(
-                    text = stringResource(R.string.presets_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = glass.textSecondary,
+    ) { topInset ->
+        OceanCascade {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = geometry.screenPadding,
+                        end = geometry.screenPadding,
+                        top = topInset,
+                        bottom = shellInsets.bottom,
+                    ),
+            ) {
+                PrimaryButton(
+                    label = stringResource(R.string.presets_new),
+                    onClick = onNew,
+                    modifier = Modifier
+                        .testTag("presets_new")
+                        .oceanEntrance(0),
                 )
-            } else {
-                state.rows.forEach { row ->
-                    PresetCard(
-                        row = row,
-                        persian = persian,
-                        onEdit = { onEdit(row.preset.clientId) },
-                        onSetDefault = { onSetDefault(row.preset.clientId) },
-                        onDelete = { onDelete(row.preset.clientId) },
+
+                Spacer(Modifier.height(geometry.spacing.xl))
+                when {
+                    state.loading -> SkeletonRows(
+                        count = 3,
+                        modifier = Modifier.oceanEntrance(1),
                     )
-                    Spacer(Modifier.height(geometry.spacing.md))
+
+                    state.isEmpty -> Text(
+                        text = stringResource(R.string.presets_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = glass.textSecondary,
+                        modifier = Modifier.oceanEntrance(1),
+                    )
+
+                    else -> state.rows.forEachIndexed { index, row ->
+                        PresetCard(
+                            row = row,
+                            persian = persian,
+                            onEdit = { onEdit(row.preset.clientId) },
+                            onSetDefault = { onSetDefault(row.preset.clientId) },
+                            onDelete = { onDelete(row.preset.clientId) },
+                            modifier = Modifier.oceanEntrance(index + 1),
+                        )
+                        Spacer(Modifier.height(geometry.spacing.md))
+                    }
                 }
             }
         }
@@ -161,6 +166,7 @@ private fun PresetCard(
     onEdit: () -> Unit,
     onSetDefault: () -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val geometry = LocalHawraaGeometry.current
     val glass = LocalGlassColors.current
@@ -168,9 +174,8 @@ private fun PresetCard(
     val coverage = row.coverage
 
     GlassSurface(
-        modifier = Modifier.fillMaxWidth().testTag("preset_card_${preset.clientId}"),
+        modifier = modifier.fillMaxWidth().testTag("preset_card_${preset.clientId}"),
         shape = RoundedCornerShape(geometry.radius.card),
-        rimLight = false,
     ) {
         Column(
             modifier = Modifier
@@ -325,26 +330,6 @@ private fun TextAction(label: String, tint: Color, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = geometry.spacing.sm, vertical = geometry.spacing.xs)
             .semantics { contentDescription = label },
-    )
-}
-
-@Composable
-private fun PrimaryAction(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val geometry = LocalHawraaGeometry.current
-    val glass = LocalGlassColors.current
-    val shape = RoundedCornerShape(geometry.radius.pill)
-    Text(
-        text = label,
-        style = MaterialTheme.typography.labelLarge,
-        color = glass.accent,
-        textAlign = TextAlign.Center,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(glass.accentSoft)
-            .border(BorderStroke(1.dp, glass.accent), shape)
-            .clickable(onClick = onClick)
-            .padding(vertical = geometry.spacing.md),
     )
 }
 

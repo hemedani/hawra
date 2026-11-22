@@ -7,11 +7,13 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import ir.hawraa.quran.data.repository.PresetCoverageSummary
+import ir.hawraa.quran.domain.AppLanguage
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.domain.preset.CoverageRange
 import ir.hawraa.quran.domain.preset.Preset
 import ir.hawraa.quran.domain.preset.PresetStep
 import ir.hawraa.quran.domain.quran.TranslationKeys
+import ir.hawraa.quran.ui.LocalizedApp
 import ir.hawraa.quran.ui.screens.presets.PresetEditorContent
 import ir.hawraa.quran.ui.screens.presets.PresetEditorUiState
 import ir.hawraa.quran.ui.screens.presets.PresetRow
@@ -119,45 +121,70 @@ class PresetsScreenshotTest {
         }
     }
 
-    @Test
-    fun presets_light_persian() {
+    private fun stage(
+        language: AppLanguage,
+        theme: ThemeMode,
+        name: String,
+    ) {
         composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "settings") {
-                    PresetsContent(state = listState(), onBack = {})
+            LocalizedApp(language) {
+                HawraaTheme(themeMode = theme) {
+                    TestShell(selected = "settings") {
+                        PresetsContent(
+                            state = listState(english = language == AppLanguage.ENGLISH),
+                            onBack = {},
+                        )
+                    }
                 }
             }
         }
-        capture("presets-light-fa.png")
+        capture(name)
     }
 
     @Test
-    @Config(qualifiers = "en-rUS-w411dp-h891dp-xxhdpi")
-    fun presets_dark_english() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.DARK) {
-                TestShell(selected = "settings") {
-                    PresetsContent(state = listState(english = true), onBack = {})
-                }
-            }
-        }
-        capture("presets-dark.png")
-    }
+    fun presets_light_fa() = stage(
+        language = AppLanguage.PERSIAN,
+        theme = ThemeMode.LIGHT,
+        name = "presets-light-fa.png",
+    )
+
+    @Test
+    fun presets_dark_fa() = stage(
+        language = AppLanguage.PERSIAN,
+        theme = ThemeMode.DARK,
+        name = "presets-dark-fa.png",
+    )
+
+    @Test
+    fun presets_light_en() = stage(
+        language = AppLanguage.ENGLISH,
+        theme = ThemeMode.LIGHT,
+        name = "presets-light-en.png",
+    )
+
+    @Test
+    fun presets_dark_en() = stage(
+        language = AppLanguage.ENGLISH,
+        theme = ThemeMode.DARK,
+        name = "presets-dark-en.png",
+    )
 
     @Test
     fun editor_light_persian() {
         composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "settings") {
-                    PresetEditorContent(
-                        state = PresetEditorUiState(
-                            name = twice.name,
-                            steps = twice.steps,
-                            isNew = false,
-                            loading = false,
-                        ),
-                        onBack = {},
-                    )
+            LocalizedApp(AppLanguage.PERSIAN) {
+                HawraaTheme(themeMode = ThemeMode.LIGHT) {
+                    TestShell(selected = "settings") {
+                        PresetEditorContent(
+                            state = PresetEditorUiState(
+                                name = twice.name,
+                                steps = twice.steps,
+                                isNew = false,
+                                loading = false,
+                            ),
+                            onBack = {},
+                        )
+                    }
                 }
             }
         }

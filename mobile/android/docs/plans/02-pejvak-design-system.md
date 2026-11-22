@@ -558,3 +558,13 @@ without opening Pejvak.
   screenshot test stages light/dark × fa/en through `LocalizedApp` plus the juz-only and saved-list
   captures; all six inspected. `./gradlew test assembleDebug` green, APK at
   `app/build/outputs/apk/debug/app-debug.apk`.
+- 2026-11-22 — **Task 8c complete — Presets list chrome.** `PresetsScreen` dropped `Scaffold` +
+  `TopAppBar` for `ScreenFrame` + a floating `GlassHeader` («الگوهای تلاوت», leading back bubble, en
+  "Recitation presets"); the body starts below the measured `topInset` and clears the dock with
+  `LocalShellInsets.current.bottom` instead of `dockInset`. Preset cards keep the current
+  `GlassSurface` recipe (`radius.card` + rim light) and the accent action is now the shared
+  `PrimaryButton`, removing the last `1.dp` border literal. `OceanCascade` + `oceanEntrance` stagger
+  the new-preset action and rows; loading renders `SkeletonRows` and the empty state is preserved.
+  The screenshot test stages light/dark × fa/en through `LocalizedApp`; all four list captures
+  inspected. `./gradlew test assembleDebug` green (447 tests), APK at
+  `app/build/outputs/apk/debug/app-debug.apk`.
