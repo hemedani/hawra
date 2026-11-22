@@ -43,7 +43,15 @@ data class Spacing(
 )
 
 @Immutable
-data class Tiles(val sm: Dp = 32.dp, val md: Dp = 40.dp, val lg: Dp = 48.dp, val xl: Dp = 56.dp, val hero: Dp = 76.dp)
+data class Tiles(
+    val sm: Dp = 32.dp,
+    val md: Dp = 40.dp,
+    val lg: Dp = 48.dp,
+    val xl: Dp = 56.dp,
+    val hero: Dp = 76.dp,
+    /** Size at which an identity tile switches to the hero numeral (twice [hero]). */
+    val numeralHero: Dp = 152.dp,
+)
 
 @Immutable
 data class Controls(
@@ -226,6 +234,32 @@ data class SheetGeometry(
     val pullFloor: Dp = 420.dp,
     /** Downward release speed that completes a pull dismiss. */
     val pullFling: Dp = 520.dp,
+    /** Progress span over which the floating card's rim fades as the sheet opens. */
+    val rimFade: Float = 0.22f,
+    /** Maximum frost scrim where the backdrop cannot blur (API 29–30). */
+    val scrimMax: Float = 0.30f,
+    /** Opaque reading canvas opacity at full screen. */
+    val canvasFade: Float = 0.68f,
+    /** Collapsed card shadow scale, relative to `spacing.sm`. */
+    val shadowScale: Float = 1.15f,
+    /** The content's transform origin (fraction of the viewport) while it scales in. */
+    val contentOriginX: Float = 0.5f,
+    val contentOriginY: Float = 0.14f,
+)
+
+/** The player body's own motion (DESIGN.md §10.12): hero entrance and the playing pulse. */
+@Immutable
+data class PlayerMorph(
+    /** Scale the identity tile enters at on a track change, settling to 1. */
+    val heroEntranceScale: Float = 0.96f,
+    /** Bar count of the header's playing equaliser. */
+    val pulseBars: Int = 4,
+    /** Phase the equaliser holds under reduced motion. */
+    val pulseStaticPhase: Float = 0.5f,
+    /** Minimum bar height as a fraction of the control. */
+    val pulseMin: Float = 0.3f,
+    /** Resting bar height while nothing is playing. */
+    val pulseIdle: Float = 0.28f,
 )
 
 /** Skeleton loading rows. */
@@ -254,6 +288,7 @@ data class HawraaGeometry(
     val scrubber: ScrubberGeometry = ScrubberGeometry(),
     val transport: TransportGeometry = TransportGeometry(),
     val sheet: SheetGeometry = SheetGeometry(),
+    val playerMorph: PlayerMorph = PlayerMorph(),
     val skeleton: SkeletonGeometry = SkeletonGeometry(),
     val maxContentWidth: Dp = 760.dp,
 ) {

@@ -3,9 +3,6 @@ package ir.hawraa.quran.ui.screens.player
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.SpringSpec
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -132,12 +129,8 @@ fun NowPlayingSheet(
     var pullSettled by remember { mutableStateOf(false) }
     var settleJob by remember { mutableStateOf<Job?>(null) }
 
-    val openSpring: SpringSpec<Float> = remember {
-        spring(dampingRatio = 0.88f, stiffness = 310f)
-    }
-    val closeSpring: SpringSpec<Float> = remember {
-        spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 380f)
-    }
+    val openSpring = HawraaSpring.playerOpen
+    val closeSpring = HawraaSpring.playerClose
 
     val pinnedProgress = progressOverride?.coerceIn(0f, 1f)
     val mounted = pinnedProgress != null || expanded || animating
@@ -336,7 +329,10 @@ fun NowPlayingSheet(
                     val scale = morphContentScale(t)
                     scaleX = scale
                     scaleY = scale
-                    transformOrigin = TransformOrigin(0.5f, 0.14f)
+                    transformOrigin = TransformOrigin(
+                        geometry.sheet.contentOriginX,
+                        geometry.sheet.contentOriginY,
+                    )
                 }
                 .consumeTouchesWhile { morphContentAlpha(currentT()) < 0.99f }
         }
@@ -361,8 +357,9 @@ fun NowPlayingSheet(
         val cardHDp = with(density) { cardH.toDp() }
 
         val cardShape = RoundedCornerShape(morphCorner(geometry.radius.xl, t))
-        val rimAlpha = ((1f - t) / 0.22f).coerceIn(0f, 1f)
-        val cardShadowDp = geometry.spacing.sm * ((1f - t) * 1.15f).coerceIn(0f, 1f)
+        val rimAlpha = ((1f - t) / geometry.sheet.rimFade).coerceIn(0f, 1f)
+        val cardShadowDp = geometry.spacing.sm *
+            ((1f - t) * geometry.sheet.shadowScale).coerceIn(0f, 1f)
 
         var heroRectInRoot by remember { mutableStateOf<Rect?>(null) }
         val onHeroPositioned = remember {
@@ -388,7 +385,7 @@ fun NowPlayingSheet(
         // API 29–30 has no RenderEffect blur: the shell's backdrop reads as the frost scrim
         // instead, and the sheet fades it in with the same progress that would have lifted blur.
         val scrimAlpha = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            (backdropBlur / geometry.frost.backdrop.value).coerceIn(0f, 1f) * 0.30f
+            (backdropBlur / geometry.frost.backdrop.value).coerceIn(0f, 1f) * geometry.sheet.scrimMax
         } else {
             0f
         }
@@ -410,7 +407,7 @@ fun NowPlayingSheet(
                 .size(cardWDp, cardHDp)
                 .then(cardElevationModifier)
                 .clip(cardShape)
-                .background(glass.canvas.copy(alpha = 0.68f * t))
+                .background(glass.canvas.copy(alpha = geometry.sheet.canvasFade * t))
                 .background(glass.glassFill.copy(alpha = glass.glassFill.alpha * t))
                 .background(glass.frostBase.copy(alpha = glass.frostBase.alpha * (1f - t)))
                 .background(glass.frostScrim.copy(alpha = glass.frostScrim.alpha * (1f - t)))

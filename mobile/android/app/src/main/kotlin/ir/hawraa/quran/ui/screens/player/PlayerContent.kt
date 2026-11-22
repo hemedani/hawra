@@ -76,6 +76,7 @@ import ir.hawraa.quran.ui.quran.quranLineHeight
 import ir.hawraa.quran.ui.recitation.NowPlayingStore
 import ir.hawraa.quran.ui.recitation.PlayerUi
 import ir.hawraa.quran.ui.recitation.PlayerVerse
+import ir.hawraa.quran.ui.theme.HawraaDuration
 import ir.hawraa.quran.ui.theme.HawraaSpring
 import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
@@ -144,9 +145,9 @@ fun PlayerContent(
             heroScale = 1f
             return@LaunchedEffect
         }
-        heroScale = HERO_ENTRANCE_SCALE
+        heroScale = geometry.playerMorph.heroEntranceScale
         animate(
-            initialValue = HERO_ENTRANCE_SCALE,
+            initialValue = geometry.playerMorph.heroEntranceScale,
             targetValue = 1f,
             animationSpec = HawraaSpring.bouncy,
         ) { value, _ -> heroScale = value }
@@ -551,6 +552,7 @@ private fun PlayerOptions(
 private fun PlayingPulse(active: Boolean, modifier: Modifier = Modifier) {
     val glass = LocalGlassColors.current
     val geometry = LocalHawraaGeometry.current
+    val morph = geometry.playerMorph
     val motion = useMotionEnabled()
     val phase = if (motion) {
         val transition = rememberInfiniteTransition(label = "playerPulse")
@@ -558,16 +560,16 @@ private fun PlayingPulse(active: Boolean, modifier: Modifier = Modifier) {
             initialValue = 0f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = PULSE_PERIOD_MS),
+                animation = tween(durationMillis = HawraaDuration.PULSE),
                 repeatMode = RepeatMode.Reverse,
             ),
             label = "playerPulsePhase",
         )
         value
     } else {
-        PULSE_STATIC_PHASE
+        morph.pulseStaticPhase
     }
-    val bars = PULSE_BARS
+    val bars = morph.pulseBars
     Row(
         modifier = modifier
             .size(width = geometry.spacing.huge, height = geometry.controls.md)
@@ -579,9 +581,9 @@ private fun PlayingPulse(active: Boolean, modifier: Modifier = Modifier) {
             val local = if (active) {
                 val offset = index.toFloat() / bars
                 val t = (phase + offset) % 1f
-                PULSE_MIN + (1f - PULSE_MIN) * kotlin.math.abs(0.5f - t) * 2f
+                morph.pulseMin + (1f - morph.pulseMin) * kotlin.math.abs(0.5f - t) * 2f
             } else {
-                PULSE_IDLE
+                morph.pulseIdle
             }
             Box(
                 modifier = Modifier
@@ -601,10 +603,4 @@ private fun PresetStepKind.labelRes(): Int = when (this) {
     PresetStepKind.SILENCE -> R.string.preset_step_silence
 }
 
-private const val HERO_ENTRANCE_SCALE = 0.96f
-private const val PULSE_PERIOD_MS = 900
-private const val PULSE_STATIC_PHASE = 0.5f
-private const val PULSE_BARS = 4
-private const val PULSE_MIN = 0.3f
-private const val PULSE_IDLE = 0.28f
 private const val POSITION_TICK_MS = 500L

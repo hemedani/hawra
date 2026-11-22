@@ -50,7 +50,7 @@ fun PaletteTile(
     // A hero tile needs a numeral that carries at hero scale; the dock's small tile
     // keeps the title size. Both stay on the UI face — the mushaf face is scripture.
     val style = when {
-        size >= geometry.tiles.hero * 2f -> MaterialTheme.typography.heroNumeral
+        size >= geometry.tiles.numeralHero -> MaterialTheme.typography.heroNumeral
         size >= geometry.tiles.xl -> MaterialTheme.typography.titleLarge
         else -> MaterialTheme.typography.titleMedium
     }.copy(fontFamily = Vazirmatn)

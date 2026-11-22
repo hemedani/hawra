@@ -54,6 +54,12 @@ object HawraaSpring {
     val snap: SpringSpec<Float> = spring(dampingRatio = 0.9f, stiffness = 320f)
     val page: SpringSpec<Float> = spring(dampingRatio = 0.92f, stiffness = 340f)
 
+    /** The player morph opening: a hair of overshoot as the capsule unfolds. */
+    val playerOpen: SpringSpec<Float> = spring(dampingRatio = 0.88f, stiffness = 310f)
+
+    /** The player morph closing: no bounce on dismiss. */
+    val playerClose: SpringSpec<Float> = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 380f)
+
     fun <T> spec(): SpringSpec<T> =
         spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
 }
@@ -73,6 +79,9 @@ object HawraaDuration {
 
     /** One player tick: the playhead glides between second ticks instead of stepping. */
     const val PLAYBACK_TICK = 1_000
+
+    /** The playing equaliser's half-cycle (it reverses each period). */
+    const val PULSE = 900
 }
 
 /** Entrance stagger: index-derived, arithmetic — never hand-numbered (cap 320 ms). */
