@@ -16,6 +16,7 @@
     <string name="reader_loading">Preparing the page…</string>
     <string name="reader_error">The Quran text could not be loaded.</string>
     <string name="reader_settings">Reading settings</string>
+    <string name="reader_page_juz">Page %1$s · Juz %2$s</string>
 
     <string name="banner_surah">Surah %1$s</string>
     <string name="banner_juz">Juz %1$s</string>

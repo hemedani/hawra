@@ -19,6 +19,7 @@
     <string name="reader_loading">در حال آماده‌سازی صفحه…</string>
     <string name="reader_error">متن قرآن بارگذاری نشد.</string>
     <string name="reader_settings">تنظیمات خواندن</string>
+    <string name="reader_page_juz">صفحه %1$s · جزء %2$s</string>
 
     <!-- Mushaf furniture -->
     <string name="banner_surah">سورۀ %1$s</string>

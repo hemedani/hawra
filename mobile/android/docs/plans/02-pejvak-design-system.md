@@ -568,3 +568,13 @@ without opening Pejvak.
   The screenshot test stages light/dark × fa/en through `LocalizedApp`; all four list captures
   inspected. `./gradlew test assembleDebug` green (447 tests), APK at
   `app/build/outputs/apk/debug/app-debug.apk`.
+- 2026-11-23 — **Task 8d step 1 — Reader chrome.** `ReaderScreen` now wraps its body in
+  `ScreenFrame` with a floating `GlassHeader`: surah display name as title, «صفحه N · جزء N» as the
+  overline, and download (only when a recitation catalogue is available), settings and player
+  bubbles as actions; the player bubble calls the shell store's `openControls()`. The old in-pane
+  `ReaderTopBar` is deleted, the pane starts below `topInset`, and the list/dock clearance reads
+  `LocalShellInsets.current.bottom` instead of `geometry.dock.dockInset`. The mushaf scroll,
+  verse/translation selection, `SelectionActionBox` and session tracking are unchanged. Leading back
+  is omitted because the reader is a dock destination with no pushed signal yet. Strings added in
+  fa + en (`reader_page_juz`). `./gradlew compileDebugKotlin` green; screenshot captures and device
+  inspection deferred to a later step.

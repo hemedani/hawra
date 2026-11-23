@@ -7,7 +7,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -21,15 +20,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -81,9 +76,12 @@ import ir.hawraa.quran.domain.quran.playbackPlan
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.domain.settings.ReadingSettings
 import ir.hawraa.quran.ui.components.BubbleButton
-import ir.hawraa.quran.ui.components.DiamondBullet
 import ir.hawraa.quran.ui.components.GlassElevation
+import ir.hawraa.quran.ui.components.GlassHeader
 import ir.hawraa.quran.ui.components.GlassSurface
+import ir.hawraa.quran.ui.components.ICON_GLYPHS
+import ir.hawraa.quran.ui.components.LocalShellInsets
+import ir.hawraa.quran.ui.components.ScreenFrame
 import ir.hawraa.quran.ui.components.SelectionAction
 import ir.hawraa.quran.ui.components.SelectionActionBox
 import ir.hawraa.quran.ui.components.TransportIcons
@@ -150,6 +148,7 @@ fun ReaderScreen(
         onPlayPause = viewModel::onPlayPause,
         onPlaySelection = viewModel::onPlaySelection,
         onDownloadPage = viewModel::downloadCurrentPage,
+        onOpenPlayer = { viewModel.playerStore.openControls() },
     )
 }
 
@@ -166,11 +165,12 @@ internal fun ReaderContent(
     onPlayPause: (Pair<Int, Int>?, Int) -> Unit = { _, _ -> },
     onPlaySelection: (SelectionPlan) -> Unit = {},
     onDownloadPage: () -> Unit = {},
+    onOpenPlayer: () -> Unit = {},
 ) {
     val themeQuran = LocalQuranColors.current
     val dark = LocalHawraaDarkTheme.current
     val geometry = LocalHawraaGeometry.current
-    val glass = LocalGlassColors.current
+    val shellInsets = LocalShellInsets.current
     val quran = remember(themeQuran, state.settings, dark) {
         themeQuran.withReadingSettings(state.settings, dark)
     }
@@ -251,167 +251,189 @@ internal fun ReaderContent(
                 }
         }
 
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val density = LocalDensity.current
-            val containerHeightPx = constraints.maxHeight.toFloat()
-            val dockInsetPx = with(density) { geometry.dock.dockInset.toPx() }
-            val topSafePx = with(density) { 72.dp.toPx() }
-
-            // The reading pane floats: it keeps a margin from the screen edge so the ambient
-            // canvas is visible around it, which is what makes the pane read as glass.
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        start = geometry.spacing.md,
-                        end = geometry.spacing.md,
-                        top = geometry.spacing.xs,
-                    ),
-            ) {
-                GlassSurface(
-                    modifier = Modifier.fillMaxSize(),
-                    shape = RoundedCornerShape(geometry.radius.xl),
-                    strong = true,
-                    elevation = GlassElevation.Panel,
-                ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        when {
-                            state.isLoading -> ReaderMessage(stringResource(R.string.reader_loading))
-                            state.failed || items.isEmpty() ->
-                                ReaderMessage(stringResource(R.string.reader_error))
-
-                            else -> LazyColumn(
-                                state = listState,
-                                modifier = Modifier.fillMaxSize().testTag("mushaf-scroll"),
-                                contentPadding = PaddingValues(
-                                    start = 14.dp,
-                                    end = 14.dp,
-                                    // The floating top bar is 44 dp plus its own padding; content
-                                    // starts below it so a surah plate never scrolls underneath.
-                                    top = 64.dp,
-                                    // Room for the dock at its tallest, so the last verse is
-                                    // never hidden behind it.
-                                    bottom = geometry.dock.dockInset,
-                                ),
-                            ) {
-                                items(items = items, key = { it.key }) { item ->
-                                    when (item) {
-                                        is SurahHeaderItem -> MushafBanner(
-                                            surahNumber = item.surah.number,
-                                            surahName = item.surah.displayName(),
-                                            juz = item.juz,
-                                            modifier = Modifier.padding(top = 8.dp),
-                                        )
-
-                                        is BasmalaItem -> QuranText(
-                                            text = state.basmalaUthmani,
-                                            letterColor = quran.letter,
-                                            diacriticColor = quran.diacritic,
-                                            fontSize = state.settings.fontSizeSp.sp,
-                                            lineHeight = quranLineHeight(state.settings.fontSizeSp),
-                                            modifier = Modifier.padding(top = 12.dp, bottom = 2.dp),
-                                        )
-
-                                        is VerseItem -> VerseBlock(
-                                            verse = item.verse,
-                                            settings = state.settings,
-                                            selection = selection,
-                                            playing = state.recitation.playingVerse ==
-                                                (item.verse.surah to item.verse.ayah),
-                                            onToggle = { element ->
-                                                selection = selection.toggle(element)
-                                            },
-                                            onFocusBounds = { rect -> focusBounds = rect },
-                                        )
-                                    }
-                                }
-                                item(key = "end") { Spacer(Modifier.height(8.dp)) }
-                            }
-                        }
-
-                        // The floating top bar, inside the pane so it scrolls over the text.
-                        ReaderTopBar(
-                            surahName = currentSurah?.displayName().orEmpty(),
-                            juz = visiblePage?.juz,
-                            onSettings = onSettings,
-                            onDownload = onDownloadPage,
-                            downloadVisible = state.recitation.available,
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .statusBarsPadding()
-                                .padding(top = geometry.spacing.sm),
+        ScreenFrame(
+            header = { headerModifier ->
+                GlassHeader(
+                    modifier = headerModifier,
+                    title = currentSurah?.displayName().orEmpty(),
+                    overline = visiblePage?.let { page ->
+                        stringResource(
+                            R.string.reader_page_juz,
+                            page.page.toPersianDigits(),
+                            page.juz.toPersianDigits(),
                         )
-                    }
-                }
-            }
-
-            // ---- the floating action box, anchored to the selection ----
-            val active = selection.active
-            AnimatedVisibility(
-                visible = active != null,
-                enter = fadeIn() + scaleIn(initialScale = 0.94f),
-                exit = fadeOut() + scaleOut(targetScale = 0.94f),
-                modifier = Modifier.align(Alignment.TopCenter),
-            ) {
-                if (active != null) {
-                    var boxHeight by remember { mutableStateOf(0) }
-                    val gapPx = with(density) { geometry.spacing.sm.toPx() }
-                    val bounds = focusBounds
-                    val y = when {
-                        bounds == null ->
-                            containerHeightPx - dockInsetPx - boxHeight - gapPx
-
-                        // Above the verse when there is room, below it otherwise, and never
-                        // over the dock or under the top bar.
-                        bounds.top - boxHeight - gapPx >= topSafePx ->
-                            bounds.top - boxHeight - gapPx
-
-                        bounds.bottom + gapPx + boxHeight <= containerHeightPx - dockInsetPx ->
-                            bounds.bottom + gapPx
-
-                        else -> containerHeightPx - dockInsetPx - boxHeight - gapPx
-                    }
-
-                    // Only the actions that can actually do something. With no recitation
-                    // catalogue there is no play button, rather than a dead one. The play action
-                    // says what it will do: a plain single-verse pick plays from that ayah to the
-                    // end of the surah (D31) and is labelled "Play ayah N"; a selection that
-                    // narrows the scope — two or more verses, or any translation/tafsir — becomes
-                    // "Play selection" and plays only what was picked (D32). Download is the
-                    // explicit half of "keep this offline": the same page scope the player and the
-                    // silent auto-cache use, so the three can never disagree.
-                    val plan = selection.playbackPlan()
-                    val actions = buildList {
+                    },
+                    userTitle = true,
+                    actions = {
                         if (state.recitation.available) {
-                            if (plan != null && plan.isSelectionRun) {
-                                add(playSelectionAction { onPlaySelection(plan) })
-                            } else {
-                                add(
-                                    playAyahAction(active.ayah) {
-                                        onPlayPause(
-                                            active.surah to active.ayah,
-                                            visiblePage?.page ?: visiblePageNumber,
-                                        )
-                                    },
-                                )
-                            }
-                            add(
-                                SelectionAction(
-                                    key = "download",
-                                    label = stringResource(R.string.player_download_page),
-                                    icon = TransportIcons.Download,
-                                    onClick = onDownloadPage,
-                                ),
+                            BubbleButton(
+                                icon = ICON_GLYPHS.getValue("download"),
+                                contentDescription = stringResource(R.string.player_download_page),
+                                onClick = onDownloadPage,
                             )
                         }
-                    }
+                        BubbleButton(
+                            icon = ICON_GLYPHS.getValue("settings"),
+                            contentDescription = stringResource(R.string.reader_settings),
+                            onClick = onSettings,
+                        )
+                        BubbleButton(
+                            icon = ICON_GLYPHS.getValue("equalizer"),
+                            contentDescription = stringResource(R.string.player_expand),
+                            onClick = onOpenPlayer,
+                        )
+                    },
+                )
+            },
+        ) { topInset ->
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val density = LocalDensity.current
+                val containerHeightPx = constraints.maxHeight.toFloat()
+                val dockInsetPx = with(density) { shellInsets.bottom.toPx() }
+                val topSafePx = with(density) { topInset.toPx() }
 
-                    SelectionActionBox(
-                        actions = actions,
-                        modifier = Modifier
-                            .offset { IntOffset(0, y.roundToInt().coerceAtLeast(0)) }
-                            .onGloballyPositioned { boxHeight = it.size.height },
-                    )
+                // The reading pane floats: it keeps a margin from the screen edge so the ambient
+                // canvas is visible around it, which is what makes the pane read as glass. Its top
+                // starts below the floating header.
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            start = geometry.spacing.md,
+                            end = geometry.spacing.md,
+                            top = topInset,
+                        ),
+                ) {
+                    GlassSurface(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(geometry.radius.xl),
+                        strong = true,
+                        elevation = GlassElevation.Panel,
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            when {
+                                state.isLoading -> ReaderMessage(stringResource(R.string.reader_loading))
+                                state.failed || items.isEmpty() ->
+                                    ReaderMessage(stringResource(R.string.reader_error))
+
+                                else -> LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier.fillMaxSize().testTag("mushaf-scroll"),
+                                    contentPadding = PaddingValues(
+                                        start = 14.dp,
+                                        end = 14.dp,
+                                        top = geometry.spacing.sm,
+                                        // Room for the dock at its tallest, so the last verse is
+                                        // never hidden behind it.
+                                        bottom = shellInsets.bottom,
+                                    ),
+                                ) {
+                                    items(items = items, key = { it.key }) { item ->
+                                        when (item) {
+                                            is SurahHeaderItem -> MushafBanner(
+                                                surahNumber = item.surah.number,
+                                                surahName = item.surah.displayName(),
+                                                juz = item.juz,
+                                                modifier = Modifier.padding(top = 8.dp),
+                                            )
+
+                                            is BasmalaItem -> QuranText(
+                                                text = state.basmalaUthmani,
+                                                letterColor = quran.letter,
+                                                diacriticColor = quran.diacritic,
+                                                fontSize = state.settings.fontSizeSp.sp,
+                                                lineHeight = quranLineHeight(state.settings.fontSizeSp),
+                                                modifier = Modifier.padding(top = 12.dp, bottom = 2.dp),
+                                            )
+
+                                            is VerseItem -> VerseBlock(
+                                                verse = item.verse,
+                                                settings = state.settings,
+                                                selection = selection,
+                                                playing = state.recitation.playingVerse ==
+                                                    (item.verse.surah to item.verse.ayah),
+                                                onToggle = { element ->
+                                                    selection = selection.toggle(element)
+                                                },
+                                                onFocusBounds = { rect -> focusBounds = rect },
+                                            )
+                                        }
+                                    }
+                                    item(key = "end") { Spacer(Modifier.height(8.dp)) }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ---- the floating action box, anchored to the selection ----
+                val active = selection.active
+                AnimatedVisibility(
+                    visible = active != null,
+                    enter = fadeIn() + scaleIn(initialScale = 0.94f),
+                    exit = fadeOut() + scaleOut(targetScale = 0.94f),
+                    modifier = Modifier.align(Alignment.TopCenter),
+                ) {
+                    if (active != null) {
+                        var boxHeight by remember { mutableStateOf(0) }
+                        val gapPx = with(density) { geometry.spacing.sm.toPx() }
+                        val bounds = focusBounds
+                        val y = when {
+                            bounds == null ->
+                                containerHeightPx - dockInsetPx - boxHeight - gapPx
+
+                            // Above the verse when there is room, below it otherwise, and never
+                            // over the dock or under the top bar.
+                            bounds.top - boxHeight - gapPx >= topSafePx ->
+                                bounds.top - boxHeight - gapPx
+
+                            bounds.bottom + gapPx + boxHeight <= containerHeightPx - dockInsetPx ->
+                                bounds.bottom + gapPx
+
+                            else -> containerHeightPx - dockInsetPx - boxHeight - gapPx
+                        }
+
+                        // Only the actions that can actually do something. With no recitation
+                        // catalogue there is no play button, rather than a dead one. The play action
+                        // says what it will do: a plain single-verse pick plays from that ayah to the
+                        // end of the surah (D31) and is labelled "Play ayah N"; a selection that
+                        // narrows the scope — two or more verses, or any translation/tafsir — becomes
+                        // "Play selection" and plays only what was picked (D32). Download is the
+                        // explicit half of "keep this offline": the same page scope the player and the
+                        // silent auto-cache use, so the three can never disagree.
+                        val plan = selection.playbackPlan()
+                        val actions = buildList {
+                            if (state.recitation.available) {
+                                if (plan != null && plan.isSelectionRun) {
+                                    add(playSelectionAction { onPlaySelection(plan) })
+                                } else {
+                                    add(
+                                        playAyahAction(active.ayah) {
+                                            onPlayPause(
+                                                active.surah to active.ayah,
+                                                visiblePage?.page ?: visiblePageNumber,
+                                            )
+                                        },
+                                    )
+                                }
+                                add(
+                                    SelectionAction(
+                                        key = "download",
+                                        label = stringResource(R.string.player_download_page),
+                                        icon = TransportIcons.Download,
+                                        onClick = onDownloadPage,
+                                    ),
+                                )
+                            }
+                        }
+
+                        SelectionActionBox(
+                            actions = actions,
+                            modifier = Modifier
+                                .offset { IntOffset(0, y.roundToInt().coerceAtLeast(0)) }
+                                .onGloballyPositioned { boxHeight = it.size.height },
+                        )
+                    }
                 }
             }
         }
@@ -423,73 +445,6 @@ private fun visibleRange(state: androidx.compose.foundation.lazy.LazyListState):
     val info = state.layoutInfo.visibleItemsInfo
     if (info.isEmpty()) return IntRange.EMPTY
     return info.first().index..info.last().index
-}
-
-@Composable
-private fun ReaderTopBar(
-    surahName: String,
-    juz: Int?,
-    onSettings: () -> Unit,
-    onDownload: () -> Unit = {},
-    downloadVisible: Boolean = false,
-    modifier: Modifier = Modifier,
-) {
-    val glass = LocalGlassColors.current
-    val geometry = LocalHawraaGeometry.current
-    val quran = LocalQuranColors.current
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = geometry.spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        GlassSurface(
-            modifier = Modifier.weight(1f).height(44.dp),
-            shape = RoundedCornerShape(geometry.radius.pill),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = surahName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = glass.text,
-                )
-                if (juz != null) {
-                    Spacer(Modifier.width(10.dp))
-                    DiamondBullet(tint = quran.mark)
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        text = stringResource(R.string.banner_juz, juz.toPersianDigits()),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = glass.textSecondary,
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.width(geometry.spacing.xs))
-        if (downloadVisible) {
-            BubbleButton(
-                icon = TransportIcons.Download,
-                contentDescription = stringResource(R.string.player_download_page),
-                onClick = onDownload,
-                size = geometry.controls.lg,
-                iconSize = 19.dp,
-                modifier = Modifier.testTag("topbar-download"),
-            )
-            Spacer(Modifier.width(geometry.spacing.xs))
-        }
-        BubbleButton(
-            icon = Icons.Filled.Settings,
-            contentDescription = stringResource(R.string.reader_settings),
-            onClick = onSettings,
-            size = geometry.controls.lg,
-            iconSize = 19.dp,
-        )
-    }
 }
 
 /**
