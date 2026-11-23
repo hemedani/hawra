@@ -8,7 +8,7 @@ import ir.hawraa.quran.domain.settings.LetterInk
 import ir.hawraa.quran.domain.settings.ReadingSettings
 
 /**
- * Tokens for the **reading surface only** (`DESING.md` / Hawraa mushaf contract).
+ * Tokens for the **reading surface only** (`DESIGN.md` / Hawraa mushaf contract).
  *
  * Kept apart from the Material scheme and from glass chrome tokens because scripture has
  * requirements chrome does not: long-sitting legibility, and diacritics are the smallest strokes

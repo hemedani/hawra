@@ -625,3 +625,13 @@ without opening Pejvak.
   `settings_motion`/`motion_*`/`settings_haptics` reserved for the not-yet-built Settings
   motion/haptics section) and two documented catalog primitives (`SegmentedPill`,
   `WaveProgressBar`) are left in place deliberately.
+- 2026-11-23 — **Final review fix wave.** Closed the motion-gate holes: the reader's selection
+  action box snaps via `EnterTransition.None`/`ExitTransition.None` under reduced motion, and
+  `rememberWavePhase` returns `0f` before starting its loop. Moved every remaining `ReaderScreen`
+  raw dp into a new `ReaderGeometry` token group (`pageGutter`, banner/basmala rhythm, ornament gap,
+  translation indent, selection bar, pane padding), so the reader file is literal-free. Reworded the
+  `Color.kt` contrast comments to point at DESIGN §11 and the planned `ContrastContractTest`; fixed
+  the `DESING.md`→`DESIGN.md` comment typo across `ui/theme` and `core`; moved `backdrop.paused`
+  into a `SideEffect`; gave `BackdropBlurNode` a paused-no-cache `frostFallback` scrim; switched the
+  dock test's `58.dp` to `geometry.dock.playerHeight`; and made the Presets coverage bar's progress
+  animation explicit and motion-gated. `./gradlew test assembleDebug` BUILD SUCCESSFUL, 452 tests.

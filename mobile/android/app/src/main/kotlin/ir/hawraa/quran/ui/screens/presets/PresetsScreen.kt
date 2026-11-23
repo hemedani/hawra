@@ -1,5 +1,8 @@
 package ir.hawraa.quran.ui.screens.presets
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,10 +47,12 @@ import ir.hawraa.quran.ui.components.LocalShellInsets
 import ir.hawraa.quran.ui.components.PrimaryButton
 import ir.hawraa.quran.ui.components.ScreenFrame
 import ir.hawraa.quran.ui.components.SkeletonRows
+import ir.hawraa.quran.ui.theme.HawraaDuration
 import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.OceanCascade
 import ir.hawraa.quran.ui.theme.oceanEntrance
+import ir.hawraa.quran.ui.theme.useMotionEnabled
 import java.util.Locale
 
 /**
@@ -262,8 +267,14 @@ private fun CoverageBlock(coverage: PresetCoverageSummary?, persian: Boolean) {
         )
     }
     Spacer(Modifier.height(geometry.spacing.xs))
+    val motion = useMotionEnabled()
+    val progress by animateFloatAsState(
+        targetValue = (coverage.percent / 100.0).toFloat().coerceIn(0f, 1f),
+        animationSpec = if (motion) tween(HawraaDuration.BASE) else snap(),
+        label = "presetCoverage",
+    )
     LinearProgressIndicator(
-        progress = { (coverage.percent / 100.0).toFloat().coerceIn(0f, 1f) },
+        progress = { progress },
         modifier = Modifier.fillMaxWidth(),
         color = glass.accent,
         trackColor = glass.track,

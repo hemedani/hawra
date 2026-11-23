@@ -5,7 +5,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Chrome tokens for the Pejvak glass language (`DESING.md` §3).
+ * Chrome tokens for the Pejvak glass language (`DESIGN.md` §3).
  *
  * Everything that is *not* the opaque mushaf paper reads these (or [LocalHawraaTokens]):
  * the header, dock, mini-player, cards, sheets, chips.

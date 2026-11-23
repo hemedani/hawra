@@ -1,7 +1,7 @@
 package ir.hawraa.quran.core
 
 /**
- * Persian/Arabic text folding for search and tag de-duplication (DESING.md §13).
+ * Persian/Arabic text folding for search and tag de-duplication (DESIGN.md §13).
  * The same word reaches the DB written several ways; a raw comparison finds only one
  * spelling. Fold once per data load, never per keystroke. Pure + tested.
  */

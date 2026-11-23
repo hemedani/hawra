@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -127,7 +128,7 @@ fun HawraaShell(
         sheetPresence.count > 0 -> geometry.frost.backdrop
         else -> playerRadius
     }
-    backdrop.paused = backdropRadius > 0.dp
+    SideEffect { backdrop.paused = backdropRadius > 0.dp }
     val backdropBlurModifier = if (
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && backdropRadius.value > 0f
     ) {

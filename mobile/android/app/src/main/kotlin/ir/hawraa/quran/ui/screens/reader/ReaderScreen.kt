@@ -1,6 +1,8 @@
 package ir.hawraa.quran.ui.screens.reader
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -55,7 +57,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -98,6 +99,7 @@ import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaDarkTheme
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 import ir.hawraa.quran.ui.theme.LocalQuranColors
+import ir.hawraa.quran.ui.theme.useMotionEnabled
 import ir.hawraa.quran.ui.theme.withReadingSettings
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.drop
@@ -176,6 +178,8 @@ internal fun ReaderContent(
     val themeQuran = LocalQuranColors.current
     val dark = LocalHawraaDarkTheme.current
     val geometry = LocalHawraaGeometry.current
+    val reader = geometry.reader
+    val motion = useMotionEnabled()
     val shellInsets = LocalShellInsets.current
     val persian = LocalConfiguration.current.appLocale().language == "fa"
     val quran = remember(themeQuran, state.settings, dark) {
@@ -340,8 +344,8 @@ internal fun ReaderContent(
                                     state = listState,
                                     modifier = Modifier.fillMaxSize().testTag("mushaf-scroll"),
                                     contentPadding = PaddingValues(
-                                        start = 14.dp,
-                                        end = 14.dp,
+                                        start = reader.pageGutter,
+                                        end = reader.pageGutter,
                                         top = geometry.spacing.sm,
                                         // Room for the dock at its tallest, so the last verse is
                                         // never hidden behind it.
@@ -354,7 +358,7 @@ internal fun ReaderContent(
                                                 surahNumber = item.surah.number,
                                                 surahName = item.surah.displayName(),
                                                 juz = item.juz,
-                                                modifier = Modifier.padding(top = 8.dp),
+                                                modifier = Modifier.padding(top = reader.bannerGap),
                                             )
 
                                             is BasmalaItem -> QuranText(
@@ -363,7 +367,10 @@ internal fun ReaderContent(
                                                 diacriticColor = quran.diacritic,
                                                 fontSize = state.settings.fontSizeSp.sp,
                                                 lineHeight = quranLineHeight(state.settings.fontSizeSp),
-                                                modifier = Modifier.padding(top = 12.dp, bottom = 2.dp),
+                                                modifier = Modifier.padding(
+                                                    top = reader.basmalaTop,
+                                                    bottom = reader.basmalaBottom,
+                                                ),
                                             )
 
                                             is VerseItem -> VerseBlock(
@@ -379,7 +386,7 @@ internal fun ReaderContent(
                                             )
                                         }
                                     }
-                                    item(key = "end") { Spacer(Modifier.height(8.dp)) }
+                                    item(key = "end") { Spacer(Modifier.height(reader.afterBanner)) }
                                 }
                             }
                         }
@@ -390,8 +397,16 @@ internal fun ReaderContent(
                 val active = selection.active
                 AnimatedVisibility(
                     visible = active != null,
-                    enter = fadeIn() + scaleIn(initialScale = 0.94f),
-                    exit = fadeOut() + scaleOut(targetScale = 0.94f),
+                    enter = if (motion) {
+                        fadeIn() + scaleIn(initialScale = 0.94f)
+                    } else {
+                        EnterTransition.None
+                    },
+                    exit = if (motion) {
+                        fadeOut() + scaleOut(targetScale = 0.94f)
+                    } else {
+                        ExitTransition.None
+                    },
                     modifier = Modifier.align(Alignment.TopCenter),
                 ) {
                     if (active != null) {
@@ -485,6 +500,8 @@ private fun VerseBlock(
     onFocusBounds: (androidx.compose.ui.geometry.Rect?) -> Unit,
 ) {
     val quran = LocalQuranColors.current
+    val geometry = LocalHawraaGeometry.current
+    val reader = geometry.reader
     val verseSelected = selection.isSelected(verse.surah, verse.ayah, VerseLayer.VERSE)
     val focused = selection.isFocused(verse.surah, verse.ayah)
     // Tapping the Arabic peeks at its translations even with translations switched off — a
@@ -494,7 +511,7 @@ private fun VerseBlock(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = geometry.spacing.xs)
             // Only the focused verse reports its bounds, so there is one callback per selection
             // rather than one per pane.
             .then(
@@ -519,7 +536,7 @@ private fun VerseBlock(
                     else -> null
                 },
             )
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(reader.ornamentGap))
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -547,7 +564,11 @@ private fun VerseBlock(
                     tag = "translation-${verse.key}-${translation.key}",
                     // Indented past the rosette: the translation belongs to the verse, not to the
                     // ornament beside it.
-                    modifier = Modifier.padding(start = 34.dp, end = 4.dp, top = 2.dp),
+                    modifier = Modifier.padding(
+                        start = reader.translationIndent,
+                        end = geometry.spacing.xs,
+                        top = geometry.spacing.xxs,
+                    ),
                     onClick = {
                         onToggle(
                             VerseElement.translation(verse.surah, verse.ayah, translation.key),
@@ -560,7 +581,7 @@ private fun VerseBlock(
                         color = quran.translation,
                         textAlign = TextAlign.Center,
                         lineHeight = 22.sp,
-                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
+                        modifier = Modifier.weight(1f).padding(horizontal = geometry.spacing.xxs),
                     )
                 }
             }
@@ -601,7 +622,7 @@ private fun Pane(
             .testTag(tag)
             .drawBehind {
                 if (!selected && !playing) return@drawBehind
-                val bar = 3.dp.toPx()
+                val bar = geometry.reader.selectionBar.toPx()
                 // Leading edge: right in RTL, left in LTR.
                 val x = if (rtl) size.width - bar else 0f
                 drawRoundRect(
@@ -611,7 +632,7 @@ private fun Pane(
                     cornerRadius = CornerRadius(bar),
                 )
             }
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = geometry.spacing.sm, vertical = geometry.reader.panePaddingV),
         verticalAlignment = Alignment.Top,
         content = content,
     )
@@ -620,8 +641,9 @@ private fun Pane(
 @Composable
 private fun ReaderMessage(text: String) {
     val glass = LocalGlassColors.current
+    val geometry = LocalHawraaGeometry.current
     Box(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
+        modifier = Modifier.fillMaxSize().padding(geometry.spacing.xxxl),
         contentAlignment = Alignment.Center,
     ) {
         Text(

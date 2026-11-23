@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * Type scale from Pejvak DESING.md §4. Latin UI uses SansSerif; Persian titles opt
+ * Type scale from Pejvak DESIGN.md §4. Latin UI uses SansSerif; Persian titles opt
  * into the bundled Vazirmatn UI face. The Quran mushaf face lives separately in `QuranFont.kt`.
  */
 val HawraaTypography = Typography(

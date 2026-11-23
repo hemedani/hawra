@@ -29,7 +29,7 @@ val LocalMotionPreference = staticCompositionLocalOf { MotionPreference.System }
 
 /**
  * Motion is governed by `useMotionEnabled()` = OS reduced-motion × in-app preference
- * (DESING.md §8). A component that animates must check it and substitute the final
+ * (DESIGN.md §8). A component that animates must check it and substitute the final
  * value when false — never rely on the platform flag alone.
  */
 @Composable

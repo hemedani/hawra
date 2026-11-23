@@ -3,14 +3,15 @@ package ir.hawraa.quran.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Pejvak glass palette — the contract from DESING.md §3, extended with Hawraa's
+ * Pejvak glass palette — the contract from DESIGN.md §3, extended with Hawraa's
  * opaque mushaf tokens (`Page*`, `LetterInk*`, `MarkInk*`) which are never mixed
  * with translucent chrome. All colors live in `ui/theme/`.
  */
 
 // --- Canvas (the field behind the glass; never near-white in light) ---
 // Deep mid-tone so white-on-glass clears 4.5:1 against the worst-case bloom
-// (pinned by ContrastContractTest). Light is a brighter field than dark, not white.
+// (the contract in docs/DESIGN.md §11; a ContrastContractTest is planned). Light is a
+// brighter field than dark, not white.
 val CanvasBaseLight = Color(0xFF33505F)
 val CanvasBaseDark = Color(0xFF0A0F16)
 
@@ -26,7 +27,8 @@ val GlassFillFallbackDark = Color(0xB8141C26) // dark 72% (API 29-30)
 // The pane must REVEAL the blurred backdrop as a luminous crystalline wash, not an
 // opaque grey/teal slab. Keeping base + scrim + sheen around ~48-49% combined opacity
 // leaves ~51-52% of the blurred canvas and scrolling artwork glowing through, while
-// still passing ContrastContractTest against the brightest aurora bloom.
+// still meeting the contrast contract in docs/DESIGN.md §11 (a ContrastContractTest is
+// planned) against the brightest aurora bloom.
 val FrostBaseLight = Color(0x38284452)        // deep teal-slate 22%
 val FrostBaseDark = Color(0x3D08121A)         // deep slate 24%
 val FrostScrimLight = Color(0x381E4752)       // cool teal 22%
@@ -66,7 +68,7 @@ val ShadowDark = Color(0x8C000000)
 val TrackGlassLight = Color(0x2EFFFFFF)
 val TrackGlassDark = Color(0x33F0F5F6)
 
-// --- Modal scrim behind a glass sheet (DESING.md §9.1) ---
+// --- Modal scrim behind a glass sheet (DESIGN.md §9.1) ---
 val Scrim = Color(0x59000000)                 // black 35%
 
 val MarkLight = Color(0xFFA98436)

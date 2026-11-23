@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import ir.hawraa.quran.ui.theme.WaveGeometry
+import ir.hawraa.quran.ui.theme.useMotionEnabled
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
@@ -97,11 +98,12 @@ fun ramp(distance: Float, edge: Float): Float {
 }
 
 /**
- * The drift. Always called (never conditionally) so the composition structure stays
- * stable; callers that only want motion on demand pass `0f` to the drawing instead.
+ * The drift. Returns `0f` without starting a transition under reduced motion, so a
+ * paused scrubber stops recomposing every frame; callers draw the resting curve instead.
  */
 @Composable
 fun rememberWavePhase(periodMillis: Int = 3_800): Float {
+    if (!useMotionEnabled()) return 0f
     val transition = rememberInfiniteTransition(label = "wave")
     val phase by transition.animateFloat(
         initialValue = 0f,

@@ -6,7 +6,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Geometry tokens from DESING.md §4–5. One strictly-increasing radius ramp, a 4 dp
+ * Geometry tokens from DESIGN.md §4–5. One strictly-increasing radius ramp, a 4 dp
  * spacing rhythm, and named aliases (tile, segment, panel) so components never
  * hard-code a corner.
  */
@@ -88,7 +88,7 @@ data class DockGeometry(
     val navInset: Dp get() = navHeight + margin * 2 + inset
 }
 
-/** Frost geometry (DESING.md §6 / plan 02). Shell chrome only. */
+/** Frost geometry (DESIGN.md §6 / plan 02). Shell chrome only. */
 @Immutable
 data class FrostGeometry(
     /**
@@ -115,7 +115,7 @@ data class HeaderGeometry(
     val contentPadding: Dp = 20.dp,
 )
 
-/** Glass pane anatomy (DESING.md §6): the top rim and contour hairline. */
+/** Glass pane anatomy (DESIGN.md §6): the top rim and contour hairline. */
 @Immutable
 data class GlassGeometry(
     val rimHeight: Dp = 3.dp,
@@ -123,7 +123,7 @@ data class GlassGeometry(
     val hairline: Dp = 1.dp,
 )
 
-/** The wave language (DESING.md §8). Shared by the dock seam, sheets and progress. */
+/** The wave language (DESIGN.md §8). Shared by the dock seam, sheets and progress. */
 @Immutable
 data class WaveGeometry(
     val hairlineHeight: Dp = 6.dp,
@@ -374,6 +374,20 @@ data class SkeletonGeometry(
     val lineWidthSmall: Float = 0.4f,
 )
 
+/** The reader page (DESIGN.md §10.2): gutter, banner rhythm and pane metrics. */
+@Immutable
+data class ReaderGeometry(
+    val pageGutter: Dp = 14.dp,
+    val bannerGap: Dp = 8.dp,
+    val basmalaTop: Dp = 12.dp,
+    val basmalaBottom: Dp = 2.dp,
+    val afterBanner: Dp = 8.dp,
+    val ornamentGap: Dp = 6.dp,
+    val translationIndent: Dp = 34.dp,
+    val panePaddingV: Dp = 6.dp,
+    val selectionBar: Dp = 3.dp,
+)
+
 /** Home's hero and ornament scale (DESIGN.md §11.2). */
 @Immutable
 data class HomeGeometry(
@@ -403,6 +417,7 @@ data class HawraaGeometry(
     val sheet: SheetGeometry = SheetGeometry(),
     val playerMorph: PlayerMorph = PlayerMorph(),
     val skeleton: SkeletonGeometry = SkeletonGeometry(),
+    val reader: ReaderGeometry = ReaderGeometry(),
     val home: HomeGeometry = HomeGeometry(),
     val navMotion: NavMotionGeometry = NavMotionGeometry(),
     val waveSweep: WaveSweepGeometry = WaveSweepGeometry(),
@@ -414,7 +429,7 @@ data class HawraaGeometry(
 
 val LocalHawraaGeometry = staticCompositionLocalOf { HawraaGeometry() }
 
-/** Corner scales with tile size (DESING.md §5). */
+/** Corner scales with tile size (DESIGN.md §5). */
 fun tileRadius(size: Dp): Dp = when {
     size <= 32.dp -> 8.dp
     size <= 40.dp -> 12.dp

@@ -5,7 +5,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import ir.hawraa.quran.R
 
-/** Bundled Persian font for UI chrome & content (DESING.md §13). OFL license in assets/licenses. */
+/** Bundled Persian font for UI chrome & content (DESIGN.md §13). OFL license in assets/licenses. */
 val Vazirmatn = FontFamily(
     Font(R.font.vazirmatn_regular, FontWeight.Normal),
     Font(R.font.vazirmatn_medium, FontWeight.Medium),

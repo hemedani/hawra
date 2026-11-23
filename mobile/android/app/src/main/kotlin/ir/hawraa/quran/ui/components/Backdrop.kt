@@ -17,6 +17,7 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -35,6 +36,7 @@ import androidx.compose.ui.node.requireGraphicsContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.toIntSize
+import ir.hawraa.quran.ui.theme.LocalGlassColors
 import kotlin.math.ceil
 
 private const val BACKDROP_SAMPLE_SCALE = 0.5f
@@ -203,6 +205,7 @@ private class BackdropSourceElement(
 internal class BackdropBlurNode(
     var backdrop: Backdrop,
     var radius: Dp,
+    var fallback: Color,
 ) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode {
     private var effectLayer: GraphicsLayer? = null
     private var paneOriginInRoot: Offset = Offset.Zero
@@ -300,6 +303,10 @@ internal class BackdropBlurNode(
                             drawLayer(cached)
                         }
                     }
+                } else {
+                    // Paused before any frame was cached: keep the pane visible rather than
+                    // drawing nothing (DESIGN.md §6: no invisible panes).
+                    drawRect(fallback)
                 }
             }
         }
@@ -310,21 +317,25 @@ internal class BackdropBlurNode(
 private class BackdropBlurElement(
     private val backdrop: Backdrop,
     private val radius: Dp,
+    private val fallback: Color,
 ) : ModifierNodeElement<BackdropBlurNode>() {
-    override fun create(): BackdropBlurNode = BackdropBlurNode(backdrop, radius)
+    override fun create(): BackdropBlurNode = BackdropBlurNode(backdrop, radius, fallback)
 
     override fun update(node: BackdropBlurNode) {
         val backdropChanged = node.backdrop !== backdrop
         val radiusChanged = node.radius != radius
+        val fallbackChanged = node.fallback != fallback
         if (backdropChanged) {
             node.detachFromBackdrop()
             node.backdrop = backdrop
             node.radius = radius
+            node.fallback = fallback
             node.attachToBackdrop()
-        } else if (radiusChanged) {
+        } else if (radiusChanged || fallbackChanged) {
             node.radius = radius
+            node.fallback = fallback
         }
-        if (backdropChanged || radiusChanged) {
+        if (backdropChanged || radiusChanged || fallbackChanged) {
             node.invalidateDraw()
         }
     }
@@ -332,10 +343,14 @@ private class BackdropBlurElement(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is BackdropBlurElement) return false
-        return backdrop === other.backdrop && radius == other.radius
+        return backdrop === other.backdrop && radius == other.radius && fallback == other.fallback
     }
 
-    override fun hashCode(): Int = 31 * backdrop.hashCode() + radius.hashCode()
+    override fun hashCode(): Int {
+        var result = 31 * backdrop.hashCode() + radius.hashCode()
+        result = 31 * result + fallback.hashCode()
+        return result
+    }
 }
 
 /**
@@ -349,7 +364,8 @@ fun BackdropBlur(
     modifier: Modifier = Modifier,
 ) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-    Box(modifier.then(BackdropBlurElement(backdrop = backdrop, radius = radius)))
+    val fallback = LocalGlassColors.current.frostFallback
+    Box(modifier.then(BackdropBlurElement(backdrop = backdrop, radius = radius, fallback = fallback)))
 }
 
 @RequiresApi(Build.VERSION_CODES.S)

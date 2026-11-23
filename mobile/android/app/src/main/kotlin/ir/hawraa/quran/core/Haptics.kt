@@ -8,7 +8,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 
 /**
- * Haptic intents (DESING.md §8). One helper, fired once on press; the master switch
+ * Haptic intents (DESIGN.md §8). One helper, fired once on press; the master switch
  * lives in Settings and arrives through [LocalHapticsEnabled]. Screens never call
  * the platform haptics API directly.
  */

@@ -16,10 +16,10 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.unit.dp
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.ui.components.AppDock
 import ir.hawraa.quran.ui.components.NowPlayingUi
+import ir.hawraa.quran.ui.theme.HawraaGeometry
 import ir.hawraa.quran.ui.theme.HawraaTheme
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -133,7 +133,9 @@ class DockNowPlayingTest {
         composeRule.waitForIdle()
         val measured = rect
         assertNotNull("the dock must publish its mini half for the Task 6 morph", measured)
-        val expectedHeight = with(composeRule.density) { 58.dp.toPx() }
+        val expectedHeight = with(composeRule.density) {
+            HawraaGeometry().dock.playerHeight.toPx()
+        }
         assertEquals(expectedHeight, measured!!.height, 1f)
         assertEquals(true, measured.width > 0f)
     }
