@@ -1,0 +1,22 @@
+# Kotlin / Android support for this workspace.
+#
+# Tooling is not bundled; install it first:
+#   brew install --cask kotlin-lsp   # official JetBrains Kotlin language server
+#   brew install ktlint              # formatter
+#
+# `kotlin-lsp` handles Gradle + Compose projects better than the older
+# `kotlin-language-server`. To use that one instead, swap the server below for:
+#   [language-server.kotlin-language-server]
+#   command = "kotlin-language-server"
+
+[language-server.kotlin-lsp]
+command = "kotlin-lsp"
+args = ["--stdio"]
+
+[[language]]
+name = "kotlin"
+language-id = "kotlin"
+file-types = ["kt", "kts"]
+language-servers = ["kotlin-lsp"]
+formatter = { command = "ktlint", args = ["--format", "--stdin", "--stdin-path", "%{buffer_name}", "--log-level=none"] }
+auto-format = true

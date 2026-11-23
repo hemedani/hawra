@@ -1,0 +1,25 @@
+# Project-local Helix settings for the Hawraa Android app.
+#
+# Helix marks the workspace root at the first `.git`/`.helix` found while walking
+# up from the directory it was opened in, so these settings load when you start
+# `hx` inside `mobile/android`. They are merged over ~/.config/helix/config.toml.
+# Reload with `:config-reload`.
+
+[editor]
+line-number = "relative"
+bufferline = "multiple"
+color-modes = true
+cursorline = true
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+
+[editor.indent-guides]
+render = true
+
+[editor.soft-wrap]
+enable = false
+
+[editor.lsp]
+display-messages = true
