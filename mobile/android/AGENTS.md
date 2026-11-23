@@ -73,10 +73,14 @@ Non-negotiables it encodes:
   `GlassSegments` (glass palette, filled `accent` selection); chips toggle. Mixing them makes the app
   feel imprecise, and `SegmentedPill`'s Material palette is one shade off every glass pane around it.
 - **Motion is gated by `useMotionEnabled()`** (OS reduced-motion × the in-app preference). Any
-  component that animates checks it and substitutes the final value when false.
-- **Blur is the custom `Backdrop` draw-node** (`ui/components/Backdrop.kt`), not `Modifier.blur` or
-  Haze: sources record into graphics layers and panes sample a downscaled `BackdropBlur` on API 31+;
-  API 29–30 falls back to the `FrostedSurface` scrim (`frostFallback`).
+  component that animates checks it and substitutes the final value when false. Haptics go through
+  `rememberHaptics()` + `Haptics.trigger(HapticIntent)` (`core/Haptics.kt`), gated by a master switch
+  (`LocalHapticsEnabled`).
+- **Blur is the custom `Backdrop` draw-node** (`ui/components/Backdrop.kt`) for panes and glass —
+  sources record into graphics layers and panes sample a downscaled `BackdropBlur` on API 31+;
+  API 29–30 falls back to the `FrostedSurface` scrim (`frostFallback`). `Modifier.blur` (and Haze)
+  is forbidden for glass panes, but the modal/player backdrop scrim deliberately uses
+  `Modifier.blur(backdropRadius)` (`ui/HawraaShell.kt`).
 - **Playback UI is shell-owned.** The shell store (`ui/recitation/NowPlayingStore.kt`, `PlayerUi`)
   and the shell (`ui/HawraaShell.kt`, `NowPlayingSheet` / `PlayerContent`) own the player; the reader
   keeps its own engine and session (`ReaderViewModel`) and publishes into the store. Screens never

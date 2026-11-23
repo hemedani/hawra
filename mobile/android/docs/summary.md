@@ -422,7 +422,8 @@ mobile/android/
   the viewport. Actions are a `List<SelectionAction>` built per selection, so the glossary/terminology
   action is a new entry rather than a layout change. Play is only added when `recitation.available` —
   no dead buttons.
-- **Design tokens:** three `CompositionLocal`s, provided by `HawraaTheme`: `LocalGlassColors` (chrome),
+- **Design tokens:** five `CompositionLocal`s, provided by `HawraaTheme`: `LocalHawraaDarkTheme`
+  (dark/light flag), `LocalHawraaTokens` (raw palette), `LocalGlassColors` (chrome),
   `LocalQuranColors` (the reading surface, with the reader's ink presets applied via
   `withReadingSettings`) and `LocalHawraaGeometry` (radius/spacing/controls/dock). The Material
   `ColorScheme` is *derived* from the glass tokens, so `MaterialTheme.colorScheme` never disagrees with

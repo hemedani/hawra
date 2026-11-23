@@ -433,8 +433,8 @@ rely on the platform flag alone.
   Everything else is bounded.
 - **No travel motion on the dock indicator itself** — a tab tap is a press spring
   (1 → 0.92 → 1.05 → 1) and a haptic, nothing more.
-- **Haptics** via `triggerHaptic(intent)` / `rememberHaptics()` (`HapticIntent`: tap, select, press,
-  success, warning, error, scrub), with a master switch; fires once on press.
+- **Haptics** via `Haptics.trigger(HapticIntent)` / `rememberHaptics()` (`HapticIntent`: tap, select,
+  press, success, warning, error, scrub), with a master switch; fires once on press.
 
 **Never animate:** Quran text size, scroll position after a deliberate reader scroll, or the canvas at
 idle (the navigation surge is its only movement).
@@ -472,7 +472,7 @@ to `app/src/main/kotlin/ir/hawraa/quran/`.
 - **Back bubble policy.** `History` is a top-level peer and shows **no** back bubble. `Settings` is
   also a dock peer but shows one, because it is reachable from Home too and the shell can pop it;
   `Downloads`, `Presets`, the preset editor and `Reader` show one (`BubbleButton` with
-  `ICON_GLYPHS["back"]`, `controls.md`) as pushes. Home shows settings, not back.
+  `ICON_GLYPHS["back"]`) as pushes. Home shows settings, not back.
 
 ### 9.3 Controls
 
