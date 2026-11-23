@@ -349,7 +349,7 @@ without opening Pejvak.
 
 ---
 
-### Task 10 — Final verification and cleanup
+### Task 10 — Final verification and cleanup ✅
 
 **Goal:** prove the port.
 
@@ -610,3 +610,18 @@ without opening Pejvak.
   and `docs/plans/01-buildable-skeleton.md` gained a supersession pointer to this plan. The doc is
   now the single source, so a new agent can implement a screen from `docs/summary.md` →
   `docs/DESIGN.md` without opening Pejvak.
+- 2026-11-23 — **Task 10 complete.** `./gradlew test assembleDebug` BUILD SUCCESSFUL; 452
+  unit/Robolectric tests pass; APK at `app/build/outputs/apk/debug/app-debug.apk` (86,693,293 bytes).
+  Screenshots: 126 PNGs in `app/build/screenshots/`, 39 light + 39 dark; the eight screen suites
+  (home/reader/history/settings/downloads/presets/editor) stage light/dark × fa/en; dock, player,
+  sheet and wavesweep suites cover their states. Reduced motion verified by code:
+  `Modifier.oceanEntrance` returns early when `!useMotionEnabled()`, `WaveSweep` returns before
+  drawing when `!motion`, `AmbientCanvas` surge is gated, and
+  `NowPlayingSheet`/`PlayerContent`/`Scrubber`/`AppDock` check the gate; no motion-off screenshot
+  test (deferred, noted). API 29–30 fallback verified: `FrostedSurface.canBlur = backdrop != null &&
+  SDK_INT >= 31`, else `frostFallback`; `BackdropBlur` returns before drawing below API 31 — no
+  invisible panes. Cleanup: `ui/theme/Geometry.kt` is gone (tokens live in `Tokens.kt`); removed the
+  obsolete `home_phase_note` string. A broader unused-string audit (e.g.
+  `settings_motion`/`motion_*`/`settings_haptics` reserved for the not-yet-built Settings
+  motion/haptics section) and two documented catalog primitives (`SegmentedPill`,
+  `WaveProgressBar`) are left in place deliberately.

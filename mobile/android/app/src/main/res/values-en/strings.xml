@@ -13,7 +13,6 @@
 
     <string name="home_continue_reading">Continue reading</string>
     <string name="home_start_reading">Start reading</string>
-    <string name="home_phase_note">Early build — the first five pages of the Holy Quran</string>
 
     <string name="reader_loading">Preparing the page…</string>
     <string name="reader_error">The Quran text could not be loaded.</string>

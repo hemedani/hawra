@@ -15,7 +15,6 @@
     <!-- Home -->
     <string name="home_continue_reading">ادامه خواندن</string>
     <string name="home_start_reading">شروع خواندن</string>
-    <string name="home_phase_note">نسخهٔ اولیه — پنج صفحهٔ نخست قرآن کریم</string>
 
     <!-- Reader -->
     <string name="reader_loading">در حال آماده‌سازی صفحه…</string>
