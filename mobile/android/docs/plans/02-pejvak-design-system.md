@@ -592,3 +592,11 @@ without opening Pejvak.
   literal (`rg` clean). Home, History, Reader, Settings, Downloads, Presets and the preset editor
   use `ScreenFrame` + `GlassHeader`; Auth keeps its centred-brand exclusion. `./gradlew test
   assembleDebug` green (447 tests), every screen capture inspected in light/dark and fa/en.
+- 2026-11-23 — **Task 8 review fixes — Reader.** The reader pane now paints the opaque
+  `QuranColors.page` field inside the `GlassSurface` rim, so scripture sits on the stable reading
+  surface rather than translucent glass; the header overline formats page/juz digits from the
+  active locale (`appLocale().language == "fa"`), and the header regained a leading back bubble
+  wired to `navController.popBackStack()` in the NavHost while the dock entry still works. The
+  class comment no longer claims the screen owes `dockInset` — it pads the scroll end with the
+  measured `LocalShellInsets.bottom`. DESIGN §11.1 and the reader dock-inset note were updated to
+  match. `./gradlew test assembleDebug` green.

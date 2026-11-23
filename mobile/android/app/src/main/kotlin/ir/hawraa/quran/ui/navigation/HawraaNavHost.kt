@@ -97,6 +97,7 @@ fun HawraaNavHost(navController: NavHostController = rememberNavController()) {
             ),
         ) {
             ReaderScreen(
+                onBack = { navController.popBackStack() },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
             )
         }

@@ -47,6 +47,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -75,6 +76,7 @@ import ir.hawraa.quran.domain.quran.VerseSelection
 import ir.hawraa.quran.domain.quran.playbackPlan
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.domain.settings.ReadingSettings
+import ir.hawraa.quran.ui.appLocale
 import ir.hawraa.quran.ui.components.BubbleButton
 import ir.hawraa.quran.ui.components.GlassElevation
 import ir.hawraa.quran.ui.components.GlassHeader
@@ -110,7 +112,8 @@ import kotlinx.coroutines.flow.drop
  *
  * There is also **no bottom bar**. Actions that belong to a selection appear in a floating box over
  * that selection ([SelectionActionBox]); playback and navigation live in the dock, which the app
- * shell draws (`HawraaShell`). This screen only owes the dock its `dockInset` of bottom padding.
+ * shell draws (`HawraaShell`). The scroll end is padded by the measured shell inset so the last
+ * verse clears the dock; the screen owns no dock chrome of its own.
  *
  * Typography goes through [QuranText] only, so letters and diacritics stay independently colorable.
  * The verse and each of its translations are **separately selectable** ([VerseSelection]); session
@@ -118,6 +121,7 @@ import kotlinx.coroutines.flow.drop
  */
 @Composable
 fun ReaderScreen(
+    onBack: () -> Unit,
     onSettings: () -> Unit,
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
@@ -142,6 +146,7 @@ fun ReaderScreen(
 
     ReaderContent(
         state = state,
+        onBack = onBack,
         onSettings = onSettings,
         onPageVisible = viewModel::onPageVisible,
         onReadingActivity = viewModel::onReadingActivity,
@@ -160,6 +165,7 @@ fun ReaderScreen(
 internal fun ReaderContent(
     state: ReaderUiState,
     onSettings: () -> Unit,
+    onBack: () -> Unit = {},
     onPageVisible: (Int) -> Unit = {},
     onReadingActivity: (Int) -> Unit = {},
     onPlayPause: (Pair<Int, Int>?, Int) -> Unit = { _, _ -> },
@@ -171,6 +177,7 @@ internal fun ReaderContent(
     val dark = LocalHawraaDarkTheme.current
     val geometry = LocalHawraaGeometry.current
     val shellInsets = LocalShellInsets.current
+    val persian = LocalConfiguration.current.appLocale().language == "fa"
     val quran = remember(themeQuran, state.settings, dark) {
         themeQuran.withReadingSettings(state.settings, dark)
     }
@@ -259,11 +266,19 @@ internal fun ReaderContent(
                     overline = visiblePage?.let { page ->
                         stringResource(
                             R.string.reader_page_juz,
-                            page.page.toPersianDigits(),
-                            page.juz.toPersianDigits(),
+                            if (persian) page.page.toPersianDigits() else page.page.toString(),
+                            if (persian) page.juz.toPersianDigits() else page.juz.toString(),
                         )
                     },
                     userTitle = true,
+                    leading = {
+                        BubbleButton(
+                            icon = ICON_GLYPHS.getValue("back"),
+                            contentDescription = stringResource(R.string.back),
+                            onClick = onBack,
+                            size = geometry.controls.md,
+                        )
+                    },
                     actions = {
                         if (state.recitation.available) {
                             BubbleButton(
@@ -293,8 +308,9 @@ internal fun ReaderContent(
                 val topSafePx = with(density) { topInset.toPx() }
 
                 // The reading pane floats: it keeps a margin from the screen edge so the ambient
-                // canvas is visible around it, which is what makes the pane read as glass. Its top
-                // starts below the floating header.
+                // canvas is visible around it, and the glass rim reads as chrome. Inside that rim
+                // the pane is the opaque page colour — scripture is read on a stable field, never
+                // on a translucent surface. Its top starts below the floating header.
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -310,7 +326,11 @@ internal fun ReaderContent(
                         strong = true,
                         elevation = GlassElevation.Panel,
                     ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(quran.page),
+                        ) {
                             when {
                                 state.isLoading -> ReaderMessage(stringResource(R.string.reader_loading))
                                 state.failed || items.isEmpty() ->

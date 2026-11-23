@@ -613,8 +613,8 @@ sheet never withholds content to make a transition work.
 └─────────────────────────────────────────┘
 ```
 
-- The reading pane is a **glass pane at high opacity** (`page` over `glassFillStrong`). The canvas
-  shows through at its edges, which is enough to read as glass; the text sits on a stable field.
+- The reading pane is an **opaque `page` field inside a glass rim**. The canvas shows through only
+  around the floating pane, so the edge reads as glass while the text sits on the most stable field.
 - No page number, no page furniture — the scroll is continuous (see `ReaderItems`).
 - The dock is always present; the action box only while something is selected.
 
@@ -932,8 +932,8 @@ the theme to pick a colour — ask the token.
 - **Dock:** `Column` inside one `GlassSurface(strong = true)`; height animated with
   `animateDpAsState` from one boolean. Nav slots are `Row` children with `weight(1f)` so the row
   cannot overflow by arithmetic.
-- **Dock inset:** `contentPadding = PaddingValues(bottom = geometry.dock.dockInset)` on the reader's
-  `LazyColumn`. Never a literal.
+- **Dock inset:** `contentPadding = PaddingValues(bottom = LocalShellInsets.current.bottom)` on the
+  reader's `LazyColumn`, using the measured clearance. Never a literal.
 - **State:** `StateFlow` + `collectAsStateWithLifecycle`. Keep high-frequency ticks (playback
   position) in leaf composables so the dock's title row does not recompose every second.
 - **Selection:** `VerseSelection` is a set of layer-keyed elements plus one `active`; the action box
