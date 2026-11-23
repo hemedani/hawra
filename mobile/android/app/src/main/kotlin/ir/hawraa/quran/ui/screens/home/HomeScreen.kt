@@ -111,7 +111,7 @@ internal fun HomeContent(
             GlassHeader(
                 modifier = headerModifier,
                 title = stringResource(R.string.home_title),
-                overline = stringResource(R.string.auth_title_signin),
+                overline = stringResource(R.string.home_overline),
                 userTitle = true,
                 actions = {
                     BubbleButton(

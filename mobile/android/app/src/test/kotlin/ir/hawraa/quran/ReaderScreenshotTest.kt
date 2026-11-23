@@ -3,6 +3,7 @@ package ir.hawraa.quran
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -12,11 +13,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import ir.hawraa.quran.data.quran.QuranContentRepository
+import ir.hawraa.quran.domain.AppLanguage
 import ir.hawraa.quran.domain.ThemeMode
 import ir.hawraa.quran.domain.settings.DiacriticInk
 import ir.hawraa.quran.domain.settings.LetterInk
 import ir.hawraa.quran.domain.recitation.PlaybackSpeed
 import ir.hawraa.quran.domain.settings.ReadingSettings
+import ir.hawraa.quran.ui.LocalizedApp
 import ir.hawraa.quran.ui.components.NowPlayingUi
 import ir.hawraa.quran.ui.screens.reader.RecitationUiState
 import ir.hawraa.quran.ui.screens.reader.ReaderContent
@@ -38,6 +41,11 @@ import org.robolectric.annotation.GraphicsMode
  * This is the gate for the mushaf typography: it proves on Android's own text
  * stack that the two derived ink layers register exactly, in both themes.
  * Run `./gradlew testDebugUnitTest` then open the PNGs.
+ *
+ * Every capture goes through [TestShell] — the ambient canvas, the real screen frame and the dock —
+ * because the reader is deliberately transparent and the dock is part of every destination. A bare
+ * `ReaderContent` photographs a screen the app never shows and cannot catch chrome, dock or inset
+ * regressions.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -70,6 +78,13 @@ class ReaderScreenshotTest {
         ),
     )
 
+    private fun nowPlaying() = NowPlayingUi(
+        title = "فاتحه",
+        subtitle = "آیۀ ۳ · شهریار پرهیزگار",
+        number = "۱",
+        isPlaying = true,
+    )
+
     private fun capture(name: String) {
         composeRule.waitForIdle()
         val bitmap = composeRule.onRoot().captureToImage().asAndroidBitmap()
@@ -81,29 +96,41 @@ class ReaderScreenshotTest {
 
     /**
      * The reader as the app actually composes it: the ambient canvas, the reading pane, the
-     * floating action box and the dock. The other captures isolate the mushaf; this one is the
-     * gate for the chrome, because a screenshot that omits the dock cannot catch a regression in
-     * it.
+     * floating action box and the dock. Locale is explicit so both `fa` and `en` chrome are gated.
      */
-    @Test
-    fun reader_shell_with_dock_and_selection() {
+    private fun stage(
+        language: AppLanguage = AppLanguage.PERSIAN,
+        theme: ThemeMode,
+        nowPlaying: NowPlayingUi? = null,
+        content: @Composable () -> Unit,
+    ) {
         composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(
-                    selected = "reader",
-                    nowPlaying = NowPlayingUi(
-                        title = "فاتحه",
-                        subtitle = "آیۀ ۳ · شهریار پرهیزگار",
-                        number = "۱",
-                        isPlaying = true,
-                    ),
-                ) {
-                    ReaderContent(state = state(ReadingSettings()), onSettings = {})
+            LocalizedApp(language) {
+                HawraaTheme(themeMode = theme) {
+                    TestShell(selected = "reader", nowPlaying = nowPlaying) {
+                        content()
+                    }
                 }
             }
         }
+    }
+
+    @Test
+    fun reader_shell_with_dock_and_selection() {
+        stage(theme = ThemeMode.LIGHT, nowPlaying = nowPlaying()) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
+        }
         composeRule.onNodeWithTag("verse-1:3").performClick()
         capture("reader-shell.png")
+    }
+
+    @Test
+    fun reader_shell_with_dock_and_selection_en() {
+        stage(language = AppLanguage.ENGLISH, theme = ThemeMode.LIGHT, nowPlaying = nowPlaying()) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
+        }
+        composeRule.onNodeWithTag("verse-1:3").performClick()
+        capture("reader-shell-en.png")
     }
 
     /**
@@ -113,72 +140,82 @@ class ReaderScreenshotTest {
      */
     @Test
     fun reader_shell_dock_idle() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                TestShell(selected = "reader") {
-                    ReaderContent(state = state(ReadingSettings()), onSettings = {})
-                }
-            }
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
         }
         capture("reader-shell-idle.png")
+    }
+
+    @Test
+    fun reader_shell_dock_idle_en() {
+        stage(language = AppLanguage.ENGLISH, theme = ThemeMode.LIGHT) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
+        }
+        capture("reader-shell-idle-en.png")
     }
 
     /** The dock in the dark theme: the fill, border and rim light all invert. */
     @Test
     fun reader_shell_dark() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.DARK) {
-                TestShell(
-                    selected = "reader",
-                    nowPlaying = NowPlayingUi(
-                        title = "فاتحه",
-                        subtitle = "آیۀ ۳ · شهریار پرهیزگار",
-                        number = "۱",
-                        isPlaying = true,
-                    ),
-                ) {
-                    ReaderContent(state = state(ReadingSettings()), onSettings = {})
-                }
-            }
+        stage(theme = ThemeMode.DARK, nowPlaying = nowPlaying()) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
         }
         capture("reader-shell-dark.png")
     }
 
     @Test
+    fun reader_shell_dark_en() {
+        stage(language = AppLanguage.ENGLISH, theme = ThemeMode.DARK, nowPlaying = nowPlaying()) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
+        }
+        capture("reader-shell-dark-en.png")
+    }
+
+    @Test
     fun reader_light_default_ink() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                ReaderContent(state = state(ReadingSettings()), onSettings = {})
-            }
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
         }
         capture("reader-light.png")
     }
 
     @Test
+    fun reader_light_default_ink_en() {
+        stage(language = AppLanguage.ENGLISH, theme = ThemeMode.LIGHT) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
+        }
+        capture("reader-light-en.png")
+    }
+
+    @Test
     fun reader_dark_gold_marks() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.DARK) {
-                ReaderContent(state = state(ReadingSettings()), onSettings = {})
-            }
+        stage(theme = ThemeMode.DARK) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
         }
         capture("reader-dark.png")
     }
 
     @Test
+    fun reader_dark_gold_marks_en() {
+        stage(language = AppLanguage.ENGLISH, theme = ThemeMode.DARK) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
+        }
+        capture("reader-dark-en.png")
+    }
+
+    @Test
     fun reader_light_green_letters_burgundy_marks() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                ReaderContent(
-                    state = state(
-                        ReadingSettings(
-                            fontSizeSp = 34,
-                            letterInk = LetterInk.GREEN,
-                            diacriticInk = DiacriticInk.BURGUNDY,
-                        ),
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(
+                state = state(
+                    ReadingSettings(
+                        fontSizeSp = 34,
+                        letterInk = LetterInk.GREEN,
+                        diacriticInk = DiacriticInk.BURGUNDY,
                     ),
-                    onSettings = {},
-                )
-            }
+                ),
+                onSettings = {},
+            )
         }
         capture("reader-ink-variant.png")
     }
@@ -191,10 +228,8 @@ class ReaderScreenshotTest {
     @Test
     fun reader_light_page_two_with_basmala() {
         val pageTwo = state(ReadingSettings()).copy(pages = content.pages.drop(1))
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                ReaderContent(state = pageTwo, onSettings = {})
-            }
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(state = pageTwo, onSettings = {})
         }
         capture("reader-page-two.png")
     }
@@ -206,13 +241,11 @@ class ReaderScreenshotTest {
      */
     @Test
     fun reader_light_selected_verse() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                ReaderContent(
-                    state = state(ReadingSettings(showTranslation = false)),
-                    onSettings = {},
-                )
-            }
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(
+                state = state(ReadingSettings(showTranslation = false)),
+                onSettings = {},
+            )
         }
         composeRule.onNodeWithTag("verse-1:3").performClick()
         capture("reader-selected-verse.png")
@@ -226,13 +259,11 @@ class ReaderScreenshotTest {
      */
     @Test
     fun reader_light_selected_translation_only() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                ReaderContent(
-                    state = state(ReadingSettings(showTranslation = true)),
-                    onSettings = {},
-                )
-            }
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(
+                state = state(ReadingSettings(showTranslation = true)),
+                onSettings = {},
+            )
         }
         composeRule.onNodeWithTag("translation-1:3-ansarian").performClick()
         capture("reader-selected-translation.png")
@@ -245,10 +276,8 @@ class ReaderScreenshotTest {
      */
     @Test
     fun reader_continuous_across_a_page_boundary() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                ReaderContent(state = state(ReadingSettings()), onSettings = {})
-            }
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(state = state(ReadingSettings()), onSettings = {})
         }
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("mushaf-scroll").performScrollToIndex(6)
@@ -262,24 +291,22 @@ class ReaderScreenshotTest {
      */
     @Test
     fun reader_light_recitation_playing() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.LIGHT) {
-                ReaderContent(
-                    state = state(ReadingSettings()).copy(
-                        recitation = RecitationUiState(
-                            available = true,
-                            reciterNameFa = "شهریار پرهیزگار",
-                            reciterNameEn = "Shahriar Parhizgar",
-                            isPlaying = true,
-                            speed = PlaybackSpeed.ONE_AND_QUARTER,
-                            repeatAyah = true,
-                            playingVerse = 1 to 3,
-                            hasQueue = true,
-                        ),
+        stage(theme = ThemeMode.LIGHT) {
+            ReaderContent(
+                state = state(ReadingSettings()).copy(
+                    recitation = RecitationUiState(
+                        available = true,
+                        reciterNameFa = "شهریار پرهیزگار",
+                        reciterNameEn = "Shahriar Parhizgar",
+                        isPlaying = true,
+                        speed = PlaybackSpeed.ONE_AND_QUARTER,
+                        repeatAyah = true,
+                        playingVerse = 1 to 3,
+                        hasQueue = true,
                     ),
-                    onSettings = {},
-                )
-            }
+                ),
+                onSettings = {},
+            )
         }
         capture("reader-recitation.png")
     }
@@ -287,22 +314,20 @@ class ReaderScreenshotTest {
     /** The same state in the dark theme, paused mid-page. */
     @Test
     fun reader_dark_recitation_paused() {
-        composeRule.setContent {
-            HawraaTheme(themeMode = ThemeMode.DARK) {
-                ReaderContent(
-                    state = state(ReadingSettings()).copy(
-                        recitation = RecitationUiState(
-                            available = true,
-                            reciterNameFa = "شهریار پرهیزگار",
-                            reciterNameEn = "Shahriar Parhizgar",
-                            isPlaying = false,
-                            playingVerse = 1 to 5,
-                            hasQueue = true,
-                        ),
+        stage(theme = ThemeMode.DARK) {
+            ReaderContent(
+                state = state(ReadingSettings()).copy(
+                    recitation = RecitationUiState(
+                        available = true,
+                        reciterNameFa = "شهریار پرهیزگار",
+                        reciterNameEn = "Shahriar Parhizgar",
+                        isPlaying = false,
+                        playingVerse = 1 to 5,
+                        hasQueue = true,
                     ),
-                    onSettings = {},
-                )
-            }
+                ),
+                onSettings = {},
+            )
         }
         capture("reader-recitation-dark.png")
     }

@@ -84,7 +84,7 @@ class HistoryScreenshotTest {
             LocalizedApp(language) {
                 HawraaTheme(themeMode = theme) {
                     TestShell(selected = "history") {
-                        HistoryContent(state = state(), onBack = {})
+                        HistoryContent(state = state())
                     }
                 }
             }

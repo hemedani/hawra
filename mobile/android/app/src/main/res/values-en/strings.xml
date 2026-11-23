@@ -4,9 +4,11 @@
     <string name="action_close">Close</string>
 
     <string name="home_title">Home</string>
+    <string name="home_overline">Your reading space</string>
     <string name="home_subtitle">The Holy Quran</string>
     <string name="reader_title">Read</string>
     <string name="history_title">History</string>
+    <string name="history_overline">Every reading, recorded</string>
     <string name="settings_title">Settings</string>
 
     <string name="home_continue_reading">Continue reading</string>

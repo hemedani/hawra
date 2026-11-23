@@ -30,10 +30,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.hawraa.quran.R
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.ui.appLocale
-import ir.hawraa.quran.ui.components.BubbleButton
 import ir.hawraa.quran.ui.components.GlassHeader
 import ir.hawraa.quran.ui.components.GlassSurface
-import ir.hawraa.quran.ui.components.ICON_GLYPHS
 import ir.hawraa.quran.ui.components.LocalShellInsets
 import ir.hawraa.quran.ui.components.ScreenFrame
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
@@ -47,18 +45,16 @@ import java.util.Date
 
 @Composable
 fun HistoryScreen(
-    onBack: () -> Unit,
     viewModel: HistoryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    HistoryContent(state = state, onBack = onBack)
+    HistoryContent(state = state)
 }
 
 /** Stateless body, so the layout can be screenshot-tested without Hilt or a database. */
 @Composable
 internal fun HistoryContent(
     state: HistoryUiState,
-    onBack: () -> Unit,
 ) {
     val geometry = LocalHawraaGeometry.current
     val shellInsets = LocalShellInsets.current
@@ -68,15 +64,8 @@ internal fun HistoryContent(
             GlassHeader(
                 modifier = headerModifier,
                 title = stringResource(R.string.history_title),
+                overline = stringResource(R.string.history_overline),
                 userTitle = true,
-                leading = {
-                    BubbleButton(
-                        icon = ICON_GLYPHS.getValue("back"),
-                        contentDescription = stringResource(R.string.back),
-                        onClick = onBack,
-                        size = geometry.controls.md,
-                    )
-                },
             )
         },
     ) { topInset ->

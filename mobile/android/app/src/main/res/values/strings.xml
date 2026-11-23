@@ -5,9 +5,11 @@
 
     <!-- Navigation / screens -->
     <string name="home_title">خانه</string>
+    <string name="home_overline">فضای خواندن شما</string>
     <string name="home_subtitle">قرآن کریم</string>
     <string name="reader_title">خواندن</string>
     <string name="history_title">تاریخ</string>
+    <string name="history_overline">هر خواندن، ثبت‌شده</string>
     <string name="settings_title">تنظیمات</string>
 
     <!-- Home -->

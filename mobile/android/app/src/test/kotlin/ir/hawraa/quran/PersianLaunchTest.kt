@@ -93,7 +93,7 @@ class PersianLaunchTest {
     @Test
     fun history_opens_in_persian() {
         render {
-            HistoryContent(state = HistoryUiState(isLoading = false), onBack = {})
+            HistoryContent(state = HistoryUiState(isLoading = false))
         }
         val tree = composeRule.onRoot().printToString()
         assertTrue(tree.contains("تاریخ"))

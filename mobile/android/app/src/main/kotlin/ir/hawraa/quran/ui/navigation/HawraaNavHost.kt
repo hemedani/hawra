@@ -102,7 +102,7 @@ fun HawraaNavHost(navController: NavHostController = rememberNavController()) {
             )
         }
         composable(Routes.HISTORY) {
-            HistoryScreen(onBack = { navController.popBackStack() })
+            HistoryScreen()
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(
