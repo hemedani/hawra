@@ -18,17 +18,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,8 +43,13 @@ import ir.hawraa.quran.domain.preset.PresetStep
 import ir.hawraa.quran.domain.preset.PresetStepKind
 import ir.hawraa.quran.domain.quran.toPersianDigits
 import ir.hawraa.quran.ui.appLocale
+import ir.hawraa.quran.ui.components.BubbleButton
 import ir.hawraa.quran.ui.components.GlassChip
+import ir.hawraa.quran.ui.components.GlassHeader
 import ir.hawraa.quran.ui.components.GlassSurface
+import ir.hawraa.quran.ui.components.ICON_GLYPHS
+import ir.hawraa.quran.ui.components.LocalShellInsets
+import ir.hawraa.quran.ui.components.ScreenFrame
 import ir.hawraa.quran.ui.theme.LocalGlassColors
 import ir.hawraa.quran.ui.theme.LocalHawraaGeometry
 
@@ -87,7 +84,7 @@ fun PresetEditorScreen(
 }
 
 /** Stateless body, so a screenshot test can render it without Hilt. */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun PresetEditorContent(
     state: PresetEditorUiState,
@@ -100,41 +97,37 @@ internal fun PresetEditorContent(
 ) {
     val geometry = LocalHawraaGeometry.current
     val glass = LocalGlassColors.current
+    val shellInsets = LocalShellInsets.current
     val persian = LocalConfiguration.current.appLocale().language == "fa"
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(
-                            if (state.isNew) R.string.editor_title_new else R.string.editor_title_edit,
-                        ),
+    ScreenFrame(
+        header = { headerModifier ->
+            GlassHeader(
+                modifier = headerModifier,
+                title = stringResource(
+                    if (state.isNew) R.string.editor_title_new else R.string.editor_title_edit,
+                ),
+                userTitle = true,
+                leading = {
+                    BubbleButton(
+                        icon = ICON_GLYPHS.getValue("back"),
+                        contentDescription = stringResource(R.string.back),
+                        onClick = onBack,
+                        size = geometry.controls.md,
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
                 },
             )
         },
-    ) { innerPadding ->
+    ) { topInset ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(
                     start = geometry.screenPadding,
                     end = geometry.screenPadding,
-                    top = geometry.spacing.sm,
-                    bottom = geometry.dock.dockInset,
+                    top = topInset,
+                    bottom = shellInsets.bottom,
                 ),
         ) {
             OutlinedTextField(
