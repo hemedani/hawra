@@ -8,48 +8,49 @@
 > these tokens is a regression even if it compiles.
 >
 > Companion docs: [`summary.md`](summary.md) (orientation, stack, build quirks),
-> [`plans/01-buildable-skeleton.md`](plans/01-buildable-skeleton.md) (roadmap + progress record),
-> [`../AGENTS.md`](../AGENTS.md) (engineering rules).
+> [`plans/02-pejvak-design-system.md`](plans/02-pejvak-design-system.md) (the design roadmap and
+> progress record), [`../AGENTS.md`](../AGENTS.md) (engineering rules).
 
 **Status:** adopted 2026-11-15. Supersedes the warm-paper "mushaf" look that shipped through
 Phases 0–3 (cream paper, deep-green banner, gold-bordered plate). That look is what the owner
 called *"the typical look of existing Quranic apps"*; this document is the deliberate departure.
 
+The material language is ported from the owner's Pejvak Android app — **patterns and measurements
+only**, never code. Hawraa keeps the same glass/frost/ambient vocabulary and rebuilds it around one
+fact Pejvak does not have: the screen frequently holds sacred text that must be read, not decorated.
+
 ---
 
 ## 1. Design intent
 
-Hawraa is a **reading surface**, not a control panel. The previous design borrowed the visual
-grammar of printed mushaf apps — warm paper, an ornamental green banner, gold rules — which is
-handsome but anonymous: it looks like every other Quran app on the store.
-
-The new language comes from the owner's reference (`ignoreAssets/sample.jpg`: a frosted-glass audio
-player) and from the shipping Pejvak app (`/Users/syd/work/Pejvak/mobile`), whose dock and glass
-recipe are the concrete target. We adopt its **material language** — light, floating frosted panes
-over a soft ambient field — and adapt it to a text-first app.
+Hawraa is a **reading surface**, not a control panel. The visual language is glassmorphism — light,
+floating frosted panes over a soft, colourful ambient field — but it is bent to a text-first app.
 
 Three ideas carry everything:
 
 1. **The page floats.** Chrome does not touch the edges of the screen. The reading surface is a
-   pane with generous corners, the top bar is a pill, the dock and the action box float above the
-   content with a visible gap. Nothing is bolted to a bezel.
+   pane with generous corners, the top bar is a floating capsule, the dock and the action box float
+   above the content with a visible gap. Nothing is bolted to a bezel.
 2. **Glass is for chrome, never for scripture.** Frosted panes carry navigation, controls and
    metadata. The Quran text sits on the most stable, most opaque surface in the app, because
-   legibility of sacred text outranks any material effect. (See §5.5 — this is the one place we
-   deliberately diverge from the reference.)
-3. **One accent means "current".** A single filled teal circle marks the current destination, the
-   playing ayah, and the primary action in the action box. Warm gold is reserved for *what the
-   reader marked* and for ornament — it is never an interactive colour.
+   legibility of sacred text outranks any material effect (§3.7 — the one deliberate divergence from
+   the reference).
+3. **One accent means "current".** A single filled white/turquoise circle marks the current dock
+   destination, the playing ayah, and the primary action in the action box. Warm gold is reserved
+   for *what the reader marked* and for ornament — it is never an interactive colour.
+
+The app is **fa-first and RTL by default**, so the composition is read right-to-left. Every rule
+below is stated in *start/end* terms, never left/right.
 
 ### 1.1 What we are leaving behind
 
 | Old (pre-2026-11-15) | New |
 |---|---|
-| Cream paper `#FBF6EC` | Near-white glass `#FDFDFE` on a cool canvas `#E4E9EF` |
+| Cream paper `#FBF6EC` | Opaque page `#FDFDFE` inside a glass rim, on a deep teal canvas `#33505F` |
 | Deep-green banner with gold border | Teal-tinted glass plate, hairline edge, no gradient |
 | Gold rosette ornament | Neutral ring that fills with the active hue |
 | Full-width bottom transport bar | Floating action box over the selection + a floating dock |
-| Green primary / gold secondary / bronze tertiary | Teal accent / gold "marker" / neutral chrome |
+| Green primary / gold secondary / bronze tertiary | White/turquoise accent / gold "marker" / neutral chrome |
 | Edge-to-edge opaque screens | Floating panes over an ambient canvas |
 
 ### 1.2 What we are NOT doing yet
@@ -58,7 +59,7 @@ Authentic Iranian design elements — tilework geometry, `تذهیب` illuminati
 (`لاجوردی`) fields, arabesque borders — are the **planned next layer**, not this one. Two hooks are
 already in place so that layer can be added without re-cutting the foundation:
 
-- the accent is turquoise (`فیروزه`), the most Iranian of the cool hues;
+- the tonal accent is turquoise (`فیروزه`), the most Iranian of the cool hues;
 - gold survives as a *marker* colour, so ornament can return without re-theming the app.
 
 Do not add half-hearted "Persian" decoration ad hoc. When that layer lands it gets its own section
@@ -66,111 +67,133 @@ here.
 
 ---
 
-## 2. Principles
-
-1. **Legibility is the ceiling on every effect.** Any glass, blur, tint or gradient that reduces
-   the contrast of Quranic text or its diacritics is wrong, no matter how good it looks.
-2. **Float, don't frame.** Floating panes over an ambient field. No hard full-bleed bars, no 1 px
-   screen-edge dividers.
-3. **One radius ramp, one spacing rhythm.** Never hard-code a corner or a gap; ask the geometry
-   tokens (§7).
-4. **One accent, one meaning.** Filled teal = "this is the current thing". If a second element on
-   screen is also filled teal, one of them is wrong.
-5. **Motion explains, never decorates.** Springs for press, a height change when the dock gains or
-   loses its player half. No looping animation except the ambient canvas wash, and that stops under
-   reduced motion.
-6. **The chrome is disposable; the text is permanent.** Chrome may fade, collapse or slide away.
-   The mushaf never moves unexpectedly.
-7. **Every string in resources, every colour in `ui/theme/`.** No literals anywhere else (§17).
-
----
-
-## 3. The ambient canvas
+## 2. The ambient canvas
 
 Glass needs something to refract. A frosted pane over flat white is invisible; over a softly
 coloured field it reads as glass. So every screen renders an **ambient canvas** behind its content.
 
-- **`AmbientCanvas`** — a full-bleed field of 2–3 very large, very soft radial blooms drawn from
-  the theme's canvas ramp. Low frequency, low contrast, no noise, no hard edges.
+- **`AmbientCanvas`** (`ui/components/AmbientCanvas.kt`) — a full-bleed `#33505F` (light) or
+  `#0A0F16` (dark) field with **four** large, soft radial blooms drawn from the cool aurora stops:
+  teal, blue, cyan and purple (the `RampTeal`/`RampBlue`/`RampCyan`/`RampPurple` **mid** stops).
+  Low frequency, low contrast, no noise, no hard edges.
+- **Bloom opacity** is `0.20` in light and `0.38` in dark; a navigation surge lifts it by another
+  `0.025` / `0.05` briefly. Cool-only keeps the field dark enough for the contrast contract even
+  where two blooms overlap.
+- **The canvas is static at rest.** A dedicated `navTrigger` surge (bounded, `NavMotionGeometry`,
+  and only when `useMotionEnabled()` is true) is the only movement; it shifts the blooms along the
+  navigation current and settles back to zero. There is no idle drift.
+- Content scrolls **over** the canvas; the canvas does not scroll. `HawraaShell` registers it as the
+  `zIndex = 0f` backdrop source so chrome can sample it (§6).
 - A **base tint** sits under the blooms so the field never reaches pure white or pure black.
-- The canvas is **static** (it does not drift). A slow drift is tempting and was considered, but a
-  reading app that moves behind the text is a reading app that distracts. If it is ever animated it
-  must be ≤ 0.02 alpha/second and off under reduced motion.
-- Content scrolls **over** the canvas; the canvas does not scroll.
 
-**Canvas values** (see §5.1). The light canvas is a **cool pale grey-blue**, not cream and not
-white — cream would drag the whole app back to the mushaf look, and white would kill the glass.
+The light canvas is deliberately a **deep mid-tone cool slate**, not white. This is what lets white
+text on glass stay legible in both themes, and it is the single most important colour decision in
+this document. Cream would drag the app back to the mushaf look; white would kill the glass.
+
+**Fallback (API 29–30, no `RenderEffect`):** the canvas still renders; frosted chrome paints
+`frostFallback` instead of a real blur (§3.3). Legibility never depends on blur.
 
 ---
 
-## 4. Colour system
+## 3. Colour system
 
-All values live in `ui/theme/`. Nothing outside that package may contain a colour literal.
+All values live in `ui/theme/`. No colour literal exists outside that package. The contract below is
+the shipped token set, not an aspiration.
 
-### 4.1 Canvas
-
-| Token | Light | Dark | Role |
-|---|---|---|---|
-| `canvas` | `#E4E9EF` | `#060910` | the field everything floats on |
-| `canvasElevated` | `#EDF1F6` | `#0E1520` | one step up, behind a floating pane |
-| `canvasBloomA` | `#C9DCE6` | `#0D2C33` | cool bloom (teal) |
-| `canvasBloomB` | `#D3DAEC` | `#12203A` | cool bloom (periwinkle) |
-| `canvasBloomC` | `#E4DCEC` | `#241C33` | soft bloom (lilac) |
-
-### 4.2 Glass
+### 3.1 Canvas
 
 | Token | Light | Dark | Role |
 |---|---|---|---|
-| `glassFill` | `rgba(255,255,255,0.78)` | `rgba(28,37,50,0.72)` | a normal floating pane |
-| `glassFillStrong` | `rgba(255,255,255,0.98)` | `rgba(30,40,54,0.98)` | dock, sheets, action box — anything that must read over busy content |
-| `glassBorder` | `rgba(20,32,39,0.13)` | `rgba(226,238,255,0.22)` | the hairline edge |
-| `glassHighlight` | `rgba(255,255,255,0.95)` | `rgba(255,255,255,0.24)` | the specular top edge |
-| `shadow` | `rgba(20,32,39,0.16)` | `rgba(0,0,0,0.55)` | shadow tint |
+| `canvas` / `canvasBase` | `#33505F` | `#0A0F16` | the field everything floats on; never near-white |
+| `canvasElevated` | `#33505F` | `#0A0F16` | alias for the same field (no second canvas layer) |
+| `canvasBlooms` (drawn) | `RampTeal/Blue/Cyan/Purple` **mid** @ 20 % | same mid stops @ 38 % | the four large, static radial blooms |
+| `scrim` | `rgba(0,0,0,0.35)` | `rgba(0,0,0,0.35)` | behind modal sheets |
 
-**Note the border direction.** In light mode the hairline is *dark* at 13 %, not white: over a
-light canvas a white border disappears. In dark mode it is *light* at 22 %. This asymmetry is
-deliberate and is the single detail that makes the panes read as glass in both themes.
+### 3.2 Glass recipe
 
-**Why `glassFillStrong` is 98 % and not 90 %.** The dock, the action box and sheets sit over text
-that scrolls behind them. Measured on a rendered screenshot, a 92–96 % fill left the page's Persian
-translation **4 % legible** through the panel — enough to read whole words under the dock's icons,
-which looks like a rendering fault rather than like glass (dark needed the same treatment: at 94 %
-the ghost measured an 8-lum lift, more visible on a flat dark panel). The fill only has to occlude;
-the **border, the 2 dp sheen and the shadow** are what make the material read. Translucency is for
-`glassFill` (78 %), which sits over the ambient canvas and is meant to show it.
+| Token | Light | Dark | Role |
+|---|---|---|---|
+| `glassFill` | white 16 % | white 8 % | a normal floating pane |
+| `glassFillStrong` | white 26 % | white 14 % | strong glass: sheets, action box, reading rim, cards over busy content |
+| `glassFillFallback` | white 30 % | `#141C26` 72 % | API 29–30, no blur |
+| `glassBorder` | white 60 % | white 40 % | the bright hairline edge, 1 dp |
+| `glassHighlight` | white 75 % | white 55 % | the specular top rim |
+| `shadow` | black 16 % | black 55 % | shadow tint (dock/sheet only) |
 
-### 4.3 Text
+The **double-border effect** is `glassFill` + a distinct brighter `glassBorder` stroke + a top
+`glassHighlight`. That trio makes a pane read as an edge catching light. There is no second dark
+line and no gradient plate.
+
+### 3.3 Frost — shell chrome only
+
+Frost is the heavy crystalline material for the **floating header, dock and mini-player**. It samples
+the live backdrop through `FrostedSurface` + `Backdrop` (§6). Content panes never use it.
+
+| Token | Light | Dark | Role |
+|---|---|---|---|
+| `frostBase` | `#284452` 22 % | `#08121A` 24 % | base slate pane behind the sampled blur |
+| `frostScrim` | `#1E4752` 22 % | `#0B2830` 24 % | cool crystalline teal tint |
+| `frostSheen` | `#E6F9FF` 14 % | `#DFF6FF` 12 % | pale ice surface highlight |
+| `frostFallback` | `#33505F` 82 % | `#06090F` 86 % | API 29–30, no blur |
+
+`FrostGeometry`: chrome blur **22 dp** at a **0.5×** sample scale with a **1.22×** saturation
+vibrancy chain; the modal backdrop is **18 dp**; the inner top catchlight is capped at **28 dp**;
+micro-grain is **0.12** (a deterministic 64 × 64 tileable shader). Base + scrim + sheen stay near
+~48–49 % combined opacity so the blurred canvas still glows through while the contrast contract
+holds against the brightest bloom.
+
+### 3.4 Text on glass
 
 | Token | Light | Dark | Contrast target |
 |---|---|---|---|
-| `text` | `#0E1720` | `#F0F5F4` | ≥ 4.5:1 on any pane |
-| `textSecondary` | `#41505A` | `#B4C4CB` | ≥ 3:1 |
-| `textTertiary` | `#5B6A75` | `#8B9EA8` | ≥ 1.25:1 vs secondary |
-| `icon` | `#2C3A43` | `#D6E2E6` | resting glyphs |
+| `text` | `#FFFFFF` | `#F2F6F7` | ≥ 4.5:1 over the worst-case canvas |
+| `textSecondary` | white 74 % | `#F0F5F6` 72 % | ≥ 3:1 |
+| `textTertiary` | white 52 % | `#F0F5F6` 50 % | ≥ 1.25:1 vs secondary (tier separation) |
+| `icon` | `text` | `text` | resting glyphs |
 
 `textSecondary` and `textTertiary` must stay **measurably** different. The pre-glass app shipped two
 greys at ~1.07:1 and every two-line row read as one flat block.
 
-### 4.4 Accent & semantic
+### 3.5 Accent & semantic
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `accent` | `#0A635C` | `#5FD9C6` | current destination, playing ayah, primary action, links |
-| `accentSoft` | `rgba(10,99,92,0.12)` | `rgba(95,217,198,0.16)` | washes, selected chip fill |
-| `onAccent` | `#FFFFFF` | `#04231F` | glyph knocked out of a filled accent |
-| `mark` (gold) | `#A98436` | `#D9BB78` | **selection only** + ornament rules |
-| `markSoft` | `rgba(169,132,54,0.14)` | `rgba(217,187,120,0.18)` | selection wash |
-| `danger` | `#B02F45` | `#FF8296` | destructive, failure |
-| `track` | `rgba(65,80,90,0.18)` | `rgba(180,196,203,0.20)` | progress track, dividers |
+| `accent` | `#FFFFFF` | `#FFFFFF` | filled primary bubble, selected dock disc, progress fill |
+| `onAccent` | `#0E1720` | `#0E1720` | glyph knocked out of a filled accent |
+| `accentTeal` | `#0A635C` | `#5FD9C6` | tonal highlights, "synced", links, crest accents |
+| `danger` | `#FFD7DD` | `#FF8296` | destructive, failure |
+| `mark` (chrome gold) | `#D9BB78` | `#D9BB78` | ornament / marker on dark-teal chrome |
+| `markSoft` | `#D9BB78` 18 % | `#D9BB78` 18 % | marker wash on chrome |
+| `track` | white 18 % | `#F0F5F6` 20 % | progress track, dividers |
 
 **`mark` is not an interactive colour.** It never appears on a button, a chip, a toggle or a nav
-item. It means *the reader put this here* — a selected verse, a rule under a surah plate, a
-diamond bullet. If gold starts looking interactive, the accent has lost its monopoly on "current".
+item. It means *the reader put this here* — a selected verse, a rule under a surah plate, a diamond
+bullet. If gold starts looking interactive, the accent has lost its monopoly on "current".
 
-### 4.5 The mushaf surface (Quran-specific)
+The chrome `mark` is the bright gold in both themes because chrome sits on the dark-teal field. The
+mushaf `mark` is theme-specific (§3.7) because it sits on opaque paper.
 
-The reader has its own token set (`QuranColors`) because scripture has requirements chrome does not.
-It is provided alongside the glass tokens and never mixed with them.
+### 3.6 Aurora ramps (identity)
+
+Eight deterministic `[deep, mid, light]` ramps, selected by `paletteIndexFor(seed)`. They paint the
+identity tile and give the canvas its cool field. They are not a user-facing palette picker.
+
+| Ramp | deep | mid | light |
+|---|---|---|---|
+| teal | `#0A635C` | `#159A8C` | `#5FD9C6` |
+| blue | `#123A6B` | `#2D6CB5` | `#7FB6F0` |
+| purple | `#3A2A6B` | `#6C4FC1` | `#B79CF0` |
+| coral | `#7A2E3A` | `#C75B6B` | `#FF9FAE` |
+| amber | `#7A4A12` | `#C78A2D` | `#FFD08A` |
+| green | `#1E5A34` | `#3E9A5F` | `#8FD9A8` |
+| pink | `#6B2A5A` | `#B54F9A` | `#F09FD9` |
+| cyan | `#0E4A5A` | `#2D8FA8` | `#7FD9E8` |
+
+### 3.7 The mushaf surface (Quran-specific)
+
+The reader has its own token set (`QuranColors`, `ui/theme/QuranColors.kt`) because scripture has
+requirements chrome does not. It is provided alongside the glass tokens and **never mixed with
+them**.
 
 | Token | Light | Dark | Role |
 |---|---|---|---|
@@ -179,104 +202,124 @@ It is provided alongside the glass tokens and never mixed with them.
 | `letter` | `#16202A` | `#EDE9E0` | Quranic letters (default ink) |
 | `diacritic` | `#8A6A28` | `#D9BB78` | the marks (default ink) |
 | `translation` | `#41505A` | `#A8B4BE` | translation line |
-| `ornamentRing` | `accent @ 40 %` | `accent @ 45 %` | ayah rosette, unfilled |
-| `ornamentNumber` | `#41505A` | `#A8B4BE` | ayah number, unfilled |
+| `hairline` | `#41505A` 18 % | `#B4C4CB` 20 % | rule between verse and translation |
+| `mark` (paper gold) | `#A98436` | `#D9BB78` | marked verse |
+| `markSoft` | `#A98436` 14 % | `#D9BB78` 18 % | marked wash |
+| `accent` | `#0A635C` | `#5FD9C6` | playing / current |
+| `accentSoft` | `#0A635C` 12 % | `#5FD9C6` 16 % | playing wash / surah plate fill |
+| `onAccent` | `#FFFFFF` | `#04231F` | knocked-out glyph on a filled accent |
+| `ornamentRing` | accent @ 40 % | accent @ 45 % | ayah rosette, unfilled |
+| `ornamentNumber` | `translation` | `translation` | ayah number, unfilled |
 | `bannerFill` | `accentSoft` | `accentSoft` | surah plate |
-| `bannerEdge` | `accent @ 35 %` | `accent @ 35 %` | surah plate hairline |
+| `bannerEdge` | accent @ 35 % | accent @ 35 % | surah plate hairline |
 | `bannerText` | `accent` | `accent` | surah name |
-| `bannerSubText` | `textSecondary` | `textSecondary` | juz / surah number |
+| `bannerSubText` | `translation` | `translation` | juz / surah number |
 | `selection` | `markSoft` | `markSoft` | wash behind a tapped pane |
 | `selectionEdge` | `mark` | `mark` | leading bar of a tapped pane |
-| `playing` | `accentSoft` | `accentSoft` | wash behind the reciting ayah |
+| `playing` | accent @ 12 % | accent @ 12 % | wash behind the reciting ayah |
 | `playingEdge` | `accent` | `accent` | leading bar of the reciting ayah |
-| `letterMuted` | `letter @ 34 %` | `letter @ 34 %` | silent letters (§6.3) |
+| `letterMuted` | `letter` @ 34 % | `letter` @ 34 % | silent letters |
 
 **Selection and playback must never look alike.** Selection is warm (`mark`); playback is cool
 (`accent`). Selection outranks playback when both apply to the same pane — a verse the reader
 deliberately marked keeps its gold while the recitation walks past it.
 
-### 4.6 Ink presets (user choice)
+### 3.8 Ink presets (user choice)
 
-The reader may override `letter` and `diacritic` from Settings (`LetterInk`, `DiacriticInk`). Those
-presets are **reader preference, not theme**: they are exempt from the accent rules, must keep their
-own contrast against `page`, and every new preset needs its light and dark variant before it ships.
+The reader may override `letter` and `diacritic` from Settings (`LetterInk`: ink / green / navy;
+`DiacriticInk`: gold / green / grey / burgundy). Those presets are **reader preference, not theme**:
+they are exempt from the accent rules, must keep their own contrast against `page`, and every preset
+has a light and a dark variant (`ui/theme/Color.kt`). Do not add a preset with only one theme.
 
 ---
 
-## 5. Typography
+## 4. Typography
 
-### 5.1 Faces
+### 4.1 Faces
 
 | Role | Face | Notes |
 |---|---|---|
-| Quran text | **Scheherazade New**, split into `quran_letters.ttf` + `quran_marks.ttf` | Two derived ink layers with identical metrics. See `summary.md` §9 — do not "simplify" this to one font. |
-| UI (Latin) | platform sans (Roboto) | no bundled Latin face |
-| UI (Persian) | platform Naskh | *future:* bundle **Vazirmatn** (OFL) for UI chrome; it is a visible quality win for the Persian UI, which is the default locale |
+| Quran text | **Scheherazade New** (OFL), split into `quran_letters.ttf` + `quran_marks.ttf` | Two derived ink layers with identical metrics (`ui/quran/QuranFont.kt`). See `summary.md` — do not "simplify" this to one font. |
+| UI body | system sans (`Roboto` for Latin; the platform Naskh face for Persian) | the `HawraaTypography` default |
+| UI chrome (Persian) | bundled **Vazirmatn** (OFL) | header titles, sheet titles, primary buttons, identity numerals, shared empty/error states |
 
-### 5.2 Scale
+Vazirmatn is bundled in `res/font/` and wrapped as `Vazirmatn` in `ui/theme/Fonts.kt`. It is applied
+where Persian chrome is most visible; body copy remains the system face so the app stays fast and
+predictable.
 
-| Token | Size / line | Weight | Use |
+### 4.2 Scale
+
+The shipped scale is Material's slots, customised in `ui/theme/Type.kt`. Sizes are sp / line height
+sp.
+
+| Slot | Size / line | Weight | Use |
 |---|---|---|---|
-| `hero` | 40 / 46 | 700 | landing wordmark, empty-state hero |
-| `display` | 32 / 40 | 700 | screen title |
-| `title` | 22 / 30 | 600 | surah name in the top bar |
-| `heading` | 18 / 26 | 600 | section headers, sheet titles |
-| `body` | 15 / 22 | 400 | primary copy |
-| `bodyStrong` | 15 / 22 | 600 | emphasized copy |
-| `label` | 13 / 18 | 500 | buttons, chips, mini-player title |
-| `caption` | 12 / 16 | 400 | metadata, mini-player subtitle |
-| `overline` | 11 / 14 | 600, +1.2 tracking | eyebrows, group labels |
-| `numeric` | 13 / 18 | 500, **tabular** | durations, counters, ayah spans |
+| `displayLarge` | 34 / 40 | 700 | large screen title |
+| `headlineLarge` | 30 / 38 | 700 | hero headings |
+| `headlineMedium` | 20 / 26 | 600 | sheet and dialog titles |
+| `titleLarge` | 28 / 34 | 700 | Now Playing title, screen wordmark rows |
+| `titleMedium` | 16 / 23 | 700 | card titles, small-tile numerals |
+| `bodyLarge` | 16 / 23 | 400 | primary copy, translations in the player |
+| `bodyMedium` | 14 / 20 | 400 | secondary copy |
+| `bodySmall` | 13 / 18 | 400 | detail line |
+| `labelLarge` | 14 / 20 | 500 | buttons, dock mini title |
+| `labelSmall` | 11 / 15 | 600, +1.3 tracking | overlines, dock mini subtitle |
+| `caption` | 12 / 16 | 400 | scrubber clocks, metadata |
+| `heroNumeral` | 56 / 64 | 700 | the full-screen player's identity numeral |
 
-**Rules:** anything that counts uses tabular figures so digits do not jitter. Persian numerals are
-rendered with `toPersianDigits()` at the display layer only — never in identifiers or storage.
-Quran text sizes are a reader setting (22–44 sp) and are **never** taken from this table.
+**Rules:** anything that counts (durations, counters, ayah spans) sets
+`fontFeatureSettings = "tnum"` so digits do not jitter (`HistoryScreen`, `Scrubber`). Persian
+numerals are rendered with `toPersianDigits()` at the display layer only — never in identifiers or
+storage. Quran text sizes are a reader setting (22–44 sp, step 2, default 32) and are **never** taken
+from this table.
 
-### 5.3 Quran text sizing
+### 4.3 Quran text sizing
 
-`fontSizeSp` is user-controlled. `quranLineHeight(sp)` derives the line height (marks need vertical
-room — a tight line height clips the very diacritics the app is built to show). Never set an
-absolute line height on Quran text.
+`fontSizeSp` is user-controlled. `quranLineHeight(sp)` (`ui/quran/QuranTypeScale.kt`) multiplies it by
+**1.85**, because Uthmani marks stack above and below the letters and a tight line height clips the
+very diacritics the app is built to show. Never set an absolute line height on Quran text.
 
 ---
 
-## 6. Shape & spacing
+## 5. Shape & spacing
 
-### 6.1 Radius ramp
+### 5.1 Radius ramp
 
-One strictly-increasing ramp. Never hard-code a corner.
+One strictly-increasing ramp (`Radius` in `ui/theme/Tokens.kt`). Never hard-code a corner.
 
 | Token | dp | Alias |
 |---|---|---|
-| `xs` | 8 | badge |
-| `sm` | 12 | tile, badge |
+| `xs` | 8 | — |
+| `sm` | 12 | `badge`, `tile` |
 | `md` | 16 | inline control, text field |
-| `lg` | 20 | inset row, segmented track |
-| `card` | 28 | **cards, floating panels, the dock** (`panel`) |
-| `xl` | 32 | collapsed sheet, reading pane |
+| `lg` | 20 | `segment`, inset row, segmented track |
+| `card` | 28 | **cards, floating panels** (`panel`) |
+| `xl` | 32 | dock, sheets, reading pane, header capsule |
 | `xxl` | 40 | expanded sheet, hero |
-| `pill` | 999 | chips, top bar, search |
+| `pill` | 999 | chips, nav-only dock, search, drag handle |
 
-### 6.2 Spacing — a 4 dp rhythm
+`tileRadius(size)` scales a tile's corner with its size (8 → 20 dp).
+
+### 5.2 Spacing — a 4 dp rhythm
 
 `0, 2, 4, 8, 12, 16, 20, 24, 32, 44, 64` (`none, xxs, xs, sm, md, lg, xl, xxl, xxxl, huge, giant`).
 
-Screen padding 20–24 · card gap 12–16 · card inner padding 16.
+Screen padding 20 · card gap 12–16 · card inner padding 16.
 
 | Group | Tokens (dp) |
 |---|---|
-| Controls (circular) | `sm 32, md 36, lg 40, xl 44, play 52` |
-| Tiles | `sm 32, md 40, lg 48` |
+| Tiles | `sm 32, md 40, lg 48, xl 56, hero 76, numeralHero 152` |
+| Controls (circular) | `sm 36, md 40, lg 44, xl 52, play 64` |
+| Bars | `thin 4, thick 6` (seeker track 2, thumb 12; wave scrubber lives in `ScrubberGeometry`) |
 | Icons | `xs 13, sm 15, md 18, lg 22, xl 26, hero 44` |
-| Hairlines | 1 dp (`1.dp`), or `Dp.Hairline` for dividers inside a pane |
 | Max content width | 760 |
 
-### 6.3 Dock geometry — the numbers are the contract
+### 5.3 Dock geometry — the numbers are the contract
 
 ```
 playerHeight 58   navHeight 58   indicator 40
-icon 22           iconActive 20  touchTarget 44
-margin 10         inset 12       clearance 20
+icon 22           iconActive 20  touch 44
+margin 10         inset 12
 ```
 
 - Both halves are **equal height** (58) so the seam divides the panel in half rather than cutting a
@@ -287,592 +330,370 @@ margin 10         inset 12       clearance 20
   is exactly half the disc and rhymes with the mini-player's play bubble. Trust the number; do not
   "fix" it to match `icon`.
 
-**`dockInset = margin + playerHeight + navHeight + clearance = 146`**
+**`dockInset = playerHeight + navHeight + margin × 2 + inset = 148`**
+(`navInset = 90` collapsed.)
 
-Screens owe the dock `dockInset`, sized for the dock **at its tallest**, never a literal and never
-the collapsed height. A screen cannot know whether something will start playing while it is open,
-and reserving later would make its list jump.
+Screens owe the dock `dockInset` (`DockGeometry`), sized for the dock **at its tallest**, never a
+literal and never the collapsed height. A screen cannot know whether something will start playing
+while it is open, and reserving later would make its list jump. The shell measures the real dock
+height and publishes it as `LocalShellInsets.bottom`; screens use that measured value.
+
+### 5.4 Header & frame geometry
+
+```
+margin 10   minHeight 72   contentPadding 20   capsule radius.xl
+```
+
+`GlassHeader` owns the status-bar inset and the morphing search capsule. `ScreenFrame` mounts the
+header (and an optional floating sub-header) as siblings **outside** the screen body's
+`backdropSource`, and reports the combined top inset so lists can scroll smoothly behind both.
 
 ---
 
-## 7. Depth — the glass recipe
+## 6. Depth: blur, borders & elevation
 
 Depth is **not** a drop shadow. It is a three-part recipe, in order of importance:
 
-1. **Blur** of whatever is behind the pane. On API 31+ this is a real
-   `RenderEffect.createBlurEffect`; below 31 the fill alone must carry it.
-2. **Translucent fill** (`glassFill` / `glassFillStrong`) — gives the pane its colour and keeps text
-   legible over busy content.
-3. **Specular top edge + hairline border** — the 2 dp sheen gradient (`glassHighlight` → transparent,
-   running slightly diagonally: `x 0 → 0.35`) plus a 1 dp `glassBorder` stroke.
+1. **Background blur** (custom `Backdrop`, `ui/components/Backdrop.kt`; API 31+). Shell chrome
+   samples the ambient canvas (`zIndex = 0f`) and each screen body (`zIndex = 1f`) into sharp
+   `GraphicsLayer`s and composites only the region behind each pane into a **0.5×** downscaled,
+   padded, offscreen layer with a **22 dp** blur and a **1.22×** saturation boost. Invalidation is
+   draw-phase only (`Snapshot.registerApplyObserver`), so scrolling never recomposes the chrome.
+2. **Translucent fill** (`glassFill` / `glassFillStrong`, or the frost trio) — gives the pane its
+   colour and keeps text legible over busy content.
+3. **Bright hairline + top rim** — a 1 dp `glassBorder` stroke plus a **3 dp** top-edge
+   `glassHighlight` gradient. Never a highlight over the upper half; it blows out.
 
-A soft shadow may sit under the **dock and sheets only**, to lift them off content:
+**Modal backdrop.** While a sheet is open, or as the full player opens, the shell blurs the content
+box (canvas + nav + dock) by up to **18 dp** (`FrostGeometry.backdrop`). The sheet/player is a
+sibling *outside* that blur — it is the surface the blur exists to reveal. On API 29–30 there is no
+`RenderEffect`, so the sheet fades the same progress into a frost scrim (`scrimMax = 0.30`) instead.
 
-| Elevation | Offset | Radius | Use |
-|---|---|---|---|
-| `none` | — | — | content cards, rows |
-| `dock` | y 6 | 18 | the dock |
-| `panel` | y 12 | 28 | action box, floating panes |
-| `float` | y 16 | 34 | sheets, menus |
+| Elevation | dp | Use |
+|---|---|---|
+| `None` | 0 | content cards, rows, reading panes |
+| `Dock` | 5 | a control lifted like the dock |
+| `Panel` | 6 | action box, reading pane, floating panes |
+| `Float` | 12 | sheets, menus |
 
-**The dock's shadow is deliberately shallower than `float`.** A floating *control* is lifted off the
-page; a dock is a *surface*. The deep drop reads as the dock hovering above the screen rather than
-floating in it, and darkens the canvas along the bottom edge of every list.
+The dock's frost pane itself carries a soft **8 dp** lift (`dockElevation()`), deliberately shallower
+than `Float`: a floating *control* is lifted off the page; a dock is a *surface*. Content cards get
+**no** shadow — their fill + border + rim draw the edge.
 
-**API 29–30 fallback:** no blur. Raise the fill opacity (light `0.88`, dark `0.80`), keep border and
-sheen. Legibility must never depend on blur.
+**API 29–30 fallback:** no blur; content glass raises to `glassFillFallback`, chrome paints
+`frostFallback`, and border + rim stay. The pane still reads as a distinct surface; legibility never
+depends on blur.
 
 ---
 
-## 8. Iconography
+## 7. Iconography
 
-- **One family:** Material Symbols / Material Icons, `Outlined` for resting states and `Filled` for
-  the selected state. Screens ask for a semantic name through `HawraaIcon`; never import an icon set
-  in a screen.
-- **Interactive icons live in circles.** A filled accent circle is the primary action; outlined
-  circles are secondary. A bare glyph is only acceptable inside a larger tappable row.
-- **Directional glyphs are auto-mirrored** (`Icons.AutoMirrored`) so back/next stay correct in RTL.
+- **One family:** Material **Rounded**, behind the semantic `ICON_GLYPHS` catalog in
+  `ui/components/Icon.kt`. Screens ask for `"play"`, `"history"`, `"back"` — never import an icon set
+  directly. Only `Icon.kt` imports one. A glyph that is missing is added to the catalog, never
+  hand-drawn per screen. `IconCatalogTest` pins the catalog.
+- **Interactive glyphs live in circular bubbles** (`BubbleButton`): outlined by default, filled
+  `accent` for the primary action (play, the one main action) and the selected dock destination.
+- **Directional glyphs are auto-mirrored** (`Icons.AutoMirrored…`) so back/next stay correct in RTL.
 - A glyph whose meaning changes (play ↔ pause, playing ↔ paused) **cross-fades**; it never swaps
   instantly in place.
-- Transport glyphs come from the semantic `ICON_GLYPHS` catalog (`ui/components/Icon.kt`, D3), drawn
-  from Material Rounded in `material-icons-extended`.
-- The same rule covers the password eye (`ui/components/EyeGlyph.kt`, §10.11): `material-icons-core`
-  has no `Visibility`/`VisibilityOff`, so the glyph is two quadratics and a disc. **Before adding an
-  icon dependency, check whether the glyph is two shapes in a `Canvas`** — it usually is, and the
-  dependency is always bigger than the drawing.
+- The password eye (`ui/components/EyeGlyph.kt`) is drawn from two quadratics and a disc rather than
+  imported, because the core icon set has no `Visibility`/`VisibilityOff`. Before adding an icon
+  dependency, check whether the glyph is two shapes in a `Canvas` — it usually is.
 
 ---
 
-## 9. Motion
+## 8. Motion
 
-Governed by the OS "remove animations" setting. When motion is off, substitute the **final value** —
-never rely on the platform flag alone.
+Motion is governed by `useMotionEnabled()` (`ui/theme/Motion.kt`) = OS "remove animations" × the
+in-app preference (`System` / `Full` / `Reduced`). When false, substitute the **final value** — never
+rely on the platform flag alone.
 
-| Interaction | Motion |
-|---|---|
-| Press | spring scale `1 → 0.92 → 1.04` (overshoot), ~120 ms |
-| Dock height change | height animation 220 ms, emphasized easing |
-| Action box appear | fade + 8 dp rise, 160 ms |
-| Sheet open/close | spring, 280 ms, no bounce on dismiss |
-| Tab / destination switch | ocean current: lateral tab drift, push rise, pop reverse; WaveSweep crest + ambient surge, `OceanSwellEasing` |
-| Playing-ayah wash | 180 ms cross-fade of the wash colour only |
-| Follow-along scroll | `animateScrollToItem`, and only when the verse is off screen |
+- **Springs** (`HawraaSpring`): bouncy/gentle/sheet/snap/page, plus `playerOpen` (a hair of
+  overshoot) and `playerClose` (no bounce on dismiss).
+- **Duration ladder** (`HawraaDuration`): instant 120, exit 130, quick 180, base 260, crossfade 400,
+  screen 420, scrubber 380, playback tick 1000, pulse 900.
+- **Page transitions (ocean current):** dock tab switches glide laterally along `tabOrder` with
+  `OceanSwellEasing`; pushes rise while the parent recedes; pops reverse. Each transition fires a
+  bounded `AmbientCanvas` surge and a `WaveSweep` crest (aqua band, dual sine crests, a glider with a
+  twin wake). Both are absent under reduced motion. `WaveSweep` mirrors the logical tab direction for
+  RTL itself.
+- **Reveal stagger (`OceanCascade` + `Modifier.oceanEntrance`):** initially visible list items
+  (`index < 10`, first 850 ms) enter sequentially (`stagger(..., step 32, max 230)`), rising 14 dp
+  with a 5 dp lateral weave and a 0.978 → 1 settle. Items composed later while scrolling skip the
+  delay. Layer-only transforms; no relayout.
+- **Player morph:** one normalised `t` (`0` = dock capsule, `1` = full screen) drives bounds, corner
+  (`mini × (1 − t^1.6)`), the dock-row/content cross-fade, and the hero identity flight. Opening and
+  closing are springs; a downward pull moves the same `t` and either settles back or dismisses by
+  distance (`pullDismiss = 105 dp`) or velocity (`pullFling = 520 dp`), normalised over at least
+  `pullFloor = 420 dp`.
+- **`WavyProgress` drift** (`rememberWavePhase`, the mini-player's ambient wave) and the player header's
+  **playing equaliser** (`PlayingPulse`) are the only unbounded animations. The wave's callers pass
+  `0f` under reduced motion so it holds its resting phase; the equaliser holds `pulseStaticPhase`.
+  Everything else is bounded.
+- **No travel motion on the dock indicator itself** — a tab tap is a press spring
+  (1 → 0.92 → 1.05 → 1) and a haptic, nothing more.
+- **Haptics** via `triggerHaptic(intent)` / `rememberHaptics()` (`HapticIntent`: tap, select, press,
+  success, warning, error, scrub), with a master switch; fires once on press.
 
-**Never animate:** Quran text size changes, scroll position after a deliberate reader scroll, or the
-canvas at idle (the navigation surge is its only movement). Under reduced motion the switch is
-instant and the crest is absent.
+**Never animate:** Quran text size, scroll position after a deliberate reader scroll, or the canvas at
+idle (the navigation surge is its only movement).
 
 ---
 
-## 10. Components
+## 9. Component specifications
 
-Every component is a glass pane unless stated. Compose names in parentheses.
+Every component is a glass/frost pane unless noted. Compose names in parentheses; paths are relative
+to `app/src/main/kotlin/ir/hawraa/quran/`.
 
-### 10.1 `GlassSurface`
+### 9.1 Surfaces
 
-The base pane. `glassFill` + `glassBorder` hairline + 2 dp specular sheen + optional blur and
-shadow. Variants: `tone = surface | surfaceStrong`, `elevated = none | dock | panel | float`.
+- **GlassSurface** (`ui/components/GlassSurface.kt`): the base pane — `glassFill` + 1 dp
+  `glassBorder` + 3 dp top rim. Variants: `strong` (sheets, action box, reading rim,
+  `glassFillStrong`), `filled = false` (outline only), `rimLight = false` (quiet rows), and
+  `elevation: None | Dock | Panel | Float`. This recipe is legible without blur.
+- **FrostedSurface** (`ui/components/FrostedSurface.kt`): crystalline shell pane. `frostBase` +
+  sampled `BackdropBlur` (or `frostFallback` on API 29–30) + `frostScrim` + `frostSheen` +
+  deterministic grain + curved inner top catchlight + contour-following bevel border. Used **only**
+  by the header, dock, mini-player and player capsule.
+- **GlassSheet** (`ui/components/GlassSheet.kt`): modal bottom sheet on `canvasBase`, `radius.xl`,
+  hairline border, 36 × 4 drag handle, scrim. It raises `SheetPresence` so the shell frosts the
+  content behind it. Title + optional subtitle + icon bubble + close bubble + `HairlineWave`.
 
-```kotlin
-GlassSurface(
-    shape = RoundedCornerShape(geometry.radius.card),
-    strong = true,          // dock / sheets / action box
-    elevation = Elevation.Dock,
-) { … }
-```
+### 9.2 Header & frame
 
-### 10.2 `BubbleButton`
+- **GlassHeader** (`ui/components/ScreenHeader.kt`): the one floating heavy-frost capsule. Anatomy:
+  `[leading bubble] [overline + title + optional subtitle] [weight] [ActionCluster]`. Owns the
+  status-bar inset. A trailing search bubble morphs the capsule into an inline search field; query
+  and results stay in the view model. `userTitle = true` enables per-text RTL detection
+  (`isRtlText`) and the Vazirmatn face for Persian titles.
+- **ScreenFrame** (`ui/components/ScreenFrame.kt`): composes a screen's header + optional sub-header
+  outside the body's `backdropSource(zIndex = 1f)` and reports the combined top inset.
+- **Back bubble policy.** `History` is a top-level peer and shows **no** back bubble. `Settings` is
+  also a dock peer but shows one, because it is reachable from Home too and the shell can pop it;
+  `Downloads`, `Presets`, the preset editor and `Reader` show one (`BubbleButton` with
+  `ICON_GLYPHS["back"]`, `controls.md`) as pushes. Home shows settings, not back.
 
-Circular glass icon button. `filled = true` → solid `accent` disc with `onAccent` glyph (the primary
-action); `filled = false` → outlined disc with `glassBorder` and an `icon`-coloured glyph. Every
-variant pads out to a 44 dp touch target even when it draws smaller.
+### 9.3 Controls
 
-### 10.3 `GlassChip` and `GlassSegments`
+- **BubbleButton** (`ui/components/BubbleButton.kt`): circular glass icon button. `filled = true` →
+  solid `accent` disc with an `onAccent` glyph (the primary action); `filled = false` → outlined
+  disc with `glassBorder` and an `icon`-coloured glyph. `busy` swaps the glyph for in-place
+  `SpinnerRing` and keeps the press. Minimum 44 dp touch.
+- **PrimaryButton** (`ui/components/Buttons.kt`): the one filled pill for a screen's main action,
+  `controls.xl` tall, Vazirmatn label, `onAccent` text; no shadow of its own.
+- **GlassChip** (`ui/components/GlassChip.kt`): a **filter/toggle** pill. Selected = `accentSoft`
+  fill + `accent` hairline + `accent` label; unselected = `glassFill` + `glassBorder` +
+  `textSecondary`. A chip is a filter; a segmented control is a choice.
+- **GlassSegments** (`ui/components/GlassSegments.kt`): one-of-N choice. One `glassFill` track with a
+  hairline border and 4 dp inner padding; the selected segment is a filled `accent` pill with an
+  `onAccent` label. It reads `LocalGlassColors`, not `MaterialTheme.colorScheme`, so it matches every
+  pane around it. **Anything choosing one-of-N uses `GlassSegments`.** (`SegmentedPill` is the
+  Material-palette legacy sibling; do not reach for it on a glass screen.)
+- **Fields** (auth): hand-built inset tracks with a visible label above, hairline border that warms to
+  `accent` on focus. No Material outlined field, no floating label.
 
-A **chip** is a filter/toggle pill: `radius.pill`, `accentSoft` fill when selected with an `accent`
-hairline and `accent` label; `glassFill` + `glassBorder` + `textSecondary` when not. A chip is a
-*filter*; a segmented control is a *choice*. Do not use a chip where the reader is choosing one of
-two.
+### 9.4 The dock (`ui/components/AppDock.kt`)
 
-A **segmented control** (`GlassSegments`) is one `glassFill` track with a hairline border and 4 dp of
-inner padding, and the selected segment is a **filled `accent`** pill with an `onAccent` label, both
-animated. The fill — not a tint — is what makes "which one am I in" survive a glance. It reads
-`LocalGlassColors` rather than `MaterialTheme.colorScheme`; `SegmentedPill` does the same job with
-Material's palette, and on a screen whose whole surface is glass that difference shows as a track
-one shade off from every pane around it. **Anything choosing one-of-N uses `GlassSegments`.**
-
-### 10.4 `AppDock` — the menu bar + mini-player
-
-**One panel, two halves.** This is the centrepiece and it is copied structurally from the reference
-app, because that structure exists for a reason worth repeating:
-
-> The now-playing row and the navigation used to be two separate floating panels. Two panels means
-> their geometry is a negotiation, and the negotiation went wrong: the bar's raised centre button
-> ended up 32 dp underneath the now-playing row. Inside one panel the question cannot be asked —
-> one surface, one radius, one shadow, no clearance to get wrong.
-
-**Anatomy**
+**One panel, two halves.** The mini-player row and the icon nav are one `FrostedSurface`, so their
+geometry cannot disagree.
 
 ```
 ╭─────────────────────────────────────────╮  FrostedSurface, radius.xl (pill when nav-only)
-│  ▢  Surah al-Fatiha          (▶)  (⏭)  │  playerHeight 58   ← only while playing
-│  ▢  ayah 3 · Parhizgar                  │
+│  ▢  فاتحه · آیۀ ۳            (▶)  (⏭)  │  playerHeight 58   ← only while playing
 ├─────────────────────────────────────────┤  seam: HairlineWave, inset 12
 │    ⌂        ▤         ◷        ⚙        │  navHeight 58
 ╰─────────────────────────────────────────╯
    margin 10 from the safe-area edge, inset 12 horizontal
 ```
 
-- **Collapses when idle.** Height animates between `navHeight` (nothing playing) and
-  `playerHeight + navHeight + hairline` (playing). One shared value drives both the panel height and
-  the row's visibility, so they can never disagree.
-- **The player half fades in and out as one group**, seam included, so the divider cannot outlive
-  the row it divides.
-- **Navigation is icon-only, 4–5 peers.** No labels, no raised centre action. Selected = filled
-  `accent` circle (`indicator` 40) with the glyph knocked out in `onAccent` at `dock.iconActive`.
-  Unselected = `textSecondary` glyph at `dock.icon`; every peer has a 44 dp touch target.
-- **The navigation current explains the switch.** A dock tap drifts laterally along the tab order,
-  a pushed screen rises and a pop reverses; the WaveSweep crest rides the same current. Under
-  reduced motion the switch is instant and the crest is absent.
-- The dock is a **sibling** of the scrolling content, never inside it, so the content's scroll does
-  not drag the dock and the dock's shadow does not clip.
+- **Collapses when idle.** Height animates between `navHeight` and `playerHeight + navHeight + seam`
+  from one shared value; the seam lives inside the fading group so it cannot outlive the row.
+- **Navigation is icon-only, four peers in reading order:** `Home` · `Read` · `History` · `Settings`
+  (`DockTab`). No labels, no raised centre action. Selected = filled `accent` circle (40) with the
+  glyph tinted `onAccent` at `iconActive` (20); unselected = `textSecondary` at `icon` (22). Every
+  peer has a 44 dp target, `Role.Tab`, and a `selected` semantic.
+- **The nav current explains the switch** (§8); under reduced motion it is instant and the crest is
+  absent.
+- **MiniPlayerRow** (same file): identity tile 40 dp, title (`labelLarge`) over subtitle
+  (`labelSmall`, `textSecondary`), a `WavyProgress` leaf, then play/pause (filled accent, 40) and next
+  (outlined, 36). The whole leading region is one tap target that opens the full player; the trailing
+  bubbles sit outside it. No surface of its own — the dock owns the panel.
+- The dock is a **sibling** of the scrolling content, never inside it.
 
-**Hawraa's destinations:** `Home` · `Read` · `History` · `Settings`. Four peers is within the range
-Material specifies for icon-only docks, and it leaves room for a fifth (`Search`) without a redesign.
+### 9.5 Reader parts
 
-### 10.5 `MiniPlayerRow`
+- **SelectionActionBox** (`ui/components/SelectionActionBox.kt`): the floating action box over the
+  current selection, driven by a `List<SelectionAction>`. One primary (filled accent bubble + label);
+  the rest are icon-only. It appears when something is selected and disappears when cleared; the
+  reader anchors it above the verse, flips it below when there is no room, and keeps it clear of the
+  dock. It replaces the old permanent bottom bar.
+- **AyahOrnament** (`ui/quran/AyahOrnament.kt`): the drawn 8-lobe rosette (`res/drawable/ayah_marker.xml`,
+  Delapouite's "Rub el Hizb", CC BY 3.0). Unfilled = `ornamentRing` + `ornamentNumber`; selected =
+  filled `mark`; playing = filled `accent`, with the number knocked out. Persian digits always.
+- **VerseBlock / Pane** (`ui/screens/reader/ReaderScreen.kt`): one verse is a stack of independently
+  selectable panes — the Arabic pane, then one per translation. Each pane owns its selection state
+  and draws its own wash and 3 dp leading-edge bar (start edge, right in RTL). Translations indent
+  past the rosette.
+- **MushafBanner** (`ui/quran/MushafBanner.kt`): the surah plate — `bannerFill`, `bannerEdge`
+  hairline, `bannerText` name, `bannerSubText` juz/number.
+- **QuranText** (`ui/quran/QuranText.kt`): the only entry point for Quran typography, so letters and
+  diacritics stay independently colorable. Never draw Quran text with a plain `Text`.
 
-The dock's player half. Identity tile 40 dp (`geometry.tiles.md`, `radius.sm`), title (`label`) over
-subtitle (`caption`, `textSecondary`), then trailing controls: **play/pause** (filled accent bubble,
-40) and **next** (outlined, 36). A `WavyProgress` wave sits under the title/subtitle inside the leading
-region, and the whole leading region is one tap target that opens the player.
+### 9.6 Player parts
 
-- Tapping the row opens the player / reader context; the trailing buttons must not steal that tap.
-- While buffering, the play bubble shows a spinner and **keeps its press** — the same control, same
-  job.
-- The row is a plain `Row` with **no surface of its own**. The dock owns the panel.
-- Hawraa has no artwork: the tile is a deterministic **identity tile** (`PaletteTile`) — an aurora
-  ramp derived from the number, with the numeral in the UI face, centred. No image assets, no
-  network; the same number paints the same tile on every device.
-  - For a **juz-granularity reciter** the tile carries the **juz** number, matching the title beside
-    it. The juz's starting surah would put `جزء ۵` and `۴` in the same 58 dp row with nothing to say
-    which is which.
-  - It is **not** knocked out of a filled disc: three filled accent objects in one 58 dp row (tile,
-    play bubble, selected destination) turns the accent into decoration and loses the rule that
-    "filled accent = the current thing".
-  - It is **not** set in the mushaf face. Scheherazade draws «۱» as one thin calligraphic stroke;
-    at 19 sp inside a 40 dp tile that is a slanted smudge rather than a numeral, and it reads as a
-    rendering artefact. **The mushaf face is for scripture; chrome uses the UI face.**
+- **Scrubber** (`ui/components/player/Scrubber.kt`): a wave-shaped seeker with a glowing head and
+  `tnum` clocks; indeterminate while waiting. **WavyProgress** is the dock's ambient wave.
+- **TransportControls** (`ui/components/player/Transport.kt`): previous / play-pause / next; play is
+  the 64 dp filled bubble (a `SpinnerRing` while waiting), the others 48 dp outlined bubbles.
+- **PlaybackStatusLine**: waiting/error state under the scrubber; never a bare caption.
+- **PaletteTile** (`ui/components/PaletteTile.kt`): the identity tile. Hawraa ships no bundled cover
+  imagery and fetches none, so identity is a deterministic aurora gradient from the number, with the
+  numeral in the UI face. The dock tile is 40 dp; the full player's is 180 dp with `heroNumeral`
+  (56 sp). It is **not** a filled accent disc and **not** set in the mushaf face — three filled
+  accent objects in one row, or a calligraphic «۱» at 19 sp, both read as mistakes.
+- **FeaturedVerseCard** (`ui/screens/player/PlayerContent.kt`): the verse on an opaque `quran.page`
+  inside a glass frame; the translation is separated by the mushaf hairline. A juz track has no
+  featured verse.
 
-### 10.6 `SelectionActionBox` — the floating action box
+### 9.7 States
 
-This replaces the old full-width bottom transport bar. It is the component the owner asked for:
-**a small floating pane that appears over whatever is selected**, carrying the actions that apply to
-that selection.
-
-**Anatomy**
-
-```
-        ╭──────────────────────────────╮   glassFillStrong, radius.panel,
-        │  ╭───╮                       │   elevation.panel, padding 6
-        │  │ ▶ │   Play ayah 3        │   ← primary: filled accent bubble + label
-        │  ╰───╯  ╭───╮  ╭───╮         │
-        │         │ 📖 │  │ ⋯ │         │   ← future actions (glossary, notes…)
-        │         ╰───╯  ╰───╯         │
-        ╰──────────────────────────────╯
-                 ↑ anchored above the dock, near the selection
-```
-
-**Behaviour**
-
-- **Appears when something is selected**, disappears when the selection is cleared. Driven by
-  `VerseSelection.active` — the same single element that already answers "which verse to peek at".
-- **Anchored, not docked.** It floats in the region above the dock and, where the selected pane is
-  on screen, sits as close to it as it can without covering it. If the selection is under the box,
-  the box flips below it; if there is no room either way, it pins to the bottom above the dock.
-- **Never covers the selection.** This is the whole point of the change: the old bar took a strip of
-  the screen permanently, and it was never where the reader was looking.
-- **Extensible by construction.** Actions are a list (`SelectionAction`), not a hard-coded row. Today
-  the list is `Play`; the glossary/terminology button, "copy", "note" and "share" are later entries
-  and require no layout change. The first action is always the filled accent bubble; the rest are
-  outlined.
-- **Dismissal:** tapping elsewhere in the page, scrolling away from the selected verse, or pressing
-  back. Dismissing clears the selection.
-- **The label says what Play does.** "Play ayah 3" — not a bare glyph. The box is transient and the
-  reader did not necessarily arrive at it by pressing play.
-- Only appears when a queue exists (recitation catalogue available); otherwise the box shows the
-  actions that are available and hides play rather than showing a dead button.
-
-### 10.7 `ReaderTopBar`
-
-A floating pill, not a bar: `radius.pill`, `glassFill`, 44 dp tall, inset 12 from the edges.
-Contents: surah name (`title`) · diamond bullet · juz (`label`, `textSecondary`). Trailing settings
-bubble. No back arrow — the dock owns navigation, and a floating dock plus a back arrow is two ways
-to do the same thing.
-
-### 10.8 `AyahOrnament`
-
-The verse number marker: a drawn 8-lobe rosette (`res/drawable/ayah_marker.xml`, Delapouite's "Rub
-el Hizb", CC BY 3.0). Unfilled: `ornamentRing` stroke + `ornamentNumber` digits. Selected: filled
-`mark` with knocked-out number. Playing: filled `accent` with knocked-out number. Numbers are
-Persian digits, always.
-
-### 10.9 `VerseBlock` / `Pane`
-
-One verse is a **stack of independently selectable panes**: the Arabic pane, then one pane per
-translation. Each pane owns its selection state (§11.3) and draws its own wash and leading-edge bar.
-This is what makes "three translations and a commentary, each highlighted separately" possible.
-
-- Pane radius `lg` (20), inner padding 8/6.
-- The leading-edge bar is 3 dp, on the **start** edge (right in RTL).
-- Translations are indented past the rosette (34 dp start) — the translation belongs to the verse,
-  not to the ornament beside it.
-
-### 10.10 Sheets
-
-`GlassSheet`: `glassFillStrong`, `radius.xl` top corners, a 36 × 4 drag handle, scrim behind
-(`#060910` @ 40 %). Owns its own insets. Used for reading settings, reciter picker, and any future
-glossary sheet — the glossary action in the selection box opens a sheet, it does not navigate.
-
-### 10.11 `PasswordReveal`
-
-The eye that shows and hides a password (`ui/components/EyeGlyph.kt`). The almond is two quadratics
-and the pupil is a disc; hidden adds a corner-to-corner slash. Wrapped in a **40 dp** touch target
-with `Role.Button` and a state-dependent `contentDescription` ("show password" / "hide password"),
-because a 20 dp glyph is not a tap target and an unlabelled toggle is invisible to a screen reader.
-
-It is drawn rather than imported for the same reason as the transport glyphs (§8):
-`material-icons-core` ships neither `Visibility` nor `VisibilityOff`. It takes a `tint` rather than
-reading a theme colour so it can sit at `textTertiary` in a field and warm to `accent` on focus.
-
-### 10.12 The player morph
-
-The full player is not a second surface that appears over the dock: it is the dock's mini half
-**unfolding** into the screen. `NowPlayingSheet` is owned by the shell and mounted as a **sibling**
-of the nav host and the dock — never inside either — and it reads `NowPlayingStore`; it knows
-nothing about navigation, and the reader keeps the engine and session tracking.
-
-One normalised progress `t` (`0` = the dock capsule, `1` = full screen) drives every channel:
-
-- **Bounds** interpolate from the dock's measured `miniPlayerRect` to the viewport, so the capsule
-  starts exactly on the dock row and no surface ever jumps.
-- **Corner** is `mini * (1 - t^1.6)`, where `mini` is the dock's `radius.xl`; the capsule lets go
-  quickly at first and eases into the square full-screen edge.
-- **Cross-fade:** the dock row fades out over `t 0.12 → 0.52` while `PlayerContent` fades in over
-  `t 0.34 → 0.90` (scale `0.84 → 1`); hit-test order hands off at `t = 0.5`. A faded layer
-  swallows pointers, so the invisible one is never the live target.
-- **Glass → opaque:** the card's glass fill, frost scrim and rim fade out as the reading canvas
-  fades in; scripture never lands on glass.
-- **Hero flight:** the identity is one `PaletteTile` interpolated from the dock tile's rect to the
-  hero's measured rect, with both endpoints hiding their own copy during the flight. The hero is
-  `geometry.player.heroSize` (180 dp) carrying `Typography.heroNumeral` (56 sp) — no artwork (D5).
-
-**Pull to dismiss.** A downward drag drives the same `t`. Travel is normalised over at least
-`pullFloor` (420 dp), so a short screen cannot fling the player away on a nudge. On release the
-player dismisses if it has travelled past `pullDismiss` (105 dp) or is flung down faster than
-`pullFling` (520 dp); otherwise it springs back to `t = 1`. A slow lift at full screen always
-settles open.
-
-**Backdrop.** The shell blurs the content box (nav host + dock) by `frost.backdrop × t` on API 31+;
-the player itself sits outside that blur — it is the surface the blur exists to reveal. API 29–30
-has no `RenderEffect`, so the sheet fades the same progress into a frost scrim (`scrimMax`, 0.30)
-instead; legibility never depends on the blur.
-
-**Reduced motion** snaps every channel to its end value — open, close and pull included — and the
-sheet never withholds content to make a transition work.
+`EmptyState` / `InlineNotice` / `SkeletonRows` (`ui/components/States.kt`): four distinct states
+(empty / loading / failed / offline). The skeleton is static (no shimmer loop); an error is a
+danger-tinted notice with retry, never bare text. Never leave a blank list.
 
 ---
 
-## 11. Screens
+## 10. Screen specifications
 
-### 11.1 Reader — the signature screen
+All screens render over the ambient canvas and owe the dock their measured `LocalShellInsets.bottom`.
+They mount chrome through `ScreenFrame` + `GlassHeader`. The UI is fa-RTL by default.
+
+### 10.1 Reader — the signature screen
 
 ```
 ┌─────────────────────────────────────────┐  AmbientCanvas
 │  ╭───────────────────────────────────╮  │
-│  │ فاتحه  ◆  جزء ۱              ⚙    │  │  floating pill top bar
+│  │ ←  فاتحه  ◆  صفحهٔ ۱ · جزء ۱  ⚙… │  │  floating frosted capsule
 │  ╰───────────────────────────────────╯  │
-│                                         │
 │  ╭───────────────────────────────────╮  │
-│  │  ╭─────────────────────────────╮  │  │  reading pane: glassFillStrong-ish,
-│  │  │  سورۀ ۱  فاتحه              │  │  │  radius.xl, page colour, high opacity
+│  │  ╭─────────────────────────────╮  │  │  reading pane: GlassSurface(strong, xl)
+│  │  │  سورۀ ۱  فاتحه              │  │  │  with opaque quran.page inside
 │  │  ╰─────────────────────────────╯  │  │
 │  │   ١  بِسْمِ ٱللَّهِ …            │  │  │
 │  │      به نام خدا…                 │  │  │
 │  │   ٢  ٱلْحَمْدُ لِلَّهِ …          │  │  │
-│  │      ستایش‌ها…                    │  │  │
 │  │        ⋮  (scrolls)              │  │  │
 │  ╰───────────────────────────────────╯  │
 │         ╭─────────────────────╮         │
-│         │ ▶  Play ayah 3      │         │  ← SelectionActionBox (floating)
+│         │ ▶  پخش آیه ۳        │         │  ← SelectionActionBox (floating)
 │         ╰─────────────────────╯         │
-│  ╭───────────────────────────────────╮  │
-│  │ ▢ فاتحه · آیه ۳        (▶)  (⏭)  │  │  ← AppDock
+│  ╭───────────────────────────────────╮  │  ← AppDock
+│  │ ▢ فاتحه · آیۀ ۳        (▶)  (⏭)  │  │
 │  │   ⌂     ▤      ◷      ⚙          │  │
 │  ╰───────────────────────────────────╯  │
 └─────────────────────────────────────────┘
 ```
 
-- The reading pane is an **opaque `page` field inside a glass rim**. The canvas shows through only
-  around the floating pane, so the edge reads as glass while the text sits on the most stable field.
-- No page number, no page furniture — the scroll is continuous (see `ReaderItems`).
+- The reading pane is an **opaque `page` field inside a glass rim** (`radius.xl`). The canvas shows
+  through only around the floating pane, so the edge reads as glass while the text sits on the most
+  stable field.
+- No page number, no page furniture — the scroll is continuous. `LazyColumn` with `MushafBanner`,
+  `BasmalaItem`, `VerseItem`; bottom padding is `LocalShellInsets.bottom`.
+- The header carries back (push), a page/juz overline, and trailing download (only when recitation is
+  available), settings and player bubbles.
 - The dock is always present; the action box only while something is selected.
 
-### 11.2 Home
+### 10.2 Home
 
-Wordmark (`hero`, Quran face), a "continue reading" card showing the **real opening verses** of the
-resume page, a today strip (minutes, goal bar, streak), one filled primary action. Cards are glass,
-`radius.card`, padding 16.
+`GlassHeader` (title, overline "فضای خواندن شما", settings bubble, no back). Hero with the wordmark
+in the mushaf face (`home.wordmarkSizeSp = 64`), a gold rule broken by a diamond, and a faint
+octagram lattice stroked with a vertical gradient so it fades into the canvas. Then a "continue
+reading" card showing the real opening verses of the resume page on opaque paper, a today strip
+(minutes, goal, streak) in tabular figures, and one filled primary action. Cards are `GlassSurface`,
+`radius.card`, padding 16; the verse preview is an opaque `page` inset, never scripture on glass.
 
-Behind the wordmark, a lattice of faint octagrams (the ayah marker's eight-point geometry at 7 %),
-**stroked with a vertical gradient brush so it fades into the canvas by itself** — never with a box
-painted over the top. The hero sits on the ambient canvas, so a fade to the mushaf paper leaves a hard
-white band where the hero meets the canvas (it did, until a screenshot showed it), and a fade to
-transparent is not a fade at all.
+### 10.3 History
 
-### 11.3 History
+Top-level peer, **no back bubble**. `GlassHeader` (title + overline). Summary card (time / pages /
+streak) in `tnum`, then day sections (Today / Yesterday / date) with one glass row per session.
+Rows use an inset hairline that starts at the text, not at the pane edge.
 
-Summary card (time / pages / streak) in tabular figures, then day sections (Today / Yesterday / date)
-with one glass row per session. Rows use an inset hairline that starts at the text, not at the pane
-edge.
+### 10.4 Settings
 
-### 11.4 Settings
+Push-capable peer (dock tab **and** Home's settings action), so it shows a **back bubble**. Grouped
+`GlassSurface` cards (`radius.card`, inner padding 16), each with an inline section title: Theme
+(`GlassSegments`), Language, Reading (font size slider, translation switch, letter-ink and
+diacritic-ink `GlassSegments`, a live preview on `page`), Recitation (reciter chips), Presets and
+Downloads (link rows to their screens). Credits sit as a centred `labelSmall` footnote, not a card.
 
-Grouped sections, each one glass card: Appearance (theme, language), Reading (font size, inks,
-translation), Recitation (reciter, speed, repeat), About (attributions). Rows are 56 dp, leading
-glyph bubble, inset dividers.
+### 10.5 Downloads
 
-Two sections end in a **link row** rather than a control — *Recitation presets* and *Recitation
-downloads*. A link row is one line of hint text (`textSecondary`, `bodyMedium`) with a `ChevronIcon`
-at the end, pointing left in RTL. It exists because both destinations need a list, a picker and a
-queue, which is more than a settings row can honestly express; the section title names the
-destination, the hint says what it is for.
+Push (back bubble). Purpose: choose a reciter and edition, choose a scope in the unit the reader
+thinks in, keep the audio on the device, and manage everything already there.
 
-### 11.5 Downloads
-
-Purpose: choose a reciter and an edition, choose a scope in the unit the reader thinks in, keep the
-audio on the device — and manage everything already there.
-
-```
-فضای استفاده‌شده                                     ← one strong glass card
-۱۲ مگابایت                            ۳۶ فایل در صف
-
-قاری
-[ حامد شاکرنژاد ] [ شهریار پرهیزگار ] [ منذاوی ]     ← GlassChips
-
-نسخه
-[ ترتیل — جزء‌به‌جزء ]                                ← chip…
-  ۲۴ kbps · juz                                      ← …technical line, LTR
-[ مرتل — آیه‌به‌آیه ]
-  ۴۸ kbps · ayah
-  این نسخه جزء‌به‌جزء است؛ هر جزء یک فایل…            ← granularity note
-
-محدوده
-[ صفحه | سوره | جزء | آیه ]                           ← GlassSegments
-
-از صفحهٔ ۱
-────●────────────────────────────────────────────    ← NumberPicker (labelled Slider)
-تا صفحهٔ ۵
-──────────────────────────────●──────────────────
-[ پنج صفحهٔ اول ]                                     ← GlassChip
-
-صفحهٔ ۱ تا ۵                                ۳۶ آیه    ← summary row
-
-[           دانلود (حدود ۳٫۸ مگابایت)           ]     ← the one accent action
-۲۹ فایل در صف دانلود · ۷ از قبل ذخیره شده بود         ← notice, in place
-
-روی این دستگاه
-╭──────────────────────────────────────────────────────╮
-│ شهریار پرهیزگار                                 کامل │
-│ مرتل — آیه‌به‌آیه                                    │
-│ ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ │
-│ ۱۲ مگابایت · ۲۸۶ از ۲۸۶                      حذف همه │
-│ ──────────────────────────────────────────────────── │
-│ جزء ۱                                 ۳۶ از ۳۶   حذف │
-│ جزء ۲               ۳۴ از ۳۶ · ۲ ناموفق  تلاش دوباره │
-╰──────────────────────────────────────────────────────╯
-  header = reciter + edition label + `کامل` when finished
-  bar    = the edition's coverage across every scope under it
-  footer = size · done of total · `حذف همه`; then one BatchRow per scope,
-           each with `تلاش دوباره` only when something failed
-```
-
-- **The estimate is on the button**, not in a dialog: `دانلود (حدود ۳٫۸ مگابایت)`. A 300 MB download
-  started by accident is a bad afternoon, and the number is the only thing that prevents it.
-- **Scope is offered in the reader's unit first.** `صفحه` leads because a page is what a mushaf has —
-  and the wire has no page scope at all (`ayah | surah | juz | range`), so a page range is resolved
-  into a verse range against the bundled mushaf before anything is sent. When the pages have not
-  loaded, the picker says so and points at the two scopes that need no text, rather than guessing at
-  a boundary.
+- **The estimate is on the button**, not in a dialog; a large download started by accident is a bad
+  afternoon.
+- **Scope is offered in the reader's unit first** (`صفحه` leads), and a page range is resolved into a
+  verse range against the bundled mushaf before anything is sent — the wire has no page scope.
 - **Four scopes, never four at once.** A juz-granularity edition collapses the control to `جزء`
-  alone: the other three would describe a download that edition cannot serve. `scopeModes` decides,
-  so the screen itself carries no granularity conditional beyond the note.
-- **Two sliders, not start-plus-count.** "From page 3 to page 7" is how someone describes a stretch
-  of mushaf out loud; a count would have to be converted in the head. The start slider drags the end
-  along when it passes it, so the pair can never invert.
-- **`پنج صفحهٔ اول` is a chip, not a special case.** It sets the same two sliders to 1 and 5. It
-  exists because it is by far the most common request, and asking for it should not require finding
-  two thumbs.
-- **The technical line is LTR, the note is not.** `۴۸ kbps · ayah` is a token, not prose; in an RTL
-  paragraph the bidi algorithm reorders it into `kb · ayah 48`, which reads as a different fact. The
-  note below it is a sentence and is set in the locale's own direction. A juz edition's note is
-  `textSecondary` rather than `textTertiary` — it is a constraint on what you can do next, not a
-  footnote.
-- **The summary row is the last chance to stop.** The scope in the reader's words at the start edge,
-  the ayah count at the end edge. `صفحهٔ ۱ تا ۵` is not a wire scope, so it is spelled out here rather
-  than shown as `۱:۱ تا ۲:۲۹` — the same range, and no help to anyone reading it.
-- **Holdings are grouped per edition, not listed per batch.** The header answers "how much of this
-  reciter do I have", the bar answers "is it finished" (`کامل` when it is), and the rows below answer
-  "which parts". Thirty flat batches are thirty progress bars with no total.
-- **Delete is offered twice, on purpose.** Per scope for surgical removal, per edition (`حذف همه`)
-  for "free this space" — after a five-page download the second is the only one anyone wants.
-- **Retry appears only where something failed**, as `accent` text beside `حذف` in `danger`. The
-  download button stays the screen's only filled control.
-- **The notice is in place, not a snackbar.** It reports what the queue now holds —
-  `۲۹ فایل در صف دانلود · ۷ از قبل ذخیره شده بود` — which is worth reading twice; a snackbar is
-  worth reading zero times.
-- **A missing catalogue is a tinted strip, not an empty screen.** The pickers step aside and one
-  `danger`-tinted row explains why, because a download screen with no reciters looks like a bug
-  rather than a connection problem.
+  alone; the screen carries no granularity conditional beyond the note.
+- **Two sliders, not start-plus-count**; the start drags the end along so the pair cannot invert.
+  The most common request is a chip, not a special case.
+- **The technical line is LTR, the note is not** (`48 kbps · ayah` is a token, not prose).
+- **The summary row is the last chance to stop**; holdings are grouped per edition, not listed per
+  batch. Delete is offered per scope and per edition. Retry appears only where something failed. The
+  notice is in place, not a snackbar.
 
-### 11.6 Presets
+### 10.6 Presets
 
-Purpose: see your recipes, how much of the Quran each has covered, and edit one.
+Push (back bubble). The recipe is a line with arrows (`آیه ← ترجمه ← تفسیر`); order is the feature.
+Coverage lives here, not in History: percentage, bar, and the runs (at most four, then an ellipsis).
+No coverage is a sentence, not a zero. The editor is a name plus an ordered list of steps with a
+repeat stepper (`− ۲ +`) and a remove action; save is the one accent action.
 
-```
-[                 New preset                 ]           ← one accent action
+### 10.7 Now Playing — the morph
 
-╭ آیه، ترجمه، المیزان                          پیشفرض ╮
-│ آیه ← ترجمه ← تفسیر                                 │  ← the recipe, in order
-│ ۲٪ از قرآن · ۱۴۹ آیه                                │
-│ ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ │
-│ بخشها: ۱:۱–۱:۷, ۲:۱–۲:۱۴۱, ۱۸:۱                    │
-│ پیشفرض کن   ویرایش   حذف                            │
-╰──────────────────────────────────────────────────────╯
-```
+Owned by the shell (`ui/HawraaShell.kt` → `ui/screens/player/NowPlayingSheet.kt`): it is mounted
+**above** the blurred shell box (a sibling of the wrapper that holds the nav host, dock and wave
+sweep) and reads `NowPlayingStore`. The player is the dock's mini half **unfolding**, not a second
+surface appearing over it.
 
-- **The recipe is a line, with arrows.** Order is the feature; a list of toggles would lose it.
-  Repeats are inline (`آیه ×۲`), and the arrow is the text run's, so the line reads correctly in both
-  directions without a direction-aware layout.
-- **Coverage lives here, not in History.** Coverage is a property of a *preset* — "how much have I
-  heard with this recipe" — while History answers "what did I do on Tuesday". The card shows the
-  percentage, a bar, and the runs themselves (at most four, then an ellipsis).
-- **No coverage is a sentence, not a zero**: "Nothing read with this preset yet."
-- **The editor is a name and an ordered list.** Each step row is `1. Verse` with a repeat stepper
-  (`−  ۲  +`) and a `Remove` action; silence has no repeat. Below the list, chips add a step. Save is
-  the one accent action and is disabled until there is a name and at least one playable step.
-- **The stepper uses text glyphs (`−`/`+`), not icons** — `material-icons-core` has `Add` but no
-  `Remove`, and the extended icon set is not worth one minus sign.
+- **Header:** close bubble (start), centred "در حال پخش" with the running preset/step beneath,
+  non-interactive playing equaliser (end).
+- **Hero:** the 180 dp identity tile with its numeral; it flies from the dock tile's measured rect to
+  the player's.
+- **Body:** title/subtitle, optional featured verse card (opaque page inside glass), the wave
+  scrubber, status line, transport, then options (reciter, presets, speed, repeat, download).
+- **Morph channels:** bounds interpolate from `NowPlayingStore.miniPlayerRect` to the viewport; the
+  corner releases as `mini × (1 − t^1.6)`; the dock row fades over `t 0.12 → 0.52` while
+  `PlayerContent` fades in over `0.34 → 0.90` (scale 0.84 → 1); glass fades through to the opaque
+  reading canvas. Pull to dismiss normalises over `pullFloor` and settles by distance/velocity.
+- **Ownership:** the shell owns the store and the sheet; the **reader keeps the engine and session
+  tracking** (`ui/screens/reader/ReaderViewModel.kt`). The store publishes a `PlayerUi` snapshot,
+  binds transport commands, and collects position through a leaf `positionProvider` so a 1 Hz tick
+  never recomposes the sheet or dock. `PlayerUi` is null when nothing is queued; a juz track sets
+  `juzNumber` and the row says `جزء N` instead of a verse.
 
-### 11.7 The account gate
+### 10.8 The account gate
 
-Purpose: get an account before anything else, because history recorded before sign-in belongs to
-nobody.
+The one screen with no dock, no back and no content: it is the condition for the rest of the app to
+exist. Three bands — a drawn eight-point medallion with a radial accent glow, the wordmark, and one
+centred `GlassSurface(strong, Panel)` card at `radius.card`.
 
-```
-┌───────────────────────────────────────────────────┐
-│                         ✳                         │
-│                       حوراء                       │
-│                     قرآن کریم                     │
-│                                                   │
-│   ╭─────────────────────────────────────────────╮   │
-│   │ ساخت حساب تازه                              │   │
-│   │ با یک حساب، تاریخچهٔ مطالعهٔ شما…           │   │
-│   │                                             │   │
-│   │ [    ورود    |    ثبت‌نام    ]              │   │
-│   │                                             │   │
-│   │ ایمیل                                       │   │
-│   │ ╭───────────────────────────────────────────╮ │   │
-│   │ │ ✉  you@example.com                        │ │   │
-│   │ ╰───────────────────────────────────────────╯ │   │
-│   │ گذرواژه                                     │   │
-│   │ ╭───────────────────────────────────────────╮ │   │
-│   │ │ 🔒  ••••••••                           ◉ │ │   │
-│   │ ╰───────────────────────────────────────────╯ │   │
-│   │ تکرار گذرواژه                               │   │
-│   │ ╭───────────────────────────────────────────╮ │   │
-│   │ │ 🔒  ••••••••                           ◉ │ │   │
-│   │ ╰───────────────────────────────────────────╯ │   │
-│   │ نام (اختیاری)                               │   │
-│   │ ╭───────────────────────────────────────────╮ │   │
-│   │ │ 👤  نام شما                               │ │   │
-│   │ ╰───────────────────────────────────────────╯ │   │
-│   │ ⚠  دو گذرواژه یکسان نیستند.                 │   │
-│   │                                             │   │
-│   │ (           ساخت حساب            )          │   │
-│   ╰─────────────────────────────────────────────╯   │
-│ پس از ورود، برنامه بدون اینترنت هم…               │
-└───────────────────────────────────────────────────┘
-  ornament + wordmark = two bands above the card
-  card  = GlassSurface(strong, Panel), radius.card
-  ◉     = PasswordReveal, 40 dp target, one per password field
-  ⚠     = AuthErrorLine, tinted danger strip (not bare red text)
-```
-
-- **Three bands: ornament, wordmark, one pane.** The gate is the first thing anyone sees and the only
-  screen with no dock, no back and no content, so it carries the whole weight of a first impression.
-  The medallion is **drawn**, not shipped: it has to work in both themes at any density, and a PNG
-  would be three assets and a mismatch waiting to happen.
-- **The medallion is an eight-point khatam, in one path.** Eight points because that is the star of
-  the geometric tradition this app's chrome borrows from; drawn as one closed polygon with
-  alternating radii rather than two overlapping squares, so the stroke joins cleanly at every vertex
-  instead of leaving the doubled corners two squares produce. The radial `accent` glow behind it is
-  what stops it reading as a sticker on the canvas.
-- **One glass card, centred, `radius.card`, `strong` + `GlassElevation.Panel`.** The gate is the only
-  screen with no dock and no top bar: it is not a destination, it is the condition for the rest of
-  the app to exist, so it offers no way back and no way past.
-- **One screen, two verbs.** Sign in and register differ by three fields and one word, so a segmented
-  control switches between them instead of a second screen — two screens would be two copies of the
-  same validation and two chances to fix a bug in only one of them. Switching verbs clears the error:
-  "this email is taken" is a lie on the sign-in tab.
-- **Fields are hand-built, and the label sits above the box.** Material's outlined field draws its own
-  1 dp box, its own 16 sp label and its own floating-label animation, none of which belong to this
-  app's glass language — and none of which can be restyled into it. A floating label also disappears
-  the moment there is text, which is exactly when someone checking a form wants to know which field
-  they are looking at.
-- **The border is the only focus affordance**: hairline `glassBorder` → `accent`, animated, with the
-  label and leading icon warming in step. No outline, no ring, no elevation change — one cue, and it
-  is unmistakable. The whole pane is the touch target, not the glyph-and-cursor strip, or tapping the
-  padding beside the text feels broken.
-- **The email and both passwords are LTR.** An address and a password are Latin even inside a Persian
-  sentence; left alone, bidi types `a@b.com` back to front, which looks correct and is not.
-- **Two password fields, each with its own eye.** A single reveal toggle for both would be one
-  control doing two jobs, and the confirmation exists precisely because the reader cannot see what
-  they typed. The reveal flags are `rememberSaveable`, so a rotation while typing does not silently
-  expose the password. The eye is drawn on a `Canvas` — `material-icons-core` has no
-  `Visibility`/`VisibilityOff` — and lives in a 40 dp target, because a 20 dp glyph is not a tap
-  target.
-- **The confirmation is checked before the wire, and only when registering.** A server that accepted
-  a mismatched pair would still lock the reader out on the next attempt, so catching it locally costs
-  a round trip and saves a support ticket. The check sits after the length check: "too short" is more
-  useful than "they differ" when both are true. On the sign-in tab there is nothing to confirm, and a
-  stale confirmation must never block a sign-in.
-- **The primary action has three states, and they must not be confusable:** filled `accent` when it
-  can be pressed, `accentSoft` + a spinner while working, flat `glassFill` + `textTertiary` when it
-  cannot. (The editor's save action stops at the soft state, which is right for a screen that is
-  *editing* something; here a soft mint pill beside a hard green selected segment reads as
-  disabled — a screenshot made that obvious.) Busy swaps the label for the spinner in place rather
-  than growing the pane, because a button that changes height mid-press makes the form jump.
-- **The shadow is only under the live button.** An 8 dp `accent` shadow when it can be pressed, none
-  otherwise: a shadow under a dead control suggests it is floating there waiting for a tap that will
-  not happen.
-- **The error is a tinted strip, not a red line.** `danger` at 0.09 alpha on light and 0.18 on dark,
-  a 0.32 border and a `Warning` glyph give the message an edge of its own — a red sentence between
-  two glass panes is easy to miss, and this screen has no snackbar to fall back on. It is replaced by
-  the next keystroke, because an error that survives the fix is noise.
-- **The IME walks the form.** `Next` moves email → password → confirmation → name, and `Done` submits
-  from the last field; on the sign-in tab `Done` on the password submits directly, since there is
-  nothing after it.
-- **The footnote says why the gate exists** ("Once you are signed in, the app works offline"), in
-  `textTertiary`. Asking for a password before showing anything is a cost; the sentence is what makes
-  it a trade the reader can accept.
-- **No language switcher here.** The gate is the first screen and must respect the app's configured
-  language, not offer to change it — there is no Settings to reach yet.
-
+- One screen, two verbs (sign in / register) switched by `GlassSegments`; switching clears the error.
+- Fields are hand-built with labels above the box; the hairline border is the only focus affordance.
+  Email and passwords are LTR even inside a Persian sentence.
+- Two password fields, each with its own `PasswordReveal` (drawn eye, 40 dp target,
+  `rememberSaveable`).
+- The primary action has three states: filled `accent` when pressable, `accentSoft` + spinner while
+  working, flat `glassFill` + `textTertiary` when not. The shadow is only under the live button.
+- The error is a tinted `danger` strip, not bare red text. The footnote says why the gate exists.
+- No language switcher here.
 
 ---
 
-## 12. Accessibility & the contrast contract
+## 11. Accessibility & the contrast contract
 
 Glassmorphism's failure mode is invisible hierarchy. The contract:
 
@@ -882,82 +703,124 @@ Glassmorphism's failure mode is invisible hierarchy. The contract:
   strokes and the reader may be reading for a long time.
 - Filled-bubble glyph (`onAccent` on `accent`) ≥ 4.5:1.
 - Every interactive target ≥ **44 dp**, even when the visible glyph is smaller.
-- Every icon-only button carries a `contentDescription`; the dock reports
-  `Role.Tab` + `selected` state.
+- Every icon-only button carries a `contentDescription`; the dock reports `Role.Tab` + `selected`.
 - Focus order follows reading order. Persian is RTL: never hard-code `left`/`right`, always
   `start`/`end`.
-- **A palette edit that breaks a threshold fails the suite. Never weaken a threshold to make it
-  pass.**
+- Reduced motion substitutes final values; content is never withheld to make an animation work.
+- **A palette edit that breaks a threshold fails review. Never weaken a threshold to make it pass.**
+
+Contrast is computed against the **worst-case** backdrop (the brightest bloom under the thinnest
+pane), not a fixed flat colour; the mid-tone light canvas (§3.1) is what lets white text pass.
+The shipped gate is the screenshot suite plus review; a dedicated contrast test is still planned.
 
 ---
 
-## 13. Light & dark
+## 12. Light & dark themes
 
-Both first-class, switched by `themeMode` (System / Light / Dark). The difference is **canvas and
-glass opacity**, not structure:
+Both are first-class, switched by `themeMode` (`System` / `Light` / `Dark`, resolved in
+`ui/theme/Theme.kt`). The difference is **canvas base and glass/frost opacity**, not structure:
 
-- **Light** — cool pale canvas (`#E4E9EF`), white glass at 78 % / 98 %, near-black text. Reads as
-  frosted panes over a bright sky.
-- **Dark** — near-black canvas (`#060910`), dark glass at 72 % / 98 %, near-white text. Reads as
-  glass over deep water.
+- **Light** — deep slate-teal canvas (`#33505F`) with the brighter cool blooms, white glass at
+  16 % / 26 %, white text. Reads as frosted panes over a coloured sky.
+- **Dark** — near-black canvas (`#0A0F16`) with the dimmer deep blooms, white glass at 8 % / 14 %,
+  near-white text. Reads as glass over deep water.
 
-Accent, mark and semantics are shared; only canvas/glass/text alphas differ. No screen may branch on
-the theme to pick a colour — ask the token.
+The accent, aurora ramps and semantics are shared; only canvas/glass/text alphas differ. The chrome
+`mark` is the bright gold in both; the mushaf `mark` follows the paper (dark gold on light, bright
+gold on dark). No screen may branch on the theme to pick a colour — ask the token.
 
 ---
 
-## 14. RTL & Persian
+## 13. RTL & Persian content
 
-- Persian is the **default locale** and the only RTL one shipped. English is LTR.
+- Persian (`fa`) is the **default locale** and the only RTL one shipped; English (`en`) is LTR. Both
+  are declared in `res/xml/locales_config.xml`.
 - All layout uses `start`/`end`; `LocalLayoutDirection` decides the leading edge for bars, indents
-  and icon mirroring.
+  and icon mirroring. Directional icons are auto-mirrored.
+- Per-text detection (`isRtlText` in `core/TextFold.kt`) lets a user-supplied title opt into
+  `LayoutDirection.Rtl` and Vazirmatn even inside an otherwise LTR composition.
 - Persian digits via `toPersianDigits()` at display time only.
 - Arabic/Quran text is always RTL regardless of UI locale.
-- Mixed Persian + Latin strings rely on the platform bidi algorithm; do not hand-insert marks.
-- Every string lives in `values/strings.xml` (fa) and `values-en/strings.xml`. A hardcoded string is
-  a bug.
+- Mixed Persian + Latin strings rely on the platform bidi algorithm; do not hand-insert marks. A
+  technical token such as `48 kbps · ayah` is deliberately kept LTR.
+- Every string lives in `values/strings.xml` (fa) and `values-en/strings.xml`. A hardcoded string is a
+  bug.
 
 ---
 
-## 15. Compose implementation notes
+## 14. Assets
 
-- **Tokens:** `GlassColors` + `HawraaGeometry` are `staticCompositionLocalOf` values provided by
-  `HawraaTheme`, alongside the existing `QuranColors`. Read them via `LocalGlassColors` /
-  `LocalHawraaGeometry`.
-- **Blur:** `Modifier.graphicsLayer { renderEffect = RenderEffect.createBlurEffect(r, r, Clamp) }`
-  on API 31+, gated on `Build.VERSION.SDK_INT`. Below 31, raise the fill instead. Blur the
-  **background**, never the pane's own text.
-- **Sheen:** `drawWithContent` after `drawContent()` — a 2 dp vertical gradient at the top edge.
-  Never a highlight over the upper half; it blows out.
-- **Dock:** `Column` inside one `GlassSurface(strong = true)`; height animated with
-  `animateDpAsState` from one boolean. Nav slots are `Row` children with `weight(1f)` so the row
-  cannot overflow by arithmetic.
-- **Dock inset:** `contentPadding = PaddingValues(bottom = LocalShellInsets.current.bottom)` on the
-  reader's `LazyColumn`, using the measured clearance. Never a literal.
-- **State:** `StateFlow` + `collectAsStateWithLifecycle`. Keep high-frequency ticks (playback
-  position) in leaf composables so the dock's title row does not recompose every second.
+- **No bundled cover imagery.** Identity is a `PaletteTile` from an aurora ramp (§3.6); the same
+  number paints the same gradient on every device, offline. There is no network image path.
+- **Quran face:** bundle **Scheherazade New** (SIL OFL) as two layers, `res/font/quran_letters.ttf`
+  and `res/font/quran_marks.ttf`, built by `tools/build-quran-fonts.py`. Licence in
+  `assets/licenses/ScheherazadeNew-OFL.txt`.
+- **UI face:** bundle **Vazirmatn** (OFL) under `res/font/` (regular/medium/semibold/bold). Licence in
+  `assets/licenses/Vazirmatn-OFL.txt`.
+- **Ayah marker:** `res/drawable/ayah_marker.xml` (Delapouite's "Rub el Hizb", CC BY 3.0). Attribution
+  in `assets/licenses/ayah-marker-game-icons.txt`.
+- Canvas blooms and the auth medallion are drawn in code — no image assets.
+- **Sacred text is never fetched at runtime.** It ships with the app and is never modified by code.
+
+---
+
+## 15. Compose implementation
+
+- **Tokens:** `HawraaTheme` provides `LocalHawraaTokens` (`HawraaTokens`), `LocalGlassColors`,
+  `LocalQuranColors`, `LocalHawraaGeometry` and `LocalHawraaDarkTheme`. Read them; never carry a raw
+  value into a composable.
+- **Backdrop:** `Backdrop.kt` uses `Modifier.Node`s (`DrawModifierNode` +
+  `GlobalPositionAwareModifierNode` + `requireGraphicsContext()`) to record `AmbientCanvas`
+  (`zIndex = 0f`) and the `ScreenFrame` body (`zIndex = 1f`) into sharp `GraphicsLayer`s, invalidated
+  at the draw phase via `Snapshot.registerApplyObserver`. Each `FrostedSurface` renders `BackdropBlur`
+  into a 0.5×, blur-padded, `CompositingStrategy.Offscreen` layer with
+  `RenderEffect.createChainEffect(vibrancy, createBlurEffect(sigma, …))` on API 31+ (API 29–30 paints
+  `frostFallback`). While a modal is open the shell blurs the whole content box with `Modifier.blur`;
+  `backdrop.paused = true` reuses the cached effect layer without re-recording.
+- **Frost pane:** `FrostedSurface` layers `frostBase` + blur/fallback + `frostScrim` + `frostSheen` +
+  deterministic grain + top sheen + contour-gradient bevel border.
+- **Base pane:** `GlassSurface` uses `clip(shape)` + `background(fill)` + a 3 dp top rim
+  (`drawWithContent`) + `border(1.dp, glassBorder, shape)`.
+- **Canvas:** `AmbientCanvas` is a `Canvas` painting four radial gradients from the cool ramps, and a
+  bounded `Animatable` surge driven by `navTrigger` (snapped to zero under reduced motion).
+- **Dock:** one `FrostedSurface` containing a `Column`; the nav row is a `Row` of equal-weight peers,
+  so it cannot overflow. The player half is `AnimatedVisibility` and stays composed while exiting so
+  its measured rect survives the morph.
+- **Player:** `NowPlayingStore` publishes `PlayerUi`; `NowPlayingSheet` reads the store and drives
+  every channel from one `t`. `MorphMath.kt` holds the pure, unit-tested morph functions. Position
+  ticks are isolated to leaf composables (`ScrubberSection`, `MiniWave`).
+- **State:** `StateFlow` + `collectAsStateWithLifecycle`. Keep high-frequency ticks in leaves.
 - **Selection:** `VerseSelection` is a set of layer-keyed elements plus one `active`; the action box
-  reads `active`, each pane reads its own membership. Do not add a parallel "isSelected" boolean.
+  reads `active`, each pane reads its own membership. Do not add a parallel `isSelected` boolean.
+- **Verification:** the Robolectric screenshot suite (`app/build/screenshots/`, `*ScreenshotTest`)
+  renders real composables in both themes and both locales through a shared `TestShell`. Compose what
+  the app composes; measure the pixels for anything about contrast or occlusion.
 
 ---
 
 ## 16. Do / Don't
 
 **Do**
+
 - Read this file before building a screen.
-- Use the radius ramp, the 4 dp rhythm, tabular figures, one icon family.
+- Keep the canvas mid-tone in both themes so glass and white text stay legible.
+- Use the radius ramp, the 4 dp rhythm, tabular figures, and one icon family.
 - Keep the reading pane the most opaque surface on the screen.
 - Make the filled accent circle mean exactly one thing.
-- Reserve `dockInset` on every scrollable screen.
+- Reserve `LocalShellInsets.bottom` on every scrollable screen.
+- Gate motion with `useMotionEnabled()` and substitute the final value.
 - Check both themes and both locales before calling UI work done.
 
 **Don't**
+
 - Don't put glass behind Quran text; don't lower the reading pane's opacity "for the effect".
-- Don't add hard drop shadows to content cards — depth is blur + fill + hairline + sheen.
-- Don't hard-code a corner, a colour, a direction, a clearance or a string.
+- Don't add hard drop shadows to content cards — depth is blur + fill + hairline + rim.
+- Don't hard-code a colour literal; a raw corner/gap/clearance is a bug to fix.
 - Don't reintroduce a raised centre dock action, per-tab labels, or a full-width bottom bar.
 - Don't use `mark` (gold) as an interactive colour.
 - Don't add a page counter or page-boundary furniture; the reader scrolls continuously.
+- Don't give `History` a back bubble — it is a top-level peer.
+- Don't teach the backend about pages, or animate Quran text size / reader scroll.
 - Don't copy GPL code from reference projects — patterns and measurements only.
 - Don't weaken a contrast threshold to make a palette edit pass.
 
@@ -967,18 +830,18 @@ the theme to pick a colour — ask the token.
 
 | Rule | Gate |
 |---|---|
-| No colour literal outside `ui/theme/` | review + `grep` in CI |
+| No colour literal outside `ui/theme/` | review (`rg "Color\\(0x"`) |
 | No hardcoded user-facing string | review (`strings.xml` only) |
-| Quran text contrast ≥ 7:1 | `ContrastContractTest` (planned, §12) |
+| Token values match this document | review + `ui/theme` |
+| Icon name exists in `ICON_GLYPHS` | `IconCatalogTest` |
+| Quran text contrast ≥ 7:1 | `ContrastContractTest` (planned, §11) |
 | Tier separation ≥ 1.25:1 | same test |
 | Screens render in both themes + both locales | `*ScreenshotTest` + `PersianLaunchTest` |
 | No page chrome in the reader | `ReaderItemsTest` |
 | A capture shows the composition the app really builds (canvas + dock, real glyphs) | `TestShell` used by every `*ScreenshotTest` |
-| The dock/sheet fill actually occludes scrolling text | measured from the PNG: ghost ≤ 2 % (§4.2) |
+| The dock/sheet fill actually occludes scrolling text | measured from the PNG (§3.2) |
 
 The screenshot suite (`app/build/screenshots/`) is the visual gate: it renders real Skia + HarfBuzz
 on the JVM, so a regression is caught before the APK reaches a device. Two rules keep it honest:
 **compose what the app composes** (a bare screen on the window's white is a screen the app never
-shows), and **measure the pixels** for anything about contrast or occlusion — an impression of a
-4 % ghost and a measurement of one lead to the same fix, but only the measurement tells you when
-you are done.
+shows), and **measure the pixels** for anything about contrast or occlusion.

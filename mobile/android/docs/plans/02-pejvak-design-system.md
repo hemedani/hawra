@@ -322,7 +322,7 @@ motion; screenshots of a tab switch and a push in both themes.
 
 ---
 
-### Task 9 — Documentation: mirror the Pejvak Android sector
+### Task 9 — Documentation: mirror the Pejvak Android sector ✅
 
 **Goal:** the docs describe the shipped design, in Pejvak's structure.
 
@@ -600,3 +600,13 @@ without opening Pejvak.
   class comment no longer claims the screen owes `dockInset` — it pads the scroll end with the
   measured `LocalShellInsets.bottom`. DESIGN §11.1 and the reader dock-inset note were updated to
   match. `./gradlew test assembleDebug` green.
+- 2026-11-23 — **Task 9 complete.** `docs/DESIGN.md` was rewritten to Pejvak's 16-section structure
+  plus a closing §17 Enforcement, adapted for the fa-RTL UI, the opaque mushaf reading surface, the
+  no-artwork identity, the four-peer dock and the shell-owned player. `AGENTS.md`'s design section
+  now points at that doc as the single source of truth and states the no-literal rule, the two
+  colour families (chrome vs. reading surface), dock ownership via `LocalShellInsets`, the
+  `ICON_GLYPHS` / Material Rounded D3 exception, chip-vs-`GlassSegments`, motion gating, `Backdrop`
+  blur, and shell-owned playback. `docs/summary.md` updated its UI map and player-ownership note,
+  and `docs/plans/01-buildable-skeleton.md` gained a supersession pointer to this plan. The doc is
+  now the single source, so a new agent can implement a screen from `docs/summary.md` →
+  `docs/DESIGN.md` without opening Pejvak.

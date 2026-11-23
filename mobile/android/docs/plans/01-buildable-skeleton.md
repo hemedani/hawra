@@ -10,6 +10,12 @@
 > A phase is not finished until its **"Done when"** line is verified — not when its boxes are ticked.
 > Where this plan and the code disagree, **the code is right and this file is a bug.**
 
+> **Plan 02 supersedes this plan's UI/design portions.**
+> [`02-pejvak-design-system.md`](02-pejvak-design-system.md) adopts the Pejvak Android design system
+> (frosted header, dock, mini-player/full player, motion, icons) and rewrites the `DESIGN.md`
+> contract. Where the two disagree on UI, Plan 02 and `DESIGN.md` win; Plan 01 remains the record for
+> data, content, typography, sync and sessions.
+
 **Status:** Phases 0–2 complete and verified. **Phase 3 (recitation) complete 2026-11-15** —
 verse-by-verse streaming with follow-along highlighting, listening sessions and a reciter picker.
 **2026-11-15:** the reader is now one **continuous scroll** with **per-pane selection** (D14, D15) —

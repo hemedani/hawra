@@ -44,16 +44,16 @@ app/src/main/kotlin/ir/hawraa/quran/
 
 ## Design system — read `docs/DESIGN.md` before any UI work
 
-`docs/DESIGN.md` is the **single source of truth for look, feel and layout rules** (colour, type,
-geometry, the glass recipe, motion, every component, and the Do/Don't list). Read it before writing
+`docs/DESIGN.md` is the **single source of truth for look, feel and layout rules** — colour, type,
+geometry, the glass recipe, motion, every component, and the Do/Don't list. Read it before writing
 or changing any composable; it is not optional background reading. If a change makes the code and
 the document disagree, fix the document in the same commit — the design doc is part of the deliverable.
 
 Non-negotiables it encodes:
 
-- **No literal values in UI code.** Colours only from `ui/theme/` (`GlassColors` / `QuranColors`),
-  radii/spacing/control sizes only from `HawraaGeometry`. A raw `Color(0x…)`, `28.dp` corner or
-  `56.dp` control size outside `ui/theme/` is a bug.
+- **No literal values in UI code.** Colours only from `ui/theme/` (`GlassColors` / `QuranColors` /
+  `LocalHawraaTokens`), radii/spacing/control sizes only from `HawraaGeometry`. A raw `Color(0x…)`,
+  `28.dp` corner or `56.dp` control size outside `ui/theme/` is a bug.
 - **Two colour families that never mix.** Chrome (glass: translucent, floats) and the reading
   surface (opaque: scripture is read, not decorated). Never paint Quran text on a glass token.
 - **One accent = "this is the current thing"**; gold (`mark`) = "the reader put this here" and is
@@ -61,8 +61,9 @@ Non-negotiables it encodes:
 - **The mushaf is one continuous scroll.** No pager, no page numbers, no page-turn chrome.
 - **Selection actions float over the selection** (`SelectionActionBox`), driven by a
   `List<SelectionAction>` — never a permanent bottom bar. Playback + navigation live in the dock.
-- **The dock is one panel with two halves** (mini-player + nav), owned by the app shell. A screen
-  owes it `geometry.dock.dockInset` of bottom padding and nothing else.
+- **The dock is one glass panel with two halves** (mini-player + nav), owned by the app shell
+  (`ui/HawraaShell.kt`). Screens owe it `LocalShellInsets.current.bottom` of bottom padding and
+  nothing else; no screen draws its own bottom bar.
 - **Icons**: use the semantic `ICON_GLYPHS` catalog (`ui/components/Icon.kt`), drawn from Material
   **Rounded** in `material-icons-extended`. This is the accepted exception to the old "core only"
   rule (D3): Pejvak's catalog needs exact Rounded glyphs, and the ~10 MB APK cost is a stated,
@@ -71,6 +72,15 @@ Non-negotiables it encodes:
 - **A chip is a filter, `GlassSegments` is a choice.** Anything selecting one-of-N uses
   `GlassSegments` (glass palette, filled `accent` selection); chips toggle. Mixing them makes the app
   feel imprecise, and `SegmentedPill`'s Material palette is one shade off every glass pane around it.
+- **Motion is gated by `useMotionEnabled()`** (OS reduced-motion × the in-app preference). Any
+  component that animates checks it and substitutes the final value when false.
+- **Blur is the custom `Backdrop` draw-node** (`ui/components/Backdrop.kt`), not `Modifier.blur` or
+  Haze: sources record into graphics layers and panes sample a downscaled `BackdropBlur` on API 31+;
+  API 29–30 falls back to the `FrostedSurface` scrim (`frostFallback`).
+- **Playback UI is shell-owned.** The shell store (`ui/recitation/NowPlayingStore.kt`, `PlayerUi`)
+  and the shell (`ui/HawraaShell.kt`, `NowPlayingSheet` / `PlayerContent`) own the player; the reader
+  keeps its own engine and session (`ReaderViewModel`) and publishes into the store. Screens never
+  mount the player.
 - **A UI change is not done until a screenshot proves it.** `ReaderScreenshotTest` renders the real
   composables through Robolectric native graphics into `app/build/screenshots/`; add or update a
   capture for anything visual, in both themes.

@@ -293,21 +293,25 @@ mobile/android/
         │   │       ├── screens/auth/       # AuthScreen (the gate: sign in / register), AuthViewModel
         │   │       ├── LocalizedApp.kt     # per-app language (ContextThemeWrapper + override config)
         │   │       ├── HawraaShell.kt      # AmbientCanvas + the gate + HawraaNavHost + AppDock
-        │   │       ├── ShellViewModel.kt   # forwards dock transport taps to NowPlayingStore
+        │   │       │                       #   + NowPlayingSheet (the shell owns the player)
+        │   │       ├── ShellViewModel.kt   # bridges the store (snapshot, transport, mini rect)
         │   │       ├── theme/              # ALL tokens: Color.kt (raw palette), GlassColors.kt (chrome),
         │   │       │                       #   QuranColors.kt (reading surface), Geometry.kt (radius,
-        │   │       │                       #   spacing, controls, DockGeometry), Theme.kt, Type.kt
+        │   │       │                       #   spacing, controls, DockGeometry), Motion.kt, Theme.kt, Type.kt
         │   │       ├── navigation/         # HawraaNavHost + Routes
-        │   │       ├── components/         # GlassSurface, AmbientCanvas, BubbleButton, GlassChip,
-        │   │       │                       #   GlassSegments (one-of-N, glass palette), EyeGlyph/
-        │   │       │                       #   PasswordReveal, AppDock, SelectionActionBox,
-        │   │       │                       #   SegmentedPill, ChevronIcon/DiamondBullet, TransportIcons
+        │   │       ├── components/         # GlassSurface/FrostedSurface, Backdrop (draw-node blur),
+        │   │       │                       #   AmbientCanvas, Icon.kt (semantic ICON_GLYPHS catalog),
+        │   │       │                       #   GlassChip, GlassSegments (one-of-N), GlassSheet, ScreenFrame,
+        │   │       │                       #   EyeGlyph/PasswordReveal, AppDock (four-peer nav + mini-player),
+        │   │       │                       #   SelectionActionBox, SegmentedPill, ChevronIcon/DiamondBullet
+        │   │       │                       #   player/ (Transport, Scrubber, PlayerParts)
         │   │       ├── quran/              # QuranFont, QuranText (two ink layers + muted spans),
         │   │       │                       #   QuranTypeScale, AyahOrnament (licensed icon),
-        │   │       │                       #   MushafBanner, SurahName, RecitationSheet
-        │   │       ├── recitation/         # NowPlayingStore (app-scoped now-playing + transport binding)
+        │   │       │                       #   MushafBanner, SurahName
+        │   │       ├── recitation/         # NowPlayingStore (app-scoped PlayerUi + transport binding)
         │   │       └── screens/            # home/, reader/ (+ReaderViewModel), history/, settings/,
-        │   │                               #   downloads/ (4 scopes, grouped holdings), presets/
+        │   │                               #   downloads/ (4 scopes, grouped holdings), presets/,
+        │   │                               #   player/ (NowPlayingSheet, PlayerContent, mini player)
         │   └── res/
         │       ├── values/strings.xml      # fa (default)
         │       ├── values-en/strings.xml   # en
@@ -401,13 +405,17 @@ mobile/android/
   translation highlight independently; `active` answers the two genuinely singular questions — which
   verse to peek at, and where playback starts. Selection outranks playback for colour, so a tapped
   verse keeps its gold while the recitation moves past it.
-- **App shell & dock (D16, D17):** `HawraaShell` is `AmbientCanvas` + `HawraaNavHost` + `AppDock`, drawn
-  **once** for the whole app — the dock is not a screen's chrome, so no screen may draw its own bottom
-  bar. Ownership is inverted rather than duplicated: `ReaderViewModel` publishes a `NowPlaying` snapshot
-  into the `@Singleton NowPlayingStore` and **binds its transport callbacks** (`onToggle`, `onNext`,
-  `onOpenControls`), so the dock only draws and forwards, and the player engine stays owned by the
-  reader. `openControls` is a `SharedFlow` (one-shot), not state — otherwise recomposition would reopen
-  the sheet. Screens owe the dock `geometry.dock.dockInset` of bottom padding and nothing else.
+- **App shell, dock & player (D16, D17; Plan 02 D2/D4):** `HawraaShell` is `AmbientCanvas` +
+  `HawraaNavHost` + `AppDock` + `NowPlayingSheet`, drawn **once** for the whole app — the dock is not a
+  screen's chrome, so no screen may draw its own bottom bar. The dock is one glass panel with a
+  mini-player half over a **four-peer** nav half (Home, Read, History, Settings). Playback UI is
+  **shell-owned**: the `@Singleton NowPlayingStore` holds the `PlayerUi` snapshot, the bound transport
+  commands, the expanded flag and the dock's measured mini-player rect, and the shell renders the dock
+  plus the full-screen `NowPlayingSheet`/`PlayerContent` (morphed from that rect). The reader keeps its
+  own Media3 engine and session (`ReaderViewModel`) and only **publishes** into the store, so the engine
+  stays owned by the reader while the player UI never leaves the shell. `openControls` is a
+  `SharedFlow` (one-shot), not state — otherwise recomposition would reopen the sheet. Screens owe the
+  dock `LocalShellInsets.current.bottom` of bottom padding and nothing else.
 - **Selection actions (D17):** tapping a pane selects it and `SelectionActionBox` appears **over the
   selection**, anchored by the focused verse's `boundsInRoot()`: above it when there is room, below it
   otherwise, pinned above the dock as a last resort, and hidden entirely when the verse scrolls out of
