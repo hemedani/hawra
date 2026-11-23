@@ -290,7 +290,7 @@ motion; screenshots of a tab switch and a push in both themes.
 
 ---
 
-### Task 8 — Absorb every screen
+### Task 8 — Absorb every screen ✅
 
 **Goal:** no screen keeps its old chrome; all use `ScreenFrame` + `GlassHeader` and the new components.
 
@@ -576,5 +576,19 @@ without opening Pejvak.
   `LocalShellInsets.current.bottom` instead of `geometry.dock.dockInset`. The mushaf scroll,
   verse/translation selection, `SelectionActionBox` and session tracking are unchanged. Leading back
   is omitted because the reader is a dock destination with no pushed signal yet. Strings added in
-  fa + en (`reader_page_juz`). `./gradlew compileDebugKotlin` green; screenshot captures and device
-  inspection deferred to a later step.
+  fa + en (`reader_page_juz`). `./gradlew test assembleDebug` green; the `reader-*` captures were
+  inspected in both themes and locales, and the header/inset changes are recorded there.
+- 2026-11-23 — **Task 8a — Home chrome.** `HomeContent` moved to `ScreenFrame` + a floating
+  `GlassHeader` («خانه», welcome overline, settings bubble); the body starts below `topInset`, clears
+  the dock with `LocalShellInsets`, and the legacy Material buttons/cards were replaced by the glass
+  recipe and `BubbleButton`. `home_title` added in fa/en; `HomeScreenshotTest` now stages light/dark
+  × fa/en through `LocalizedApp`; four captures inspected. `./gradlew test assembleDebug` green.
+- 2026-11-23 — **Task 8c — Preset editor chrome.** `PresetEditorContent` dropped `Scaffold` +
+  `TopAppBar` for `ScreenFrame` + `GlassHeader` («ویرایش الگو», back bubble); the body starts below
+  `topInset` and clears the dock with `LocalShellInsets`. Editing, validation, save and delete
+  behaviour are unchanged; the `preset-editor-*` capture was inspected. `./gradlew test
+  assembleDebug` green.
+- 2026-11-23 — **Task 8 complete.** No screen keeps a `Scaffold`/`TopAppBar` or a `dockInset`
+  literal (`rg` clean). Home, History, Reader, Settings, Downloads, Presets and the preset editor
+  use `ScreenFrame` + `GlassHeader`; Auth keeps its centred-brand exclusion. `./gradlew test
+  assembleDebug` green (447 tests), every screen capture inspected in light/dark and fa/en.
